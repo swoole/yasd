@@ -164,7 +164,7 @@ int Cmder::parse_finish_cmd() {
     // int func_line_end = frame->func->op_array.line_end;
 
     context->next_level = context->level - 1;
-    global->do_next = true;
+    global->do_finish = true;
 
     return NEXT_OPLINE;
 }

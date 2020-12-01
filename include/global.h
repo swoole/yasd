@@ -25,6 +25,7 @@ class Global {
     bool is_running = false;
     bool do_step = false;
     bool do_next = false;
+    bool do_finish = false;
 
     char *entry_file = nullptr;
 

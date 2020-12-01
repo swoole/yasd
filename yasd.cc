@@ -91,6 +91,23 @@ PHP_MINFO_FUNCTION(yasd) {
     DISPLAY_INI_ENTRIES();
 }
 
+void hang(const char *filename, int lineno) {
+    int status;
+    std::string cmd;
+    yasd::SourceReader reader(filename);
+
+    reader.show_contents(lineno);
+
+    do {
+        global->do_next = false;
+        global->do_step = false;
+        global->do_finish = false;
+
+        cmder->get_next_cmd();
+        status = cmder->execute_cmd();
+    } while (status != yasd::Cmder::status::NEXT_OPLINE);
+}
+
 ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
     // zend_op_array *op_array = &frame->func->op_array;
     const zend_op *online = EG(current_execute_data)->opline;
@@ -107,6 +124,16 @@ ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
     filename = yasd::Util::get_executed_filename();
     start_lineno = lineno = online->lineno;
 
+    if (global->do_step) {
+        return hang(filename, lineno);
+    }
+
+    if (global->do_next || global->do_finish) {
+        if (context->level <= context->next_level) {
+            return hang(filename, lineno);
+        }
+    }
+
     if (!global->do_step && !global->do_next) {
         auto map_iter = global->breakpoints->find(filename);
 
@@ -121,29 +148,8 @@ ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
         }
 
         yasd::Util::show_breakpoint_hit_info();
+        return hang(filename, lineno);
     }
-
-    if (global->do_next) {
-        if (context->level > context->next_level) {
-            return;
-        }
-    }
-
-    // context->level <= context->next_level will hang
-
-    int status;
-    std::string cmd;
-    yasd::SourceReader reader(filename);
-
-    reader.show_contents(lineno);
-
-    do {
-        global->do_next = false;
-        global->do_step = false;
-
-        cmder->get_next_cmd();
-        status = cmder->execute_cmd();
-    } while (status != yasd::Cmder::status::NEXT_OPLINE);
 }
 
 ZEND_DLEXPORT int yasd_zend_startup(zend_extension *extension) {
