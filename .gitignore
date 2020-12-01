@@ -1,0 +1,29 @@
+.vscode
+debug
+
+# build
+config.h
+config.h.in
+config.log
+config.nice
+config.status
+configure
+configure.ac
+libtool
+Makefile
+Makefile.fragments
+Makefile.objects
+run-tests.php
+yasd.la
+*.lo
+.libs
+autom4te.cache
+build
+modules
+
+# debug
+test.php
+header.php
+composer.json
+composer.lock
+vendor
