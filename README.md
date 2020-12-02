@@ -68,7 +68,7 @@ t
 show all breakpoints:
 
 ```bash
-t
+i
 ```
 
 ### continue
