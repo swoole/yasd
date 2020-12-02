@@ -41,6 +41,7 @@ class Cmder {
 
     int parse_run_cmd();
     int parse_breakpoint_cmd();
+    int parse_delete_breakpoint_cmd();
     int parse_info_cmd();
     int parse_step_cmd();
     int parse_level_cmd();

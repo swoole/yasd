@@ -67,7 +67,7 @@ int Cmder::parse_breakpoint_cmd() {
         filename = exploded_cmd[1];
         lineno = atoi(exploded_cmd[2].c_str());
     } else {
-        yasd::Util::printf_info(YASD_ECHO_RED, "set breakpoint error!");
+        yasd::Util::printf_info(YASD_ECHO_RED, "use set breakpoint cmd error!");
         return RECV_CMD_AGAIN;
     }
 
@@ -82,6 +82,37 @@ int Cmder::parse_breakpoint_cmd() {
     }
 
     yasd::Util::printf_info(yasd::Color::YASD_ECHO_GREEN, "set breakpoint at %s:%d", filename.c_str(), lineno);
+
+    return RECV_CMD_AGAIN;
+}
+
+int Cmder::parse_delete_breakpoint_cmd() {
+    int lineno;
+    std::string filename;
+
+    auto exploded_cmd = yasd::Util::explode(last_cmd, ' ');
+
+    if (exploded_cmd.size() == 2) {
+        filename = yasd::Util::get_executed_filename();
+        if (filename == "") {
+            filename = global->entry_file;
+        }
+        lineno = atoi(exploded_cmd[1].c_str());
+    } else if (exploded_cmd.size() == 3) {
+        filename = exploded_cmd[1];
+        lineno = atoi(exploded_cmd[2].c_str());
+    } else {
+        yasd::Util::printf_info(YASD_ECHO_RED, "use delete breakpoint cmd error!");
+        return RECV_CMD_AGAIN;
+    }
+
+    auto iter = global->breakpoints->find(filename);
+
+    if (iter != global->breakpoints->end()) {
+        iter->second.erase(lineno);
+    } else {
+        yasd::Util::printf_info(YASD_ECHO_RED, "breakpoint is not existed!");
+    }
 
     return RECV_CMD_AGAIN;
 }
@@ -198,6 +229,7 @@ int Cmder::execute_cmd() {
 void Cmder::register_cmd_handler() {
     handlers.insert(std::make_pair("run", std::bind(&Cmder::parse_run_cmd, this)));
     handlers.insert(std::make_pair("breakpoint", std::bind(&Cmder::parse_breakpoint_cmd, this)));
+    handlers.insert(std::make_pair("delete", std::bind(&Cmder::parse_delete_breakpoint_cmd, this)));
     handlers.insert(std::make_pair("info", std::bind(&Cmder::parse_info_cmd, this)));
     handlers.insert(std::make_pair("step", std::bind(&Cmder::parse_step_cmd, this)));
     handlers.insert(std::make_pair("level", std::bind(&Cmder::parse_level_cmd, this)));
