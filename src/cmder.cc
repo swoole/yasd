@@ -110,8 +110,9 @@ int Cmder::parse_delete_breakpoint_cmd() {
 
     if (iter != global->breakpoints->end()) {
         iter->second.erase(lineno);
+        yasd::Util::printf_info(yasd::Color::YASD_ECHO_GREEN, "delete breakpoint at %s:%d", filename.c_str(), lineno);
     } else {
-        yasd::Util::printf_info(YASD_ECHO_RED, "breakpoint is not existed!");
+        yasd::Util::printf_info(YASD_ECHO_RED, "breakpoint at %s:%d is not existed!", filename.c_str(), lineno);
     }
 
     return RECV_CMD_AGAIN;
@@ -212,7 +213,8 @@ int Cmder::execute_cmd() {
     // yasd::Context *context = global->get_current_context();
 
     if (!global->is_running) {
-        if (last_cmd[0] != 'r' && last_cmd[0] != 'b' && last_cmd[0] != 'q' && last_cmd[0] != 'i') {
+        if (last_cmd[0] != 'r' && last_cmd[0] != 'b' && last_cmd[0] != 'q' && last_cmd[0] != 'i' &&
+            last_cmd[0] != 'd') {
             yasd::Util::printf_info(YASD_ECHO_RED, "program is not running!");
             return RECV_CMD_AGAIN;
         }
