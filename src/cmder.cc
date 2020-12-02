@@ -60,7 +60,7 @@ int Cmder::parse_breakpoint_cmd() {
     int lineno;
     std::string filename;
 
-    auto exploded_cmd = yasd::Util::explode(last_cmd, ' ');
+    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
 
     // breakpoint in current file with lineno
     if (exploded_cmd.size() == 2) {
@@ -96,7 +96,7 @@ int Cmder::parse_delete_breakpoint_cmd() {
     int lineno;
     std::string filename;
 
-    auto exploded_cmd = yasd::Util::explode(last_cmd, ' ');
+    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
 
     if (exploded_cmd.size() == 2) {
         filename = yasd::Util::get_executed_filename();
@@ -198,7 +198,9 @@ int Cmder::parse_quit_cmd() {
 }
 
 int Cmder::parse_print_cmd() {
-    yasd::Util::print_var(last_cmd.c_str() + 2, last_cmd.length() - 2);
+    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+
+    yasd::Util::print_var(exploded_cmd[1]);
     global->do_next = true;
 
     return RECV_CMD_AGAIN;
@@ -243,7 +245,7 @@ void Cmder::show_welcome_info() {
 int Cmder::execute_cmd() {
     // yasd::Context *context = global->get_current_context();
 
-    auto exploded_cmd = yasd::Util::explode(last_cmd, ' ');
+    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
 
     if (!global->is_running) {
         if (is_disable_cmd(exploded_cmd[0])) {

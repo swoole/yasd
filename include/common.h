@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include "php/main/php.h"
+
 #define BEGIN_EXTERN_C() extern "C" {
 #define END_EXTERN_C() }
 
@@ -25,6 +27,47 @@
     if (!_foreach_key) {k = NULL; klen = 0; ktype = 0;} \
     else {k = ZSTR_VAL(_foreach_key), klen=ZSTR_LEN(_foreach_key); ktype = 1;} {
 #define YASD_HASHTABLE_FOREACH_END()                 } ZEND_HASH_FOREACH_END();
+
+#ifndef ZEND_THIS
+#define ZEND_THIS (&EX(This))
+#endif
+
+/* PHP 8 compatibility macro {{{*/
+#if PHP_VERSION_ID < 80000
+#define yasd_zend7_object      zval
+#define YASD_Z7_OBJ_P(object)  Z_OBJ_P(object)
+#define YASD_Z8_OBJ_P(zobj)    zobj
+#else
+#define yasd_zend7_object      zend_object
+#define YASD_Z7_OBJ_P(object)  object
+#define YASD_Z8_OBJ_P(zobj)    Z_OBJ_P(zobj)
+#endif
+/*}}}*/
+
+static void yasd_zend_update_property_null_ex(zend_class_entry *scope, zval *object, zend_string *s) {
+    zval tmp;
+
+    ZVAL_NULL(&tmp);
+    zend_update_property_ex(scope, YASD_Z8_OBJ_P(object), s, &tmp);
+}
+
+static zval* yasd_zend_read_property(zend_class_entry *ce, zval *obj, const char *s, int len, int silent) {
+    zval rv, *property = zend_read_property(ce, YASD_Z8_OBJ_P(obj), s, len, silent, &rv);
+    if (UNEXPECTED(property == &EG(uninitialized_zval))) {
+        zend_update_property_null(ce, YASD_Z8_OBJ_P(obj), s, len);
+        return zend_read_property(ce, YASD_Z8_OBJ_P(obj), s, len, silent, &rv);
+    }
+    return property;
+}
+
+static zval* yasd_zend_read_property_ex(zend_class_entry *ce, zval *obj, zend_string *s, int silent) {
+    zval rv, *property = zend_read_property_ex(ce, YASD_Z8_OBJ_P(obj), s, silent, &rv);
+    if (UNEXPECTED(property == &EG(uninitialized_zval))) {
+        yasd_zend_update_property_null_ex(ce, obj, s);
+        return zend_read_property_ex(ce, YASD_Z8_OBJ_P(obj), s, silent, &rv);
+    }
+    return property;
+}
 
 namespace yasd {
 enum Color {
