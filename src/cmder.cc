@@ -58,7 +58,10 @@ int Cmder::parse_breakpoint_cmd() {
 
     // breakpoint in current file with lineno
     if (exploded_cmd.size() == 2) {
-        filename = global->entry_file;
+        filename = yasd::Util::get_executed_filename();
+        if (filename == "") {
+            filename = global->entry_file;
+        }
         lineno = atoi(exploded_cmd[1].c_str());
     } else if (exploded_cmd.size() == 3) {
         filename = exploded_cmd[1];
