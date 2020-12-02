@@ -28,9 +28,9 @@ namespace yasd
 class Util
 {
 public:
-    static std::vector<std::string> explode(std::string const & s, char delim);
+    static std::vector<std::string> explode(const std::string &str, const std::string &delimiter);
     static HashTable *get_defined_vars();
-    static void print_var(const char *var_name, size_t var_name_length);
+    static void print_var(std::string var_name);
     static void printf_info(int color, const char *format, ...);
     static void show_breakpoint_hit_info();
     static const char *get_executed_filename();

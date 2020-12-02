@@ -24,15 +24,36 @@ END_EXTERN_C()
 
 namespace yasd {
 
-std::vector<std::string> Util::explode(std::string const &s, char delim) {
-    std::vector<std::string> result;
-    std::istringstream iss(s);
+std::vector<std::string> Util::explode(const std::string &target, const std::string &delimiter) {
+    std::vector<std::string> arr;
 
-    for (std::string token; std::getline(iss, token, delim);) {
-        result.push_back(std::move(token));
+    int str_len = target.length();
+    int del_len = delimiter.length();
+
+    if (del_len == 0) {
+        return arr;
     }
 
-    return result;
+    int i = 0;
+    int k = 0;
+
+    while (i < str_len) {
+        int j = 0;
+        while (i + j < str_len && j < del_len && target[i + j] == delimiter[j]) {
+            j++;
+        }
+
+        if (j == del_len) {
+            arr.push_back(target.substr(k, i - k));
+            i += del_len;
+            k = i;
+        } else {
+            i++;
+        }
+    }
+
+    arr.push_back(target.substr(k, i - k));
+    return arr;
 }
 
 HashTable *Util::get_defined_vars() {
@@ -47,13 +68,29 @@ HashTable *Util::get_defined_vars() {
     return symbol_table;
 }
 
-void Util::print_var(const char *var_name, size_t var_name_length) {
+void Util::print_var(std::string var_name) {
     zval *var;
     HashTable *defined_vars;
+    zend_execute_data *execute_data = EG(current_execute_data);
+
+    // print $this
+    if (var_name == "this") {
+        php_var_dump(ZEND_THIS, 1);
+        return;
+    }
+
+    // print property
+    auto exploded_var_name = yasd::Util::explode(var_name, "->");
+    if (exploded_var_name.size() == 2) {
+        zval *property = yasd_zend_read_property(
+            Z_OBJCE_P(ZEND_THIS), ZEND_THIS, exploded_var_name[1].c_str(), exploded_var_name[1].length(), 0);
+        php_var_dump(property, 1);
+        return;
+    }
 
     defined_vars = get_defined_vars();
 
-    var = zend_hash_str_find(defined_vars, var_name, var_name_length);
+    var = zend_hash_str_find(defined_vars, var_name.c_str(), var_name.length());
     if (!var) {
         std::cout << "not found variable $" << var_name << std::endl;
     } else {
