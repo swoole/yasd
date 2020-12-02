@@ -39,8 +39,14 @@ Cmder::Cmder() {
 Cmder::~Cmder() {}
 
 std::string Cmder::get_next_cmd() {
+    std::string tmp;
+
     std::cout << "> ";
-    getline(std::cin, last_cmd);
+    getline(std::cin, tmp);
+    if (tmp == "") {
+        return last_cmd;
+    }
+    last_cmd = tmp;
     return last_cmd;
 }
 

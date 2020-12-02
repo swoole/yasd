@@ -73,7 +73,11 @@ PHP_RINIT_FUNCTION(yasd) {
     cmder->show_welcome_info();
 
     do {
-        cmder->get_next_cmd();
+        cmd = cmder->get_next_cmd();
+        if (cmd == "") {
+            yasd::Util::printf_info(yasd::Color::YASD_ECHO_RED, "please input cmd!");
+            continue;
+        }
         status = cmder->execute_cmd();
     } while (status != yasd::Cmder::status::NEXT_OPLINE);
 
@@ -119,7 +123,11 @@ void hang(const char *filename, int lineno) {
         global->do_step = false;
         global->do_finish = false;
 
-        cmder->get_next_cmd();
+        cmd = cmder->get_next_cmd();
+        if (cmd == "") {
+            yasd::Util::printf_info(yasd::Color::YASD_ECHO_RED, "please input cmd!");
+            continue;
+        }
         status = cmder->execute_cmd();
     } while (status != yasd::Cmder::status::NEXT_OPLINE);
 }
