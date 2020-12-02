@@ -27,6 +27,12 @@ see the extension info:
 php --ri yasd
 ```
 
+### start debug
+
+```bash
+php -e test.php
+```
+
 ### breakpoint
 
 ```bash
