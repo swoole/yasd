@@ -202,10 +202,11 @@ void Util::reload_cache_breakpoint() {
         if (exploded_content.size() != 2) {
             continue;
         }
-        auto iter = global->breakpoints->find(filename);
 
         filename = exploded_content[0];
         lineno = atoi(exploded_content[1].c_str());
+
+        auto iter = global->breakpoints->find(filename);
 
         yasd::Util::printf_info(yasd::Color::YASD_ECHO_GREEN, "reload breakpoint at %s:%d", filename.c_str(), lineno);
 
