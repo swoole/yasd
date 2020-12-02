@@ -60,7 +60,7 @@ f
 ### backtrace
 
 ```bash
-t
+bt
 ```
 
 ### info
