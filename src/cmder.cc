@@ -110,6 +110,9 @@ int Cmder::parse_delete_breakpoint_cmd() {
 
     if (iter != global->breakpoints->end()) {
         iter->second.erase(lineno);
+        if (iter->second.empty()) {
+            global->breakpoints->erase(iter->first);
+        }
         yasd::Util::printf_info(yasd::Color::YASD_ECHO_GREEN, "delete breakpoint at %s:%d", filename.c_str(), lineno);
     } else {
         yasd::Util::printf_info(YASD_ECHO_RED, "breakpoint at %s:%d is not existed!", filename.c_str(), lineno);
@@ -119,6 +122,9 @@ int Cmder::parse_delete_breakpoint_cmd() {
 }
 
 int Cmder::parse_info_cmd() {
+    if (global->breakpoints->empty()) {
+        yasd::Util::printf_info(YASD_ECHO_RED, "no found breakpoints!");
+    }
     for (auto i = global->breakpoints->begin(); i != global->breakpoints->end(); i++) {
         std::cout << "filename: " << i->first << std::endl;
         for (auto j = i->second.begin(); j != i->second.end(); j++) {
