@@ -38,6 +38,22 @@
 #include "include/base.h"
 #include "include/cmder.h"
 #include "include/source_reader.h"
+#include "include/redirect_file_to_cin.h"
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_yasd_redirectStdin, 0, 0, 1)
+    ZEND_ARG_INFO(0, data)
+ZEND_END_ARG_INFO()
+
+PHP_FUNCTION(redirectStdin) {
+    char *file;
+    size_t l_file;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+    Z_PARAM_STRING(file, l_file)
+    ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE);
+
+    global->redirector = new yasd::RedirectFileToCin(file);
+}
 
 PHP_RINIT_FUNCTION(yasd) {
     if (!(CG(compiler_options) & ZEND_COMPILE_EXTENDED_INFO)) {
@@ -158,6 +174,7 @@ ZEND_DLEXPORT int yasd_zend_startup(zend_extension *extension) {
 
 // clang-format off
 static const zend_function_entry yasd_functions[] = {
+    PHP_FE(redirectStdin, arginfo_yasd_redirectStdin)
     PHP_FE_END /* Must be the last line in swoole_functions[] */
 };
 

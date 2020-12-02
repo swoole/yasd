@@ -15,33 +15,25 @@
  */
 #pragma once
 
-#include "include/context.h"
-#include "include/redirect_file_to_cin.h"
-
-#include <map>
+#include <iostream>
+#include <fstream>
 
 namespace yasd {
-class Global {
-  public:
-    yasd::RedirectFileToCin *redirector = nullptr;
-    bool is_running = false;
-    bool do_step = false;
-    bool do_next = false;
-    bool do_finish = false;
+struct RedirectFileToCin {
+    explicit RedirectFileToCin(const char *file_name) {
+        fbuf.open(file_name, std::ios::in);             // open file for input
+        oldbuf = std::cin.rdbuf(std::addressof(fbuf));  // redirect file to std::cin
+    }
 
-    char *entry_file = nullptr;
+    ~RedirectFileToCin() {
+        std::cin.rdbuf(oldbuf);
+    }
 
-    std::map<int, Context *> *contexts;
+    // not copyable or assignable
+    RedirectFileToCin(const RedirectFileToCin &) = delete;
+    void operator=(const RedirectFileToCin &) = delete;
 
-    // filename, [lineno]
-    std::map<BREAKPOINT> *breakpoints;
-
-    Global(/* args */);
-    ~Global();
-
-    Context *get_current_context();
+    std::filebuf fbuf;
+    std::streambuf *oldbuf;
 };
 }  // namespace yasd
-
-extern yasd::Global *global;
-extern zend_function *get_cid_function;
