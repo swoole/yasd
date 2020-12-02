@@ -57,7 +57,7 @@ s
 f
 ```
 
-### trace
+### backtrace
 
 ```bash
 t
