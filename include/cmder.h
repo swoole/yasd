@@ -23,7 +23,7 @@ namespace yasd {
 class Cmder {
   private:
     std::string last_cmd;
-    std::map<std::string, std::function<int()>> handlers;
+    std::vector<std::pair<std::string, std::function<int()>>> handlers;
 
   public:
     enum status {
@@ -45,12 +45,15 @@ class Cmder {
     int parse_info_cmd();
     int parse_step_cmd();
     int parse_level_cmd();
-    int parse_trace_cmd();
+    int parse_backtrace_cmd();
     int parse_next_cmd();
     int parse_continue_cmd();
     int parse_quit_cmd();
     int parse_print_cmd();
     int parse_finish_cmd();
+
+    bool is_disable_cmd(std::string cmd);
+    std::string get_full_name(std::string sub_cmd);
 
     void register_cmd_handler();
     std::function<int()> find_cmd_handler(std::string cmd);

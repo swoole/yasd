@@ -37,5 +37,6 @@ public:
     static int get_executed_file_lineno();
     static const char *get_prev_executed_filename();
     static int get_prev_executed_file_lineno();
+    static bool is_match(std::string sub_str, std::string target_str);
 };
 } // namespace yasd

@@ -151,7 +151,7 @@ int Cmder::parse_level_cmd() {
     return RECV_CMD_AGAIN;
 }
 
-int Cmder::parse_trace_cmd() {
+int Cmder::parse_backtrace_cmd() {
     yasd::Context *context = global->get_current_context();
 
     yasd::Util::printf_info(
@@ -210,6 +210,25 @@ int Cmder::parse_finish_cmd() {
     return NEXT_OPLINE;
 }
 
+bool Cmder::is_disable_cmd(std::string cmd) {
+    // the command in the condition is allowed to execute in non-run state
+    if (get_full_name(cmd) != "run" && get_full_name(cmd) != "b" && get_full_name(cmd) != "quit" &&
+        get_full_name(cmd) != "info" && get_full_name(cmd) != "delete") {
+        return true;
+    }
+
+    return false;
+}
+
+std::string Cmder::get_full_name(std::string sub_cmd) {
+    for (auto &&kv : handlers) {
+        if (yasd::Util::is_match(sub_cmd, kv.first)) {
+            return kv.first;
+        }
+    }
+    return "unknown cmd";
+}
+
 void Cmder::show_welcome_info() {
     yasd::Util::printf_info(YASD_ECHO_GREEN, "[Welcome to yasd, the Swoole debugger]");
     yasd::Util::printf_info(YASD_ECHO_GREEN, "[You can set breakpoint now]");
@@ -218,15 +237,16 @@ void Cmder::show_welcome_info() {
 int Cmder::execute_cmd() {
     // yasd::Context *context = global->get_current_context();
 
+    auto exploded_cmd = yasd::Util::explode(last_cmd, ' ');
+
     if (!global->is_running) {
-        if (last_cmd[0] != 'r' && last_cmd[0] != 'b' && last_cmd[0] != 'q' && last_cmd[0] != 'i' &&
-            last_cmd[0] != 'd') {
+        if (is_disable_cmd(exploded_cmd[0])) {
             yasd::Util::printf_info(YASD_ECHO_RED, "program is not running!");
             return RECV_CMD_AGAIN;
         }
     }
 
-    auto handler = find_cmd_handler(last_cmd);
+    auto handler = find_cmd_handler(exploded_cmd[0]);
     if (!handler) {
         return FAILED;
     }
@@ -235,23 +255,23 @@ int Cmder::execute_cmd() {
 }
 
 void Cmder::register_cmd_handler() {
-    handlers.insert(std::make_pair("run", std::bind(&Cmder::parse_run_cmd, this)));
-    handlers.insert(std::make_pair("breakpoint", std::bind(&Cmder::parse_breakpoint_cmd, this)));
-    handlers.insert(std::make_pair("delete", std::bind(&Cmder::parse_delete_breakpoint_cmd, this)));
-    handlers.insert(std::make_pair("info", std::bind(&Cmder::parse_info_cmd, this)));
-    handlers.insert(std::make_pair("step", std::bind(&Cmder::parse_step_cmd, this)));
-    handlers.insert(std::make_pair("level", std::bind(&Cmder::parse_level_cmd, this)));
-    handlers.insert(std::make_pair("trace", std::bind(&Cmder::parse_trace_cmd, this)));
-    handlers.insert(std::make_pair("next", std::bind(&Cmder::parse_next_cmd, this)));
-    handlers.insert(std::make_pair("continue", std::bind(&Cmder::parse_continue_cmd, this)));
-    handlers.insert(std::make_pair("quit", std::bind(&Cmder::parse_quit_cmd, this)));
-    handlers.insert(std::make_pair("print", std::bind(&Cmder::parse_print_cmd, this)));
-    handlers.insert(std::make_pair("finish", std::bind(&Cmder::parse_finish_cmd, this)));
+    handlers.push_back(std::make_pair("run", std::bind(&Cmder::parse_run_cmd, this)));
+    handlers.push_back(std::make_pair("b", std::bind(&Cmder::parse_breakpoint_cmd, this)));
+    handlers.push_back(std::make_pair("bt", std::bind(&Cmder::parse_backtrace_cmd, this)));
+    handlers.push_back(std::make_pair("delete", std::bind(&Cmder::parse_delete_breakpoint_cmd, this)));
+    handlers.push_back(std::make_pair("info", std::bind(&Cmder::parse_info_cmd, this)));
+    handlers.push_back(std::make_pair("step", std::bind(&Cmder::parse_step_cmd, this)));
+    handlers.push_back(std::make_pair("level", std::bind(&Cmder::parse_level_cmd, this)));
+    handlers.push_back(std::make_pair("next", std::bind(&Cmder::parse_next_cmd, this)));
+    handlers.push_back(std::make_pair("continue", std::bind(&Cmder::parse_continue_cmd, this)));
+    handlers.push_back(std::make_pair("quit", std::bind(&Cmder::parse_quit_cmd, this)));
+    handlers.push_back(std::make_pair("print", std::bind(&Cmder::parse_print_cmd, this)));
+    handlers.push_back(std::make_pair("finish", std::bind(&Cmder::parse_finish_cmd, this)));
 }
 
 std::function<int()> Cmder::find_cmd_handler(std::string cmd) {
     for (auto &&kv : handlers) {
-        if (kv.first[0] == cmd[0]) {
+        if (kv.first == get_full_name(cmd)) {
             return kv.second;
         }
     }

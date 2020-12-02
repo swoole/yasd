@@ -140,4 +140,14 @@ int Util::get_prev_executed_file_lineno() {
 
     return 0;
 }
+
+bool Util::is_match(std::string sub_str, std::string target_str) {
+    for (size_t i = 0; i < sub_str.length(); i++) {
+        if (sub_str[i] != target_str[i]) {
+            return false;
+        }
+    }
+
+    return true;
+}
 }  // namespace yasd
