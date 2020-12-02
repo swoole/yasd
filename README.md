@@ -39,6 +39,8 @@ php -e test.php
 b absolute-file-path lineno
 ```
 
+This will also save the breakpoint information in the cache file -- `.breakpoints_file.bp`
+
 ### run
 
 ```bash

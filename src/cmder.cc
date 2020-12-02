@@ -87,6 +87,8 @@ int Cmder::parse_breakpoint_cmd() {
         global->breakpoints->insert(std::make_pair(filename, lineno_set));
     }
 
+    yasd::Util::cache_breakpoint(filename, lineno);
+
     yasd::Util::printf_info(yasd::Color::YASD_ECHO_GREEN, "set breakpoint at %s:%d", filename.c_str(), lineno);
 
     return RECV_CMD_AGAIN;
@@ -132,11 +134,9 @@ int Cmder::parse_info_cmd() {
         yasd::Util::printf_info(YASD_ECHO_RED, "no found breakpoints!");
     }
     for (auto i = global->breakpoints->begin(); i != global->breakpoints->end(); i++) {
-        std::cout << "filename: " << i->first << std::endl;
         for (auto j = i->second.begin(); j != i->second.end(); j++) {
-            std::cout << *j << ", ";
+            yasd::Util::printf_info(yasd::Color::YASD_ECHO_GREEN, "filename: %s:%d", i->first.c_str(), *j);
         }
-        std::cout << std::endl;
     }
 
     return RECV_CMD_AGAIN;

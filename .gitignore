@@ -1,5 +1,4 @@
 .vscode
-debug
 
 # build
 config.h
@@ -22,8 +21,10 @@ build
 modules
 
 # debug
+debug
 test.php
 header.php
 composer.json
 composer.lock
 vendor
+.breakpoints_file.bp
