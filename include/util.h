@@ -38,5 +38,10 @@ public:
     static const char *get_prev_executed_filename();
     static int get_prev_executed_file_lineno();
     static bool is_match(std::string sub_str, std::string target_str);
+
+    static void reload_cache_breakpoint();
+    static void clear_breakpoint_cache_file();
+    static std::string get_breakpoint_cache_filename();
+    static void cache_breakpoint(std::string filename, int lineno);
 };
 } // namespace yasd

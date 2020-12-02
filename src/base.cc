@@ -19,6 +19,8 @@
 #include "include/global.h"
 #include "include/cmder.h"
 
+#include "./php_yasd.h"
+
 #include <iostream>
 
 static void (*old_execute_ex)(zend_execute_data *execute_data);

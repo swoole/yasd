@@ -15,10 +15,13 @@
 */
 #include "include/util.h"
 #include "include/common.h"
+#include "include/global.h"
 
 BEGIN_EXTERN_C()
 #include "php/ext/standard/php_var.h"
 END_EXTERN_C()
+
+#include "./php_yasd.h"
 
 #include <iostream>
 
@@ -187,4 +190,52 @@ bool Util::is_match(std::string sub_str, std::string target_str) {
 
     return true;
 }
+
+void Util::reload_cache_breakpoint() {
+    std::string content;
+    std::fstream file(yasd::Util::get_breakpoint_cache_filename());
+    std::string filename;
+    int lineno;
+
+    while (getline(file, content)) {
+        auto exploded_content = explode(content, ":");
+        if (exploded_content.size() != 2) {
+            continue;
+        }
+        auto iter = global->breakpoints->find(filename);
+
+        filename = exploded_content[0];
+        lineno = atoi(exploded_content[1].c_str());
+
+        yasd::Util::printf_info(yasd::Color::YASD_ECHO_GREEN, "reload breakpoint at %s:%d", filename.c_str(), lineno);
+
+        if (iter != global->breakpoints->end()) {
+            iter->second.insert(lineno);
+        } else {
+            std::set<int> lineno_set;
+            lineno_set.insert(lineno);
+            global->breakpoints->insert(std::make_pair(filename, lineno_set));
+        }
+    }
+}
+
+void Util::clear_breakpoint_cache_file() {
+    // create file and clear file
+    std::ofstream file(yasd::Util::get_breakpoint_cache_filename());
+    file.close();
+}
+
+std::string Util::get_breakpoint_cache_filename() {
+    return std::string(YASD_G(breakpoints_file)) + ".bp";
+}
+
+void Util::cache_breakpoint(std::string filename, int lineno) {
+    std::ofstream file;
+    std::string path = get_breakpoint_cache_filename();
+
+    file.open(path, std::ios_base::app);
+    file << filename + ":" + std::to_string(lineno) + "\n";
+    file.close();
+}
+
 }  // namespace yasd

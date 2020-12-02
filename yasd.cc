@@ -40,8 +40,10 @@
 #include "include/source_reader.h"
 #include "include/redirect_file_to_cin.h"
 
+ZEND_DECLARE_MODULE_GLOBALS(yasd)
+
 ZEND_BEGIN_ARG_INFO_EX(arginfo_yasd_redirectStdin, 0, 0, 1)
-    ZEND_ARG_INFO(0, data)
+ZEND_ARG_INFO(0, data)
 ZEND_END_ARG_INFO()
 
 PHP_FUNCTION(redirectStdin) {
@@ -53,6 +55,16 @@ PHP_FUNCTION(redirectStdin) {
     ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE);
 
     global->redirector = new yasd::RedirectFileToCin(file);
+}
+
+// clang-format off
+PHP_INI_BEGIN()
+STD_PHP_INI_ENTRY("yasd.breakpoints_file", ".breakpoints_file", PHP_INI_ALL, OnUpdateString,
+        breakpoints_file, zend_yasd_globals, yasd_globals)
+PHP_INI_END()
+// clang-format on
+
+static void php_yasd_init_globals(zend_yasd_globals *yasd_globals) {
 }
 
 PHP_RINIT_FUNCTION(yasd) {
@@ -72,6 +84,8 @@ PHP_RINIT_FUNCTION(yasd) {
 
     cmder->show_welcome_info();
 
+    yasd::Util::reload_cache_breakpoint();
+
     do {
         cmd = cmder->get_next_cmd();
         if (cmd == "") {
@@ -85,6 +99,9 @@ PHP_RINIT_FUNCTION(yasd) {
 }
 
 PHP_MINIT_FUNCTION(yasd) {
+    ZEND_INIT_MODULE_GLOBALS(yasd, php_yasd_init_globals, nullptr);
+    REGISTER_INI_ENTRIES();
+
     return SUCCESS;
 }
 
@@ -183,7 +200,7 @@ ZEND_DLEXPORT int yasd_zend_startup(zend_extension *extension) {
 // clang-format off
 static const zend_function_entry yasd_functions[] = {
     PHP_FE(redirectStdin, arginfo_yasd_redirectStdin)
-    PHP_FE_END /* Must be the last line in swoole_functions[] */
+    PHP_FE_END /* Must be the last line in yasd_functions[] */
 };
 
 // clang-format off
