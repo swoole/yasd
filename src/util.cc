@@ -106,27 +106,28 @@ void Util::printf_info(int color, const char *format, ...) {
     va_start(args, format);
     vsnprintf(yasd_info_buf, sizeof(yasd_info_buf), format, args);
     va_end(args);
+
     switch (color) {
     case yasd::Color::YASD_ECHO_RED:
-        std::cout << "\e[31m" << yasd_info_buf << "\e[0m" << std::endl;
+        std::cout << "\e[31m" << yasd_info_buf << "\e[0m";
         break;
     case yasd::Color::YASD_ECHO_GREEN:
-        std::cout << "\e[32m" << yasd_info_buf << "\e[0m" << std::endl;
+        std::cout << "\e[32m" << yasd_info_buf << "\e[0m";
         break;
     case yasd::Color::YASD_ECHO_YELLOW:
-        std::cout << "\e[33m" << yasd_info_buf << "\e[0m" << std::endl;
+        std::cout << "\e[33m" << yasd_info_buf << "\e[0m";
         break;
     case yasd::Color::YASD_ECHO_BLUE:
-        std::cout << "\e[34m" << yasd_info_buf << "\e[0m" << std::endl;
+        std::cout << "\e[34m" << yasd_info_buf << "\e[0m";
         break;
     case yasd::Color::YASD_ECHO_MAGENTA:
-        std::cout << "\e[35m" << yasd_info_buf << "\e[0m" << std::endl;
+        std::cout << "\e[35m" << yasd_info_buf << "\e[0m";
         break;
     case yasd::Color::YASD_ECHO_CYAN:
-        std::cout << "\e[36m" << yasd_info_buf << "\e[0m" << std::endl;
+        std::cout << "\e[36m" << yasd_info_buf << "\e[0m";
         break;
     case yasd::Color::YASD_ECHO_WHITE:
-        std::cout << "\e[37m" << yasd_info_buf << "\e[0m" << std::endl;
+        std::cout << "\e[37m" << yasd_info_buf << "\e[0m";
         break;
     default:
         break;
@@ -134,7 +135,7 @@ void Util::printf_info(int color, const char *format, ...) {
 }
 
 void Util::show_breakpoint_hit_info() {
-    printf_info(YASD_ECHO_GREEN, "stop at breakponit");
+    printf_info(YASD_ECHO_GREEN, "stop at breakponit ");
 }
 
 const char *Util::get_executed_filename() {
@@ -211,7 +212,7 @@ void Util::reload_cache_breakpoint() {
 
         auto iter = global->breakpoints->find(filename);
 
-        yasd::Util::printf_info(yasd::Color::YASD_ECHO_GREEN, "reload breakpoint at %s:%d", filename.c_str(), lineno);
+        yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "reload breakpoint at %s:%d", filename.c_str(), lineno);
 
         if (iter != global->breakpoints->end()) {
             iter->second.insert(lineno);

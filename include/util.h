@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <iostream>
 #include <utility>
 
 #include "php/main/php.h"
@@ -31,7 +32,15 @@ public:
     static std::vector<std::string> explode(const std::string &str, const std::string &delimiter);
     static HashTable *get_defined_vars();
     static void print_var(std::string var_name);
+
     static void printf_info(int color, const char *format, ...);
+
+    template<typename... Args>
+    static void printfln_info(int color, const char *format, Args... args) {
+        printf_info(color, format, args...);
+        std::cout << std::endl;
+    }
+
     static void show_breakpoint_hit_info();
     static const char *get_executed_filename();
     static int get_executed_file_lineno();

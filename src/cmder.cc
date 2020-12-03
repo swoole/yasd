@@ -74,7 +74,7 @@ int Cmder::parse_breakpoint_cmd() {
         filename = exploded_cmd[1];
         lineno = atoi(exploded_cmd[2].c_str());
     } else {
-        yasd::Util::printf_info(YASD_ECHO_RED, "use set breakpoint cmd error!");
+        yasd::Util::printfln_info(YASD_ECHO_RED, "use set breakpoint cmd error!");
         return RECV_CMD_AGAIN;
     }
 
@@ -90,7 +90,7 @@ int Cmder::parse_breakpoint_cmd() {
 
     yasd::Util::cache_breakpoint(filename, lineno);
 
-    yasd::Util::printf_info(yasd::Color::YASD_ECHO_GREEN, "set breakpoint at %s:%d", filename.c_str(), lineno);
+    yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "set breakpoint at %s:%d", filename.c_str(), lineno);
 
     return RECV_CMD_AGAIN;
 }
@@ -111,7 +111,7 @@ int Cmder::parse_delete_breakpoint_cmd() {
         filename = exploded_cmd[1];
         lineno = atoi(exploded_cmd[2].c_str());
     } else {
-        yasd::Util::printf_info(YASD_ECHO_RED, "use delete breakpoint cmd error!");
+        yasd::Util::printfln_info(YASD_ECHO_RED, "use delete breakpoint cmd error!");
         return RECV_CMD_AGAIN;
     }
 
@@ -122,9 +122,9 @@ int Cmder::parse_delete_breakpoint_cmd() {
         if (iter->second.empty()) {
             global->breakpoints->erase(iter->first);
         }
-        yasd::Util::printf_info(yasd::Color::YASD_ECHO_GREEN, "delete breakpoint at %s:%d", filename.c_str(), lineno);
+        yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "delete breakpoint at %s:%d", filename.c_str(), lineno);
     } else {
-        yasd::Util::printf_info(YASD_ECHO_RED, "breakpoint at %s:%d is not existed!", filename.c_str(), lineno);
+        yasd::Util::printfln_info(YASD_ECHO_RED, "breakpoint at %s:%d is not existed!", filename.c_str(), lineno);
     }
 
     return RECV_CMD_AGAIN;
@@ -132,11 +132,11 @@ int Cmder::parse_delete_breakpoint_cmd() {
 
 int Cmder::parse_info_cmd() {
     if (global->breakpoints->empty()) {
-        yasd::Util::printf_info(YASD_ECHO_RED, "no found breakpoints!");
+        yasd::Util::printfln_info(YASD_ECHO_RED, "no found breakpoints!");
     }
     for (auto i = global->breakpoints->begin(); i != global->breakpoints->end(); i++) {
         for (auto j = i->second.begin(); j != i->second.end(); j++) {
-            yasd::Util::printf_info(yasd::Color::YASD_ECHO_GREEN, "filename: %s:%d", i->first.c_str(), *j);
+            yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "filename: %s:%d", i->first.c_str(), *j);
         }
     }
 
@@ -161,11 +161,11 @@ int Cmder::parse_level_cmd() {
 int Cmder::parse_backtrace_cmd() {
     yasd::Context *context = global->get_current_context();
 
-    yasd::Util::printf_info(
+    yasd::Util::printfln_info(
         YASD_ECHO_GREEN, "%s:%d", yasd::Util::get_executed_filename(), yasd::Util::get_executed_file_lineno());
 
     for (auto iter = context->strace->rbegin(); iter != context->strace->rend(); ++iter) {
-        yasd::Util::printf_info(YASD_ECHO_GREEN, "%s:%d", (*iter)->filename.c_str(), (*iter)->lineno);
+        yasd::Util::printfln_info(YASD_ECHO_GREEN, "%s:%d", (*iter)->filename.c_str(), (*iter)->lineno);
     }
 
     return RECV_CMD_AGAIN;
@@ -192,7 +192,7 @@ int Cmder::parse_continue_cmd() {
 }
 
 int Cmder::parse_quit_cmd() {
-    yasd::Util::printf_info(YASD_ECHO_RED, "quit!");
+    yasd::Util::printfln_info(YASD_ECHO_RED, "quit!");
     exit(255);
 
     return FAILED;
@@ -275,8 +275,8 @@ std::string Cmder::get_full_name(std::string sub_cmd) {
 }
 
 void Cmder::show_welcome_info() {
-    yasd::Util::printf_info(YASD_ECHO_GREEN, "[Welcome to yasd, the Swoole debugger]");
-    yasd::Util::printf_info(YASD_ECHO_GREEN, "[You can set breakpoint now]");
+    yasd::Util::printfln_info(YASD_ECHO_GREEN, "[Welcome to yasd, the Swoole debugger]");
+    yasd::Util::printfln_info(YASD_ECHO_GREEN, "[You can set breakpoint now]");
 }
 
 int Cmder::execute_cmd() {
@@ -286,7 +286,7 @@ int Cmder::execute_cmd() {
 
     if (!global->is_running) {
         if (is_disable_cmd(exploded_cmd[0])) {
-            yasd::Util::printf_info(YASD_ECHO_RED, "program is not running!");
+            yasd::Util::printfln_info(YASD_ECHO_RED, "program is not running!");
             return RECV_CMD_AGAIN;
         }
     }

@@ -89,7 +89,7 @@ PHP_RINIT_FUNCTION(yasd) {
     do {
         cmd = cmder->get_next_cmd();
         if (cmd == "") {
-            yasd::Util::printf_info(yasd::Color::YASD_ECHO_RED, "please input cmd!");
+            yasd::Util::printfln_info(yasd::Color::YASD_ECHO_RED, "please input cmd!");
             continue;
         }
         status = cmder->execute_cmd();
@@ -142,7 +142,7 @@ void hang(const char *filename, int lineno) {
 
         cmd = cmder->get_next_cmd();
         if (cmd == "") {
-            yasd::Util::printf_info(yasd::Color::YASD_ECHO_RED, "please input cmd!");
+            yasd::Util::printfln_info(yasd::Color::YASD_ECHO_RED, "please input cmd!");
             continue;
         }
         status = cmder->execute_cmd();
@@ -166,11 +166,13 @@ ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
     start_lineno = lineno = online->lineno;
 
     if (global->do_step) {
+        yasd::Util::printf_info(yasd::Color::YASD_ECHO_MAGENTA, "stop because of step ");
         return hang(filename, lineno);
     }
 
     if (global->do_next || global->do_finish) {
         if (context->level <= context->next_level) {
+            yasd::Util::printf_info(yasd::Color::YASD_ECHO_MAGENTA, "stop because of next ");
             return hang(filename, lineno);
         }
     }
@@ -188,7 +190,7 @@ ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
             return;
         }
 
-        yasd::Util::show_breakpoint_hit_info();
+        yasd::Util::printf_info(yasd::Color::YASD_ECHO_MAGENTA, "stop because of breakpoint ");
         return hang(filename, lineno);
     }
 }
