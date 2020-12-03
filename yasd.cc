@@ -133,7 +133,7 @@ void hang(const char *filename, int lineno) {
     std::string cmd;
     yasd::SourceReader reader(filename);
 
-    reader.show_contents(lineno, 5, true, true);
+    reader.show_contents(lineno, cmder->get_listsize(), true, true);
 
     do {
         global->do_next = false;

@@ -23,7 +23,8 @@ namespace yasd {
 class Cmder {
   private:
     std::string last_cmd;
-    int last_list_lineno = 1;;
+    int last_list_lineno = 1;
+    int listsize = 10;
     std::vector<std::pair<std::string, std::function<int()>>> handlers;
 
   public:
@@ -52,6 +53,7 @@ class Cmder {
     int parse_quit_cmd();
     int parse_print_cmd();
     int parse_list_cmd();
+    int parse_set_cmd();
 
     int parse_finish_cmd();
 
@@ -63,6 +65,14 @@ class Cmder {
 
     void show_welcome_info();
     void show_breakpoint_hit_info();
+
+    int get_listsize() {
+        return listsize;
+    }
+
+    void set_listsize(int _listsize) {
+        listsize = _listsize;
+    }
 };
 }  // namespace yasd
 

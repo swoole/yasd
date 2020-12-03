@@ -36,15 +36,15 @@ std::map<int, std::string> SourceReader::read_contents(int start, int count, boo
     // int func_line_start = frame->func->op_array.line_start;
     // int func_line_end = frame->func->op_array.line_end;
 
-    int show_line_start = start - count;
-    int show_line_end = start + count;
+    int show_line_start;
+    int show_line_end;
 
     if (show_prev) {
-        show_line_start = start - count;
-        show_line_end = start + count;
+        show_line_start = start - count / 2;
+        show_line_end = start + count / 2;
     } else {
         show_line_start = start;
-        show_line_end = start + 2 * count;
+        show_line_end = start + count;
     }
 
     show_line_start = show_line_start >= 1 ? show_line_start : 1;

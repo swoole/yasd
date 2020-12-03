@@ -217,19 +217,28 @@ int Cmder::parse_list_cmd() {
     // list lineno or list -
     if (exploded_cmd.size() == 2) {
         if (exploded_cmd[1] == "-") {
-            lineno = last_list_lineno - 2 * 5;
+            lineno = last_list_lineno - listsize;
         } else {
             lineno = atoi(exploded_cmd[1].c_str());
-            lineno = last_list_lineno + 2 * 5;
+            lineno = last_list_lineno + listsize;
         }
         last_list_lineno = lineno;
     } else {
         // list
         lineno = last_list_lineno;
-        last_list_lineno = lineno + 2 * 5;
+        last_list_lineno = lineno + listsize;
     }
 
-    reader.show_contents(lineno, 5);
+    reader.show_contents(lineno, cmder->get_listsize());
+    return RECV_CMD_AGAIN;
+}
+
+int Cmder::parse_set_cmd() {
+    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+
+    if (exploded_cmd[1] == "listsize") {
+        listsize = atoi(exploded_cmd[2].c_str());
+    }
     return RECV_CMD_AGAIN;
 }
 
@@ -248,7 +257,8 @@ int Cmder::parse_finish_cmd() {
 bool Cmder::is_disable_cmd(std::string cmd) {
     // the command in the condition is allowed to execute in non-run state
     if (get_full_name(cmd) != "run" && get_full_name(cmd) != "b" && get_full_name(cmd) != "quit" &&
-        get_full_name(cmd) != "info" && get_full_name(cmd) != "delete" && get_full_name(cmd) != "list") {
+        get_full_name(cmd) != "info" && get_full_name(cmd) != "delete" && get_full_name(cmd) != "list" &&
+        get_full_name(cmd) != "set") {
         return true;
     }
 
@@ -303,6 +313,7 @@ void Cmder::register_cmd_handler() {
     handlers.push_back(std::make_pair("print", std::bind(&Cmder::parse_print_cmd, this)));
     handlers.push_back(std::make_pair("list", std::bind(&Cmder::parse_list_cmd, this)));
     handlers.push_back(std::make_pair("finish", std::bind(&Cmder::parse_finish_cmd, this)));
+    handlers.push_back(std::make_pair("set", std::bind(&Cmder::parse_set_cmd, this)));
 }
 
 std::function<int()> Cmder::find_cmd_handler(std::string cmd) {
