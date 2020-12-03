@@ -85,9 +85,7 @@ void Util::print_var(std::string var_name) {
     // print property
     auto exploded_var_name = yasd::Util::explode(var_name, "->");
     if (exploded_var_name.size() == 2) {
-        zval *property = yasd_zend_read_property(
-            Z_OBJCE_P(ZEND_THIS), ZEND_THIS, exploded_var_name[1].c_str(), exploded_var_name[1].length(), 0);
-        php_var_dump(property, 1);
+        print_property(exploded_var_name[0], exploded_var_name[1]);
         return;
     }
 
@@ -95,10 +93,41 @@ void Util::print_var(std::string var_name) {
 
     var = zend_hash_str_find(defined_vars, var_name.c_str(), var_name.length());
     if (!var) {
-        std::cout << "not found variable $" << var_name << std::endl;
+        yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "not found variable $%s", var_name.c_str());
     } else {
         php_var_dump(var, 1);
     }
+}
+
+void Util::print_property(std::string obj_name, std::string property_name) {
+    zval *obj;
+    zval *property;
+    HashTable *defined_vars;
+    zend_execute_data *execute_data = EG(current_execute_data);
+
+    if (obj_name == "this") {
+        property =
+            yasd_zend_read_property(Z_OBJCE_P(ZEND_THIS), ZEND_THIS, property_name.c_str(), property_name.length(), 1);
+        php_var_dump(property, 1);
+    } else {
+        defined_vars = get_defined_vars();
+        obj = zend_hash_str_find(defined_vars, obj_name.c_str(), obj_name.length());
+        if (!obj) {
+            yasd::Util::printfln_info(yasd::Color::YASD_ECHO_RED, "undefined variable %s", obj_name.c_str());
+            return;
+        }
+        property = yasd_zend_read_property(Z_OBJCE_P(obj), obj, property_name.c_str(), property_name.length(), 1);
+        if (!property) {
+            yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN,
+                                      "undefined property %s::$%s",
+                                      ZSTR_VAL(Z_OBJCE_P(obj)->name),
+                                      property_name.c_str());
+            return;
+        }
+        php_var_dump(property, 1);
+    }
+
+    return;
 }
 
 void Util::printf_info(int color, const char *format, ...) {

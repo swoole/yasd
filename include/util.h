@@ -24,18 +24,17 @@
 
 #include "php/main/php.h"
 
-namespace yasd
-{
-class Util
-{
-public:
+namespace yasd {
+class Util {
+  public:
     static std::vector<std::string> explode(const std::string &str, const std::string &delimiter);
     static HashTable *get_defined_vars();
     static void print_var(std::string var_name);
+    static void print_property(std::string obj_name, std::string property_name);
 
     static void printf_info(int color, const char *format, ...);
 
-    template<typename... Args>
+    template <typename... Args>
     static void printfln_info(int color, const char *format, Args... args) {
         printf_info(color, format, args...);
         std::cout << std::endl;
@@ -53,4 +52,4 @@ public:
     static std::string get_breakpoint_cache_filename();
     static void cache_breakpoint(std::string filename, int lineno);
 };
-} // namespace yasd
+}  // namespace yasd
