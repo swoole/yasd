@@ -1,3 +1,5 @@
+English | [中文](./README-CN.md)
+
 # yasd
 
 Yet Another Swoole Debugger.
@@ -38,7 +40,7 @@ php -e test.php
 ### list source
 
 ```bash
-li
+l
 ```
 
 ### breakpoint
@@ -48,6 +50,14 @@ b absolute-file-path lineno
 ```
 
 This will also save the breakpoint information in the cache file -- `.breakpoints_file.bp`
+
+If the cache file exists, the breakpoints in the file are automatically loaded when debug is started.
+
+### Delete breakpoints
+
+```bash
+d absolute-file-path lineno
+```
 
 ### run
 
@@ -108,5 +118,5 @@ p
 ### level
 
 ```bash
-l
+le
 ```
