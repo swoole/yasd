@@ -27,4 +27,4 @@ header.php
 composer.json
 composer.lock
 vendor
-.breakpoints_file.bp
+.breakpoints_file.*
