@@ -44,6 +44,9 @@ class Context {
     int64_t next_level = 0;
 
     std::vector<StackFrame *> *strace;
+
+    // variable name, zval *
+    std::map<std::string, zval *> watchpoints;
     Context();
     ~Context();
 };

@@ -165,6 +165,11 @@ ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
     filename = yasd::Util::get_executed_filename();
     start_lineno = lineno = online->lineno;
 
+    if (yasd::Util::is_hit_watch_point()) {
+        yasd::Util::printf_info(yasd::Color::YASD_ECHO_MAGENTA, "stop because of watch point ");
+        return hang(filename, lineno);
+    }
+
     if (global->do_step) {
         yasd::Util::printf_info(yasd::Color::YASD_ECHO_MAGENTA, "stop because of step ");
         return hang(filename, lineno);

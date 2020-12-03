@@ -71,6 +71,17 @@ HashTable *Util::get_defined_vars() {
     return symbol_table;
 }
 
+zval *Util::find_variable(std::string var_name) {
+    zval *var;
+    HashTable *defined_vars;
+
+    defined_vars = get_defined_vars();
+
+    var = zend_hash_str_find(defined_vars, var_name.c_str(), var_name.length());
+
+    return var;
+}
+
 void Util::print_var(std::string var_name) {
     zval *var;
     HashTable *defined_vars;
@@ -272,4 +283,29 @@ void Util::cache_breakpoint(std::string filename, int lineno) {
     file.close();
 }
 
+bool Util::is_variable_equal(zval *op1, zval *op2) {
+    zval result;
+
+    is_equal_function(&result, op1, op2);
+    return Z_LVAL(result) == 0;
+}
+
+bool Util::is_hit_watch_point() {
+    yasd::Context *context = global->get_current_context();
+
+    for (auto &watchpoint : context->watchpoints) {
+        zval *new_var = yasd::Util::find_variable(watchpoint.first);
+        if (new_var == nullptr) {
+            return false;
+        }
+        zval *old_var = watchpoint.second;
+
+        if (!yasd::Util::is_variable_equal(new_var, old_var)) {
+            watchpoint.second = new_var;
+            return true;
+        }
+    }
+
+    return false;
+}
 }  // namespace yasd

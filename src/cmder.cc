@@ -242,6 +242,26 @@ int Cmder::parse_set_cmd() {
     return RECV_CMD_AGAIN;
 }
 
+int Cmder::parse_watch_cmd() {
+    yasd::Context *context = global->get_current_context();
+
+    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+    if (exploded_cmd.size() < 2) {
+        yasd::Util::printfln_info(yasd::Color::YASD_ECHO_RED, "you should set watch point");
+        return RECV_CMD_AGAIN;
+    }
+    std::string var_name = exploded_cmd[1];
+
+    zval *var = yasd::Util::find_variable(var_name);
+
+    if (!var) {
+        var = &EG(uninitialized_zval);
+    }
+
+    context->watchpoints.insert(std::make_pair(var_name, var));
+    return RECV_CMD_AGAIN;
+}
+
 int Cmder::parse_finish_cmd() {
     yasd::Context *context = global->get_current_context();
     // zend_execute_data *frame = EG(current_execute_data);
@@ -314,6 +334,7 @@ void Cmder::register_cmd_handler() {
     handlers.push_back(std::make_pair("finish", std::bind(&Cmder::parse_finish_cmd, this)));
     handlers.push_back(std::make_pair("set", std::bind(&Cmder::parse_set_cmd, this)));
     handlers.push_back(std::make_pair("level", std::bind(&Cmder::parse_level_cmd, this)));
+    handlers.push_back(std::make_pair("watch", std::bind(&Cmder::parse_watch_cmd, this)));
 }
 
 std::function<int()> Cmder::find_cmd_handler(std::string cmd) {
