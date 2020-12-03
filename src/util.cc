@@ -230,7 +230,7 @@ void Util::clear_breakpoint_cache_file() {
 }
 
 std::string Util::get_breakpoint_cache_filename() {
-    return std::string(YASD_G(breakpoints_file)) + ".bp";
+    return std::string(YASD_G(breakpoints_file));
 }
 
 void Util::cache_breakpoint(std::string filename, int lineno) {
