@@ -48,7 +48,7 @@ l
 ### 设置断点
 
 ```bash
-b absolute-file-path lineno
+b 文件的绝对路径 需要断点的行号
 ```
 
 默认会将断点信息保存在缓存文件 `.breakpoints_file.log` 中；
@@ -64,10 +64,10 @@ yasd.breakpoints_file=yasd.log
 ### 删除断点 delete
 
 ```bash
-d absolute-file-path lineno
+d 文件的绝对路径 断点所在的行号
 ```
 
-如果设置或者删除断点时，不指定`absolute-file-path`文件绝对路径，表示在当前文件断点。
+如果设置或者删除断点时，不指定文件绝对路径，默认是当前停留的文件。
 
 ### 运行 run
 
@@ -75,19 +75,23 @@ d absolute-file-path lineno
 r
 ```
 
-### 下一步 next
+### 下一步 step over
 
 ```bash
 n
 ```
 
-### 进入 step
+遇到函数的时候，不会进入函数内部
+
+### 下一步 step into
 
 ```bash
 s
 ```
 
-### 进入后退出 finish
+遇到函数的时候，会进入函数内部
+
+### 跳出当前函数 finish
 
 ```bash
 f
@@ -123,7 +127,15 @@ q
 p
 ```
 
-### 查看所在当前协程 level
+变量名字不需要带`$`，例如:
+
+```bash
+p a
+p this
+p this->prop
+```
+
+### 查看当前所在的协程 level
 
 ```bash
 le

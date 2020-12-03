@@ -37,11 +37,13 @@ All command supports fuzzy matching of priorities.
 php -e test.php
 ```
 
-### list source
+### list
 
 ```bash
 l
 ```
+
+list source code
 
 ### breakpoint
 
@@ -121,6 +123,14 @@ q
 
 ```bash
 p
+```
+
+variable name do not need to have `$`, for example:
+
+```bash
+p a
+p this
+p this->prop
 ```
 
 ### level
