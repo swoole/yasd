@@ -214,12 +214,22 @@ int Cmder::parse_list_cmd() {
 
     auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
 
+    // list lineno or list -
     if (exploded_cmd.size() == 2) {
-        lineno = atoi(exploded_cmd[1].c_str());
+        if (exploded_cmd[1] == "-") {
+            lineno = last_list_lineno - 2 * 5;
+        } else {
+            lineno = atoi(exploded_cmd[1].c_str());
+            lineno = last_list_lineno + 2 * 5;
+        }
+        last_list_lineno = lineno;
+    } else {
+        // list
+        lineno = last_list_lineno;
+        last_list_lineno = lineno + 2 * 5;
     }
 
     reader.show_contents(lineno, 5);
-    last_list_lineno = lineno + 2 * 5 + 1;
     return RECV_CMD_AGAIN;
 }
 
