@@ -306,14 +306,14 @@ void Cmder::register_cmd_handler() {
     handlers.push_back(std::make_pair("delete", std::bind(&Cmder::parse_delete_breakpoint_cmd, this)));
     handlers.push_back(std::make_pair("info", std::bind(&Cmder::parse_info_cmd, this)));
     handlers.push_back(std::make_pair("step", std::bind(&Cmder::parse_step_cmd, this)));
-    handlers.push_back(std::make_pair("level", std::bind(&Cmder::parse_level_cmd, this)));
+    handlers.push_back(std::make_pair("list", std::bind(&Cmder::parse_list_cmd, this)));
     handlers.push_back(std::make_pair("next", std::bind(&Cmder::parse_next_cmd, this)));
     handlers.push_back(std::make_pair("continue", std::bind(&Cmder::parse_continue_cmd, this)));
     handlers.push_back(std::make_pair("quit", std::bind(&Cmder::parse_quit_cmd, this)));
     handlers.push_back(std::make_pair("print", std::bind(&Cmder::parse_print_cmd, this)));
-    handlers.push_back(std::make_pair("list", std::bind(&Cmder::parse_list_cmd, this)));
     handlers.push_back(std::make_pair("finish", std::bind(&Cmder::parse_finish_cmd, this)));
     handlers.push_back(std::make_pair("set", std::bind(&Cmder::parse_set_cmd, this)));
+    handlers.push_back(std::make_pair("level", std::bind(&Cmder::parse_level_cmd, this)));
 }
 
 std::function<int()> Cmder::find_cmd_handler(std::string cmd) {
