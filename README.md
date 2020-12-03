@@ -1,3 +1,5 @@
+English | [中文](./README-CN.md)
+
 # yasd
 
 Yet Another Swoole Debugger.
@@ -35,11 +37,13 @@ All command supports fuzzy matching of priorities.
 php -e test.php
 ```
 
-### list source
+### list
 
 ```bash
-li
+l
 ```
+
+list source code
 
 ### breakpoint
 
@@ -48,6 +52,22 @@ b absolute-file-path lineno
 ```
 
 This will also save the breakpoint information in the cache file -- `.breakpoints_file.log`
+
+You can change this file name by the ini file, e.g.
+
+```ini
+yasd.breakpoints_file="yasd.log"
+```
+
+If the cache file exists, the breakpoints in the file are automatically loaded when debug is started.
+
+### Delete breakpoints
+
+```bash
+d absolute-file-path lineno
+```
+
+If a breakpoint is set or deleted without specifying `absolute-file-path`, It will set breakpoint in the current file.
 
 ### run
 
@@ -105,8 +125,16 @@ q
 p
 ```
 
+variable name do not need to have `$`, for example:
+
+```bash
+p a
+p this
+p this->prop
+```
+
 ### level
 
 ```bash
-l
+le
 ```
