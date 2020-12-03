@@ -65,6 +65,8 @@ If the cache file exists, the breakpoints in the file are automatically loaded w
 d absolute-file-path lineno
 ```
 
+If a breakpoint is set or deleted without specifying `absolute-file-path`, It will set breakpoint in the current file.
+
 ### run
 
 ```bash

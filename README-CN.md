@@ -51,7 +51,7 @@ l
 b absolute-file-path lineno
 ```
 
-这也会把断点信息保存在缓存文件 `.breakpoints_file.log` 中
+默认会将断点信息保存在缓存文件 `.breakpoints_file.log` 中；
 
 你也可以通过修改 php.ini 指定此文件名，如：
 
@@ -59,13 +59,15 @@ b absolute-file-path lineno
 yasd.breakpoints_file=yasd.log
 ```
 
-如果缓存文件存在，当启动调试时，文件中的断点信息会被自动加载
+如果缓存文件存在，当启动调试时，文件中的断点信息会被自动加载；
 
 ### 删除断点 delete
 
 ```bash
 d absolute-file-path lineno
 ```
+
+如果设置或者删除断点时，不指定`absolute-file-path`文件绝对路径，表示在当前文件断点。
 
 ### 运行 run
 
