@@ -27,7 +27,7 @@ SourceReader::SourceReader(const char *_filename) {
 }
 SourceReader::~SourceReader() {}
 
-std::map<int, std::string> SourceReader::read_contents(int start, int count) {
+std::map<int, std::string> SourceReader::read_contents(int start, int count, bool show_prev) {
     int i = 0;
     std::string content;
     std::map<int, std::string> contents;
@@ -38,6 +38,16 @@ std::map<int, std::string> SourceReader::read_contents(int start, int count) {
 
     int show_line_start = start - count;
     int show_line_end = start + count;
+
+    if (show_prev) {
+        show_line_start = start - count;
+        show_line_end = start + count;
+    } else {
+        show_line_start = start;
+        show_line_end = start + 2 * count;
+    }
+
+    show_line_start = show_line_start >= 1 ? show_line_start : 1;
 
     while (i < show_line_start && getline(file, content)) {
         i++;
@@ -53,11 +63,11 @@ std::map<int, std::string> SourceReader::read_contents(int start, int count) {
     return contents;
 }
 
-void SourceReader::show_contents(int start_lineno) {
-    std::map<int, std::string> contents = read_contents(start_lineno, 5);
+void SourceReader::show_contents(int start_lineno, int line_num, bool point_lineno, bool show_prev) {
+    std::map<int, std::string> contents = read_contents(start_lineno, line_num, show_prev);
     std::cout << "\n" << filename << std::endl;
     for (const auto &content : contents) {
-        if (start_lineno == content.first) {
+        if (point_lineno && (start_lineno == content.first)) {
             yasd::Util::printf_info(YASD_ECHO_GREEN, "%d-->\t%s", content.first, content.second.c_str());
         } else {
             std::cout << content.first << "\t" << content.second << std::endl;

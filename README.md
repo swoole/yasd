@@ -27,10 +27,18 @@ see the extension info:
 php --ri yasd
 ```
 
+All command supports fuzzy matching of priorities.
+
 ### start debug
 
 ```bash
 php -e test.php
+```
+
+### list source
+
+```bash
+li
 ```
 
 ### breakpoint

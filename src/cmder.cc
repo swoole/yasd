@@ -18,6 +18,7 @@
 #include "include/cmder.h"
 #include "include/util.h"
 #include "include/global.h"
+#include "include/source_reader.h"
 
 #include "php/main/php.h"
 #include "php/Zend/zend_builtin_functions.h"
@@ -206,6 +207,22 @@ int Cmder::parse_print_cmd() {
     return RECV_CMD_AGAIN;
 }
 
+int Cmder::parse_list_cmd() {
+    int lineno = last_list_lineno;
+    const char *filename = yasd::Util::get_executed_filename();
+    yasd::SourceReader reader(filename);
+
+    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+
+    if (exploded_cmd.size() == 2) {
+        lineno = atoi(exploded_cmd[1].c_str());
+    }
+
+    reader.show_contents(lineno, 5);
+    last_list_lineno = lineno + 2 * 5 + 1;
+    return RECV_CMD_AGAIN;
+}
+
 int Cmder::parse_finish_cmd() {
     yasd::Context *context = global->get_current_context();
     // zend_execute_data *frame = EG(current_execute_data);
@@ -221,7 +238,7 @@ int Cmder::parse_finish_cmd() {
 bool Cmder::is_disable_cmd(std::string cmd) {
     // the command in the condition is allowed to execute in non-run state
     if (get_full_name(cmd) != "run" && get_full_name(cmd) != "b" && get_full_name(cmd) != "quit" &&
-        get_full_name(cmd) != "info" && get_full_name(cmd) != "delete") {
+        get_full_name(cmd) != "info" && get_full_name(cmd) != "delete" && get_full_name(cmd) != "list") {
         return true;
     }
 
@@ -274,6 +291,7 @@ void Cmder::register_cmd_handler() {
     handlers.push_back(std::make_pair("continue", std::bind(&Cmder::parse_continue_cmd, this)));
     handlers.push_back(std::make_pair("quit", std::bind(&Cmder::parse_quit_cmd, this)));
     handlers.push_back(std::make_pair("print", std::bind(&Cmder::parse_print_cmd, this)));
+    handlers.push_back(std::make_pair("list", std::bind(&Cmder::parse_list_cmd, this)));
     handlers.push_back(std::make_pair("finish", std::bind(&Cmder::parse_finish_cmd, this)));
 }
 
