@@ -49,7 +49,13 @@ l
 b absolute-file-path lineno
 ```
 
-This will also save the breakpoint information in the cache file -- `.breakpoints_file.bp`
+This will also save the breakpoint information in the cache file -- `.breakpoints_file.log`
+
+You can change this file name by the ini file, e.g.
+
+```ini
+yasd.breakpoints_file="yasd.log"
+```
 
 If the cache file exists, the breakpoints in the file are automatically loaded when debug is started.
 
