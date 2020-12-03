@@ -25,10 +25,10 @@ class SourceReader {
     const char *filename;
     std::fstream file;
 
-    std::map<int, std::string> read_contents(int start, int count);
+    std::map<int, std::string> read_contents(int start, int count, bool show_prev = true);
 
   public:
-    void show_contents(int start_lineno);
+    void show_contents(int start_lineno, int line_num, bool point_lineno = false, bool show_prev = false);
     explicit SourceReader(const char *_filename);
     ~SourceReader();
 };

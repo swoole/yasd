@@ -143,13 +143,16 @@ const char *Util::get_executed_filename() {
     filename = zend_get_executed_filename_ex();
 
     if (UNEXPECTED(filename == nullptr)) {
-        return "";
+        return global->entry_file;
     }
 
     return ZSTR_VAL(zend_string_copy(filename));
 }
 
 int Util::get_executed_file_lineno() {
+    if (!EG(current_execute_data)) {
+        return 0;
+    }
     return EG(current_execute_data)->opline->lineno;
 }
 
