@@ -20,6 +20,15 @@ yasd.la
 autom4te.cache
 build
 modules
+Makefile.global
+acinclude.m4
+aclocal.m4
+config.guess
+config.sub
+install-sh
+ltmain.sh
+missing
+mkinstalldirs
 
 # debug
 debug
