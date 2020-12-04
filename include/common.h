@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "php/main/php.h"
+#include "main/php.h"
 
 #define BEGIN_EXTERN_C() extern "C" {
 #define END_EXTERN_C() }

@@ -15,7 +15,7 @@
 */
 #pragma once
 
-#include "php/main/php.h"
+#include "main/php.h"
 
 void yasd_rinit(int module_number);
 void yasd_execute_ex(zend_execute_data *execute_data);
