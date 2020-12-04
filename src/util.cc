@@ -64,10 +64,6 @@ HashTable *Util::get_defined_vars() {
 
     symbol_table = zend_rebuild_symbol_table();
 
-    if (EXPECTED(symbol_table != nullptr)) {
-        symbol_table = zend_array_dup(symbol_table);
-    }
-
     return symbol_table;
 }
 
@@ -79,12 +75,26 @@ zval *Util::find_variable(std::string var_name) {
 
     var = zend_hash_str_find(defined_vars, var_name.c_str(), var_name.length());
 
+    // not define variable
+    if (!var) {
+        return nullptr;
+    }
+
+    // defined variables
+    if (Z_TYPE_P(var) == IS_INDIRECT) {
+        var = Z_INDIRECT_P(var);
+    }
+
+    // the statement that defines the variable has not yet been executed
+    if (Z_TYPE_P(var) == IS_UNDEF) {
+        return nullptr;
+    }
+
     return var;
 }
 
 void Util::print_var(std::string var_name) {
     zval *var;
-    HashTable *defined_vars;
     zend_execute_data *execute_data = EG(current_execute_data);
 
     // print $this
@@ -100,9 +110,8 @@ void Util::print_var(std::string var_name) {
         return;
     }
 
-    defined_vars = get_defined_vars();
+    var = find_variable(var_name);
 
-    var = zend_hash_str_find(defined_vars, var_name.c_str(), var_name.length());
     if (!var) {
         yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "not found variable $%s", var_name.c_str());
     } else {
@@ -113,7 +122,6 @@ void Util::print_var(std::string var_name) {
 void Util::print_property(std::string obj_name, std::string property_name) {
     zval *obj;
     zval *property;
-    HashTable *defined_vars;
     zend_execute_data *execute_data = EG(current_execute_data);
 
     if (obj_name == "this") {
@@ -121,8 +129,7 @@ void Util::print_property(std::string obj_name, std::string property_name) {
             yasd_zend_read_property(Z_OBJCE_P(ZEND_THIS), ZEND_THIS, property_name.c_str(), property_name.length(), 1);
         php_var_dump(property, 1);
     } else {
-        defined_vars = get_defined_vars();
-        obj = zend_hash_str_find(defined_vars, obj_name.c_str(), obj_name.length());
+        obj = find_variable(obj_name);
         if (!obj) {
             yasd::Util::printfln_info(yasd::Color::YASD_ECHO_RED, "undefined variable %s", obj_name.c_str());
             return;
@@ -304,10 +311,10 @@ bool Util::is_hit_watch_point() {
         if (new_var == nullptr) {
             return false;
         }
-        zval *old_var = watchpoint.second;
+        zval *old_var = &watchpoint.second;
 
         if (!yasd::Util::is_variable_equal(new_var, old_var)) {
-            watchpoint.second = new_var;
+            watchpoint.second = *new_var;
             return true;
         }
     }

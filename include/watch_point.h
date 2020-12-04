@@ -24,7 +24,7 @@
 #include "main/php.h"
 
 // variable name, zval *
-#define WATCHPOINT std::map<std::string, zval *>
+#define WATCHPOINT std::map<std::string, zval>
 
 namespace yasd {
 
