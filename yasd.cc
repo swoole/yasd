@@ -25,9 +25,9 @@
 #include <iostream>
 #include <cstdlib>
 
-#include "php/main/php.h"
-#include "php/main/SAPI.h"
-#include "php/Zend/zend_extensions.h"
+#include "main/php.h"
+#include "main/SAPI.h"
+#include "Zend/zend_extensions.h"
 #include "ext/standard/info.h"
 #include "./php_yasd.h"
 

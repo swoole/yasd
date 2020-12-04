@@ -21,7 +21,7 @@
 #include <vector>
 #include <set>
 
-#include "php/main/php.h"
+#include "main/php.h"
 
 // variable name, zval *
 #define WATCHPOINT std::map<std::string, zval *>
