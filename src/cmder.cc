@@ -243,7 +243,7 @@ int Cmder::parse_set_cmd() {
 }
 
 int Cmder::parse_watch_cmd() {
-    yasd::Context *context = global->get_current_context();
+    zend_function *func = EG(current_execute_data)->func;
 
     auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
     if (exploded_cmd.size() < 2) {
@@ -258,7 +258,17 @@ int Cmder::parse_watch_cmd() {
         var = &EG(uninitialized_zval);
     }
 
-    context->watchpoints.insert(std::make_pair(var_name, var));
+    auto iter = global->watchPoints.var_watchpoint.find(func);
+    if (iter == global->watchPoints.var_watchpoint.end()) {
+        WATCHPOINT *watchpoint = new WATCHPOINT();
+        watchpoint->insert(std::make_pair(var_name, var));
+        global->watchPoints.var_watchpoint.insert(std::make_pair(func, watchpoint));
+    } else {
+        iter->second->insert(std::make_pair(var_name, var));
+    }
+
+    yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "watching variable %s", var_name.c_str());
+
     return RECV_CMD_AGAIN;
 }
 

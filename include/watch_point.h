@@ -15,36 +15,25 @@
 */
 #pragma once
 
-#include "include/context.h"
-#include "include/redirect_file_to_cin.h"
-#include "include/watch_point.h"
 
 #include <map>
+#include <string>
+#include <vector>
+#include <set>
+
+#include "php/main/php.h"
+
+// variable name, zval *
+#define WATCHPOINT std::map<std::string, zval *>
 
 namespace yasd {
-class Global {
+
+class WatchPoint {
   public:
-    yasd::RedirectFileToCin *redirector = nullptr;
-    bool is_running = false;
-    bool do_step = false;
-    bool do_next = false;
-    bool do_finish = false;
+    // variable name, zval *
+    std::map<zend_function *, WATCHPOINT *> var_watchpoint;
 
-    char *entry_file = nullptr;
-
-    std::map<int, Context *> *contexts;
-
-    // filename, [lineno]
-    std::map<BREAKPOINT> *breakpoints;
-
-    yasd::WatchPoint watchPoints;
-
-    Global(/* args */);
-    ~Global();
-
-    Context *get_current_context();
+    WatchPoint() {}
+    ~WatchPoint() {}
 };
 }  // namespace yasd
-
-extern yasd::Global *global;
-extern zend_function *get_cid_function;

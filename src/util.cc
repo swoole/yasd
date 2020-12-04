@@ -291,9 +291,15 @@ bool Util::is_variable_equal(zval *op1, zval *op2) {
 }
 
 bool Util::is_hit_watch_point() {
-    yasd::Context *context = global->get_current_context();
+    zend_function *func = EG(current_execute_data)->func;
 
-    for (auto &watchpoint : context->watchpoints) {
+    auto var_watchpoint = global->watchPoints.var_watchpoint.find(func);
+
+    if (var_watchpoint == global->watchPoints.var_watchpoint.end()) {
+        return false;
+    }
+
+    for (auto &&watchpoint : *(var_watchpoint->second)) {
         zval *new_var = yasd::Util::find_variable(watchpoint.first);
         if (new_var == nullptr) {
             return false;

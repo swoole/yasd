@@ -45,8 +45,6 @@ class Context {
 
     std::vector<StackFrame *> *strace;
 
-    // variable name, zval *
-    std::map<std::string, zval *> watchpoints;
     Context();
     ~Context();
 };
