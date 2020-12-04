@@ -20,11 +20,11 @@
 #include "include/global.h"
 #include "include/source_reader.h"
 
-#include "php/main/php.h"
-#include "php/Zend/zend_builtin_functions.h"
+#include "main/php.h"
+#include "Zend/zend_builtin_functions.h"
 
 BEGIN_EXTERN_C()
-#include "php/ext/standard/php_var.h"
+#include "ext/standard/php_var.h"
 END_EXTERN_C()
 
 #include <iostream>

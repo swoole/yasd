@@ -15,36 +15,25 @@
 */
 #pragma once
 
-#include "main/php.h"
 
 #include <map>
 #include <string>
 #include <vector>
 #include <set>
 
-#define BREAKPOINT std::string, std::set<int>
+#include "main/php.h"
+
+// variable name, zval *
+#define WATCHPOINT std::map<std::string, zval *>
 
 namespace yasd {
 
-class StackFrame {
+class WatchPoint {
   public:
-    std::string filename;
-    std::string function_name;
-    int level;
-    int lineno;
+    // variable name, zval *
+    std::map<zend_function *, WATCHPOINT *> var_watchpoint;
 
-    StackFrame();
-    ~StackFrame();
-};
-
-class Context {
-  public:
-    int64_t cid;
-    int64_t level = 0;
-    int64_t next_level = 0;
-
-    std::vector<StackFrame *> *strace;
-    Context();
-    ~Context();
+    WatchPoint() {}
+    ~WatchPoint() {}
 };
 }  // namespace yasd

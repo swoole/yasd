@@ -22,7 +22,7 @@
 #include <iostream>
 #include <utility>
 
-#include "php/main/php.h"
+#include "main/php.h"
 
 namespace yasd {
 class Util {

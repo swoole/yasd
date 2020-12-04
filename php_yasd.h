@@ -17,7 +17,7 @@
 #ifndef PHP_YASD_H_
 #define PHP_YASD_H_
 
-#include "php/main/php.h"
+#include "main/php.h"
 
 extern zend_module_entry yasd_module_entry;
 #define phpext_yasd_ptr &yasd_module_entry

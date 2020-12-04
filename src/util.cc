@@ -18,7 +18,7 @@
 #include "include/global.h"
 
 BEGIN_EXTERN_C()
-#include "php/ext/standard/php_var.h"
+#include "ext/standard/php_var.h"
 END_EXTERN_C()
 
 #include "./php_yasd.h"
