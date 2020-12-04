@@ -3,7 +3,7 @@ name: ext-yasd
 on: [push, pull_request]
 
 jobs:
-  build-ubuntu-latest:
+  build-yasd:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -28,5 +28,5 @@ jobs:
         pwd
         echo "`git log -20 --pretty --oneline`"
         echo "`git log -10 --stat --pretty --oneline`"
-    - name: build
+    - name: Build extension
       run: phpize && ./configure && make clean && make -j$(sysctl -n hw.ncpu) && sudo make install
