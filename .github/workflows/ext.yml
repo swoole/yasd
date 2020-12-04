@@ -11,15 +11,8 @@ jobs:
         php: [7.2, 7.3, 7.4, 8.0, 8.1]
     steps:
     - uses: actions/checkout@v1
-    - name: phpize
-      run: phpize
-    - name: build1
-      run: |
-        ./configure
-        make clean
-        make -j$(sysctl -n hw.ncpu)
-        sudo make install
-        php -d zend_extension=yasd.so --ri yasd
+    - name: build
+      run: phpize && ./configure && make clean && make -j$(sysctl -n hw.ncpu) && sudo make install && php -d zend_extension=yasd.so --ri yasd
 
   build-ubuntu-old:
     runs-on: ubuntu-16.04
@@ -29,15 +22,8 @@ jobs:
         php: [7.2, 7.3, 7.4, 8.0, 8.1]
     steps:
     - uses: actions/checkout@v1
-    - name: phpize
-      run: phpize
-    - name: build1
-      run: |
-        ./configure
-        make clean
-        make -j$(sysctl -n hw.ncpu)
-        sudo make install
-        php -d zend_extension=yasd.so --ri yasd
+    - name: build
+      run: phpize && ./configure && make clean && make -j$(sysctl -n hw.ncpu) && sudo make install && php -d zend_extension=yasd.so --ri yasd
 
   build-macos-latest:
     runs-on: macos-latest
@@ -47,12 +33,5 @@ jobs:
         php: [7.2, 7.3, 7.4, 8.0, 8.1]
     steps:
     - uses: actions/checkout@v1
-    - name: phpize
-      run: phpize
-    - name: build1
-      run: |
-        ./configure
-        make clean
-        make -j$(sysctl -n hw.ncpu)
-        sudo make install
-        php -d zend_extension=yasd.so --ri yasd
+    - name: build
+      run: phpize && ./configure && make clean && make -j$(sysctl -n hw.ncpu) && sudo make install && php -d zend_extension=yasd.so --ri yasd
