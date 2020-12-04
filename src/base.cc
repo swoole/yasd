@@ -49,14 +49,37 @@ void drop_prev_stack_frame(yasd::StackFrame *frame) {
     delete frame;
 }
 
+void clear_watch_point(zend_execute_data *execute_data) {
+    zend_function *func = execute_data->func;
+
+    auto var_watchpoint = global->watchPoints.var_watchpoint.find(func);
+
+    if (var_watchpoint == global->watchPoints.var_watchpoint.end()) {
+        return;
+    }
+
+    var_watchpoint->second->begin();
+
+    auto iter = var_watchpoint->second->begin();
+    while (iter != var_watchpoint->second->end()) {
+        zval_dtor(&iter->second);
+        var_watchpoint->second->erase(iter++);
+    }
+    var_watchpoint->second->clear();
+}
+
 void yasd_execute_ex(zend_execute_data *execute_data) {
     yasd::Context *context = global->get_current_context();
 
     context->level++;
     yasd::StackFrame *frame = save_prev_stack_frame(execute_data);
     old_execute_ex(execute_data);
+    // reduce the function call trace
     drop_prev_stack_frame(frame);
+    // reduce the level of function call
     context->level--;
+    // clear watch point
+    clear_watch_point(execute_data);
 }
 
 void register_get_cid_function() {

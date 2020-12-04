@@ -255,7 +255,9 @@ int Cmder::parse_watch_cmd() {
     zval *var = yasd::Util::find_variable(var_name);
 
     if (!var) {
-        var = &EG(uninitialized_zval);
+        zval tmp;
+        var = &tmp;
+        ZVAL_UNDEF(var);
     }
 
     auto iter = global->watchPoints.var_watchpoint.find(func);

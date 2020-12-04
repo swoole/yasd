@@ -309,7 +309,9 @@ bool Util::is_hit_watch_point() {
     for (auto &&watchpoint : *(var_watchpoint->second)) {
         zval *new_var = yasd::Util::find_variable(watchpoint.first);
         if (new_var == nullptr) {
-            return false;
+            zval tmp;
+            new_var = &tmp;
+            ZVAL_UNDEF(new_var);
         }
         zval *old_var = &watchpoint.second;
 
