@@ -11,6 +11,22 @@ jobs:
         php: [7.2, 7.3, 7.4, 8.0, 8.1]
     steps:
     - uses: actions/checkout@v1
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: "${{ matrix.php }}"
+    - name: Show machine information
+      run: |
+        date
+        env
+        uname -a
+        ulimit -a
+        php -v
+        php --ini
+        ls -al
+        pwd
+        echo "`git log -20 --pretty --oneline`"
+        echo "`git log -10 --stat --pretty --oneline`"
     - name: build
       run: phpize && ./configure && make clean && make -j$(sysctl -n hw.ncpu) && sudo make install
 
@@ -22,6 +38,22 @@ jobs:
         php: [7.2, 7.3, 7.4, 8.0, 8.1]
     steps:
     - uses: actions/checkout@v1
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: "${{ matrix.php }}"
+    - name: Show machine information
+      run: |
+        date
+        env
+        uname -a
+        ulimit -a
+        php -v
+        php --ini
+        ls -al
+        pwd
+        echo "`git log -20 --pretty --oneline`"
+        echo "`git log -10 --stat --pretty --oneline`"
     - name: build
       run: phpize && ./configure && make clean && make -j$(sysctl -n hw.ncpu) && sudo make install
   
@@ -33,6 +65,22 @@ jobs:
         php: [7.2, 7.3, 7.4, 8.0, 8.1]
     steps:
     - uses: actions/checkout@v1
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: "${{ matrix.php }}"
+    - name: Show machine information
+      run: |
+        date
+        env
+        uname -a
+        ulimit -a
+        php -v
+        php --ini
+        ls -al
+        pwd
+        echo "`git log -20 --pretty --oneline`"
+        echo "`git log -10 --stat --pretty --oneline`"
     - name: build
       run: phpize && ./configure && make clean && make -j$(sysctl -n hw.ncpu) && sudo make install
 
@@ -44,5 +92,21 @@ jobs:
         php: [7.2, 7.3, 7.4, 8.0, 8.1]
     steps:
     - uses: actions/checkout@v1
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: "${{ matrix.php }}"
+    - name: Show machine information
+      run: |
+        date
+        env
+        uname -a
+        ulimit -a
+        php -v
+        php --ini
+        ls -al
+        pwd
+        echo "`git log -20 --pretty --oneline`"
+        echo "`git log -10 --stat --pretty --oneline`"
     - name: build
       run: phpize && ./configure && make clean && make -j$(sysctl -n hw.ncpu) && sudo make install && php -d zend_extension=yasd.so --ri yasd
