@@ -267,7 +267,7 @@ int Cmder::parse_watch_cmd() {
         iter->second->insert(std::make_pair(var_name, var));
     }
 
-    yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "watching variable %s", var_name.c_str());
+    yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "watching variable $%s", var_name.c_str());
 
     return RECV_CMD_AGAIN;
 }
