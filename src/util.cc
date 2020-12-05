@@ -193,7 +193,7 @@ const char *Util::get_executed_filename() {
         return global->entry_file;
     }
 
-    return ZSTR_VAL(zend_string_copy(filename));
+    return ZSTR_VAL(filename);
 }
 
 int Util::get_executed_file_lineno() {
