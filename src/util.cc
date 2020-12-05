@@ -306,23 +306,16 @@ bool Util::is_hit_watch_point() {
     }
 
     for (auto &&watchpoint : *(var_watchpoint->second)) {
-        // printf("6\n");
         zval *new_var = yasd::Util::find_variable(watchpoint.first);
-        // printf("7\n");
         if (new_var == nullptr) {
-            // printf("8\n");
             zval tmp;
             new_var = &tmp;
             ZVAL_UNDEF(new_var);
         }
-        // printf("9\n");
         zval *old_var = &watchpoint.second;
-        // printf("10\n");
 
         if (!yasd::Util::is_variable_equal(new_var, old_var)) {
-            // printf("11\n");
             watchpoint.second = *new_var;
-            // printf("12\n");
             return true;
         }
     }
