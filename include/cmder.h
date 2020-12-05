@@ -54,7 +54,8 @@ class Cmder {
     int parse_print_cmd();
     int parse_list_cmd();
     int parse_set_cmd();
-
+    int parse_watch_cmd();
+    int parse_unwatch_cmd();
     int parse_finish_cmd();
 
     bool is_disable_cmd(std::string cmd);

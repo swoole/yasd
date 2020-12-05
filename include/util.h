@@ -28,7 +28,9 @@ namespace yasd {
 class Util {
   public:
     static std::vector<std::string> explode(const std::string &str, const std::string &delimiter);
+
     static HashTable *get_defined_vars();
+    static zval *find_variable(std::string var_name);
     static void print_var(std::string var_name);
     static void print_property(std::string obj_name, std::string property_name);
 
@@ -51,5 +53,8 @@ class Util {
     static void clear_breakpoint_cache_file();
     static std::string get_breakpoint_cache_filename();
     static void cache_breakpoint(std::string filename, int lineno);
+
+    static bool is_variable_equal(zval *z1, zval *z2);
+    static bool is_hit_watch_point();
 };
 }  // namespace yasd

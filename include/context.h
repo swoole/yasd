@@ -44,6 +44,7 @@ class Context {
     int64_t next_level = 0;
 
     std::vector<StackFrame *> *strace;
+
     Context();
     ~Context();
 };

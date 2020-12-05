@@ -17,6 +17,7 @@
 
 #include "include/context.h"
 #include "include/redirect_file_to_cin.h"
+#include "include/watch_point.h"
 
 #include <map>
 
@@ -35,6 +36,8 @@ class Global {
 
     // filename, [lineno]
     std::map<BREAKPOINT> *breakpoints;
+
+    yasd::WatchPoint watchPoints;
 
     Global(/* args */);
     ~Global();

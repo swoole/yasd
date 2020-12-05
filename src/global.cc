@@ -42,8 +42,6 @@ Global::~Global() {
     contexts = nullptr;
     delete breakpoints;
     breakpoints = nullptr;
-    delete redirector;
-    redirector = nullptr;
 }
 
 Context *Global::get_current_context() {
