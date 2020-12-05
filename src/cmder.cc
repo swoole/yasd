@@ -289,13 +289,14 @@ int Cmder::parse_unwatch_cmd() {
         yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "not found watch point $%s", var_name.c_str());
     } else {
         auto zval_iter = iter->second->find(var_name);
-        if (zval_iter != iter->second->end()) {
+        if (zval_iter == iter->second->end()) {
+            yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "not found watch point $%s", var_name.c_str());
+        } else {
             zval_dtor(&zval_iter->second);
             iter->second->erase(var_name);
+            yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "unwatch variable $%s", var_name.c_str());
         }
     }
-
-    yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "unwatch variable $%s", var_name.c_str());
 
     return RECV_CMD_AGAIN;
 }
