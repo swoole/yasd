@@ -62,10 +62,8 @@ void clear_watch_point(zend_execute_data *execute_data) {
 
     auto iter = var_watchpoint->second->begin();
     while (iter != var_watchpoint->second->end()) {
-        zval_dtor(&iter->second);
         var_watchpoint->second->erase(iter++);
     }
-    delete var_watchpoint->second;
 }
 
 void yasd_execute_ex(zend_execute_data *execute_data) {
