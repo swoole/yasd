@@ -244,29 +244,46 @@ int Cmder::parse_set_cmd() {
 
 int Cmder::parse_watch_cmd() {
     zend_function *func = EG(current_execute_data)->func;
+    std::string var_name;
+    yasd::WatchPointElement element;
 
     auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
     if (exploded_cmd.size() < 2) {
         yasd::Util::printfln_info(yasd::Color::YASD_ECHO_RED, "you should set watch point");
         return RECV_CMD_AGAIN;
-    }
-    std::string var_name = exploded_cmd[1];
+    } else if (exploded_cmd.size() == 2) {
+        element.type = yasd::WatchPointElement::t::VARIABLE_CHANGE;
+        var_name = exploded_cmd[1];
 
-    zval *var = yasd::Util::find_variable(var_name);
+        zval *old_var = yasd::Util::find_variable(var_name);
 
-    if (!var) {
-        zval tmp;
-        var = &tmp;
-        ZVAL_UNDEF(var);
+        if (!old_var) {
+            zval tmp;
+            old_var = &tmp;
+            ZVAL_UNDEF(old_var);
+        }
+
+        element.old_var = *old_var;
+    } else {
+        // w a < 1
+        element.type = yasd::WatchPointElement::t::CONDITION;
+        var_name = exploded_cmd[1];
+        element.operation = exploded_cmd[2];
+
+        if (yasd::Util::is_integer(exploded_cmd[3])) {
+            ZVAL_LONG(&element.old_var, atoi(exploded_cmd[3].c_str()));
+        } else {
+            ZVAL_NEW_STR(&element.old_var, zend_string_init(exploded_cmd[3].c_str(), exploded_cmd[3].length(), 0));
+        }
     }
 
     auto iter = global->watchPoints.var_watchpoint.find(func);
     if (iter == global->watchPoints.var_watchpoint.end()) {
         WATCHPOINT *watchpoint = new WATCHPOINT();
-        watchpoint->insert(std::make_pair(var_name, *var));
+        watchpoint->insert(std::make_pair(var_name, element));
         global->watchPoints.var_watchpoint.insert(std::make_pair(func, watchpoint));
     } else {
-        iter->second->insert(std::make_pair(var_name, *var));
+        iter->second->insert(std::make_pair(var_name, element));
     }
 
     yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "watching variable $%s", var_name.c_str());
@@ -292,7 +309,7 @@ int Cmder::parse_unwatch_cmd() {
         if (zval_iter == iter->second->end()) {
             yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "not found watch point $%s", var_name.c_str());
         } else {
-            zval_dtor(&zval_iter->second);
+            zval_dtor(&zval_iter->second.old_var);
             iter->second->erase(var_name);
             yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "unwatch variable $%s", var_name.c_str());
         }

@@ -13,6 +13,9 @@
   | Author: codinghuang  <codinghuang@qq.com>                            |
   +----------------------------------------------------------------------+
 */
+
+#include <iostream>
+
 #include "include/util.h"
 #include "include/common.h"
 #include "include/global.h"
@@ -22,8 +25,6 @@ BEGIN_EXTERN_C()
 END_EXTERN_C()
 
 #include "./php_yasd.h"
-
-#include <iostream>
 
 namespace yasd {
 
@@ -296,6 +297,18 @@ bool Util::is_variable_equal(zval *op1, zval *op2) {
     return Z_LVAL(result) == 0;
 }
 
+bool Util::is_variable_smaller(zval *op1, zval *op2) {
+    zval result;
+    is_smaller_function(&result, op1, op2);
+    return zend_is_true(&result) == 1;
+}
+
+bool Util::is_variable_greater(zval *op1, zval *op2) {
+    zval result;
+    is_smaller_or_equal_function(&result, op1, op2);
+    return zend_is_true(&result) == 0;
+}
+
 bool Util::is_hit_watch_point() {
     zend_function *func = EG(current_execute_data)->func;
 
@@ -305,21 +318,56 @@ bool Util::is_hit_watch_point() {
         return false;
     }
 
-    for (auto &&watchpoint : *(var_watchpoint->second)) {
-        zval *new_var = yasd::Util::find_variable(watchpoint.first);
+    for (auto watchpointIter = var_watchpoint->second->begin(); watchpointIter != var_watchpoint->second->end();
+         watchpointIter++) {
+        std::string var_name = watchpointIter->first;
+        yasd::WatchPointElement& watchpoint = watchpointIter->second;
+
+        zval *new_var = yasd::Util::find_variable(var_name);
         if (new_var == nullptr) {
             zval tmp;
             new_var = &tmp;
             ZVAL_UNDEF(new_var);
         }
-        zval *old_var = &watchpoint.second;
+        std::string op = watchpoint.operation;
+        zval *old_var = &watchpoint.old_var;
 
-        if (!yasd::Util::is_variable_equal(new_var, old_var)) {
-            watchpoint.second = *new_var;
-            return true;
+        if (watchpoint.type == yasd::WatchPointElement::VARIABLE_CHANGE) {
+            zval *old_var = &watchpoint.old_var;
+
+            if (!yasd::Util::is_variable_equal(new_var, old_var)) {
+                watchpoint.old_var = *new_var;
+                return true;
+            }
+        } else {
+            if (op == "<") {
+                if (yasd::Util::is_variable_smaller(new_var, old_var)) {
+                    var_watchpoint->second->erase(watchpointIter);
+                    return true;
+                }
+            } else if (op == ">") {
+                if (yasd::Util::is_variable_greater(new_var, old_var)) {
+                    var_watchpoint->second->erase(watchpointIter);
+                    return true;
+                }
+            } else if (op == "==") {
+                if (yasd::Util::is_variable_equal(new_var, old_var)) {
+                    var_watchpoint->second->erase(watchpointIter);
+                    return true;
+                }
+            }
         }
     }
 
     return false;
+}
+
+bool Util::is_integer(const std::string &s) {
+    if (s.empty() || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+'))) return false;
+
+    char *p;
+    strtol(s.c_str(), &p, 10);
+
+    return (*p == 0);
 }
 }  // namespace yasd

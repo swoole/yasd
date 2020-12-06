@@ -23,10 +23,20 @@
 
 #include "main/php.h"
 
-// variable name, zval *
-#define WATCHPOINT std::map<std::string, zval>
-
 namespace yasd {
+
+class WatchPointElement {
+  public:
+    enum t {
+        VARIABLE_CHANGE,
+        CONDITION
+    };
+    int type;
+    std::string operation;
+    zval old_var;
+};
+
+#define WATCHPOINT std::map<std::string, WatchPointElement>
 
 class WatchPoint {
   public:
