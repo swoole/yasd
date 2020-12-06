@@ -54,7 +54,12 @@ class Util {
     static std::string get_breakpoint_cache_filename();
     static void cache_breakpoint(std::string filename, int lineno);
 
-    static bool is_variable_equal(zval *z1, zval *z2);
+    static bool is_variable_equal(zval *op1, zval *op2);
+    static bool is_variable_smaller(zval *op1, zval *op2);
+    static bool is_variable_greater(zval *op1, zval *op2);
+
     static bool is_hit_watch_point();
+
+    static bool is_integer(const std::string & s);
 };
 }  // namespace yasd
