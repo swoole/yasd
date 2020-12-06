@@ -69,6 +69,22 @@ d absolute-file-path lineno
 
 If a breakpoint is set or deleted without specifying `absolute-file-path`, It will set breakpoint in the current file.
 
+### watch point
+
+We can monitor the variable changes or conditions, for example:
+
+```cpp
+watch a
+```
+
+```cpp
+watch a > 10
+```
+
+```cpp
+watch name == swoole
+```
+
 ### run
 
 ```bash
