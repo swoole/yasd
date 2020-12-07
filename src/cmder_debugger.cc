@@ -36,11 +36,11 @@ CmderDebugger::CmderDebugger() {}
 void CmderDebugger::init() {
     int status;
     std::string cmd;
-    register_cmd_handler();
 
     show_welcome_info();
 
     yasd::Util::reload_cache_breakpoint();
+    register_cmd_handler();
 
     do {
         cmd = get_next_cmd();

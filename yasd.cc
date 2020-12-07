@@ -69,11 +69,11 @@ static void php_yasd_init_globals(zend_yasd_globals *yasd_globals) {
 }
 
 PHP_RINIT_FUNCTION(yasd) {
+    // use php -e
+    // CG(compiler_options) = CG(compiler_options) | ZEND_COMPILE_EXTENDED_STMT;
     if (!(CG(compiler_options) & ZEND_COMPILE_EXTENDED_INFO)) {
         return SUCCESS;
     }
-    // use php -e
-    // CG(compiler_options) = CG(compiler_options) | ZEND_COMPILE_EXTENDED_STMT;
 
     yasd_rinit(module_number);
 
