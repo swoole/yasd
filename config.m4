@@ -81,7 +81,7 @@ if test "$PHP_YASD" != "no"; then
         src/context.cc \
         src/global.cc \
         src/source_reader.cc \
-        src/cmder.cc
+        src/cmder_debugger.cc
     "
 
     PHP_NEW_EXTENSION(yasd, $yasd_source_file, $ext_shared,,$EXTRA_CFLAGS, cxx)

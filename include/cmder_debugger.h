@@ -22,7 +22,7 @@
 #include "include/debuger_mode_base.h"
 
 namespace yasd {
-class Cmder: public DebuggerModeBase {
+class CmderDebugger: public DebuggerModeBase {
   private:
     std::string last_cmd;
     int last_list_lineno = 1;
@@ -34,8 +34,8 @@ class Cmder: public DebuggerModeBase {
 
   public:
 
-    Cmder();
-    ~Cmder();
+    CmderDebugger();
+    ~CmderDebugger();
 
     void init();
     void handle_request(const char *filename, int lineno);

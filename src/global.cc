@@ -14,7 +14,7 @@
   +----------------------------------------------------------------------+
 */
 #include "include/global.h"
-#include "include/cmder.h"
+#include "include/cmder_debugger.h"
 
 #include "./php_yasd.h"
 
@@ -40,7 +40,7 @@ Global::Global() {
     contexts = new std::map<int, Context *>();
 
     if (strncmp(YASD_G(debug_mode), "cmd", sizeof("cmd") - 1) == 0) {
-        debugger = new Cmder();
+        debugger = new CmderDebugger();
     }
 }
 
