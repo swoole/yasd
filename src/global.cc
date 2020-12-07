@@ -14,7 +14,10 @@
   +----------------------------------------------------------------------+
 */
 #include "include/global.h"
+#include "include/util.h"
+#include "include/common.h"
 #include "include/cmder_debugger.h"
+#include "include/remote_debugger.h"
 
 #include "./php_yasd.h"
 
@@ -41,6 +44,11 @@ Global::Global() {
 
     if (strncmp(YASD_G(debug_mode), "cmd", sizeof("cmd") - 1) == 0) {
         debugger = new CmderDebugger();
+    } else if (strncmp(YASD_G(debug_mode), "remote", sizeof("remote") - 1) == 0) {
+        debugger = new RemoteDebugger();
+    } else {
+        yasd::Util::printfln_info(yasd::Color::YASD_ECHO_RED, "error debug mode");
+        exit(255);
     }
 }
 
