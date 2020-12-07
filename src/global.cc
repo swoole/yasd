@@ -14,6 +14,9 @@
   +----------------------------------------------------------------------+
 */
 #include "include/global.h"
+#include "include/cmder.h"
+
+#include "./php_yasd.h"
 
 yasd::Global *global;
 
@@ -32,9 +35,13 @@ int64_t get_cid() {
 }
 
 namespace yasd {
-Global::Global(/* args */) {
+Global::Global() {
     breakpoints = new std::map<BREAKPOINT>();
     contexts = new std::map<int, Context *>();
+
+    if (strncmp(YASD_G(debug_mode), "cmd", sizeof("cmd") - 1) == 0) {
+        debugger = new Cmder();
+    }
 }
 
 Global::~Global() {

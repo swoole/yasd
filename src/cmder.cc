@@ -33,8 +33,20 @@ yasd::Cmder *cmder;
 
 namespace yasd {
 
-Cmder::Cmder() {
+Cmder::Cmder() {}
+
+void Cmder::init() {
     register_cmd_handler();
+
+    show_welcome_info();
+}
+
+std::string Cmder::receive_request() {
+    return get_next_cmd();
+}
+
+int Cmder::handle_request() {
+    return execute_cmd();
 }
 
 Cmder::~Cmder() {}

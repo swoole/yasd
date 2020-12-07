@@ -61,6 +61,8 @@ PHP_FUNCTION(redirectStdin) {
 PHP_INI_BEGIN()
 STD_PHP_INI_ENTRY("yasd.breakpoints_file", ".breakpoints_file.log", PHP_INI_ALL, OnUpdateString,
         breakpoints_file, zend_yasd_globals, yasd_globals)
+STD_PHP_INI_ENTRY("yasd.debug_mode", "cmd", PHP_INI_ALL, OnUpdateString,
+        debug_mode, zend_yasd_globals, yasd_globals)
 PHP_INI_END()
 // clang-format on
 
@@ -82,17 +84,17 @@ PHP_RINIT_FUNCTION(yasd) {
 
     register_get_cid_function();
 
-    cmder->show_welcome_info();
+    global->debugger->init();
 
     yasd::Util::reload_cache_breakpoint();
 
     do {
-        cmd = cmder->get_next_cmd();
+        cmd = global->debugger->receive_request();
         if (cmd == "") {
             yasd::Util::printfln_info(yasd::Color::YASD_ECHO_RED, "please input cmd!");
             continue;
         }
-        status = cmder->execute_cmd();
+        status = global->debugger->handle_request();
     } while (status != yasd::Cmder::status::NEXT_OPLINE);
 
     return SUCCESS;
@@ -140,12 +142,12 @@ void hang(const char *filename, int lineno) {
         global->do_step = false;
         global->do_finish = false;
 
-        cmd = cmder->get_next_cmd();
+        cmd = global->debugger->receive_request();
         if (cmd == "") {
             yasd::Util::printfln_info(yasd::Color::YASD_ECHO_RED, "please input cmd!");
             continue;
         }
-        status = cmder->execute_cmd();
+        status = global->debugger->handle_request();
     } while (status != yasd::Cmder::status::NEXT_OPLINE);
 }
 

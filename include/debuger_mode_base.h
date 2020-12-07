@@ -15,39 +15,19 @@
 */
 #pragma once
 
-#include "include/context.h"
-#include "include/redirect_file_to_cin.h"
-#include "include/watch_point.h"
-#include "include/debuger_mode_base.h"
-
-#include <map>
+#include <string>
 
 namespace yasd {
-class Global {
-  public:
-    yasd::RedirectFileToCin *redirector = nullptr;
-    bool is_running = false;
-    bool do_step = false;
-    bool do_next = false;
-    bool do_finish = false;
+class DebuggerModeBase
+{
+public:
+  DebuggerModeBase() {}
+  virtual ~DebuggerModeBase() {}
 
-    DebuggerModeBase *debugger = nullptr;
-
-    char *entry_file = nullptr;
-
-    std::map<int, Context *> *contexts;
-
-    // filename, [lineno]
-    std::map<BREAKPOINT> *breakpoints;
-
-    yasd::WatchPoint watchPoints;
-
-    Global();
-    ~Global();
-
-    Context *get_current_context();
+  virtual void init() = 0;
+  virtual std::string receive_request() = 0;
+  virtual int handle_request() = 0;
 };
 }  // namespace yasd
 
-extern yasd::Global *global;
-extern zend_function *get_cid_function;
+

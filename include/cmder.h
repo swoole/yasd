@@ -19,13 +19,18 @@
 #include <string>
 #include <functional>
 
+#include "include/debuger_mode_base.h"
+
 namespace yasd {
-class Cmder {
+class Cmder: public DebuggerModeBase {
   private:
     std::string last_cmd;
     int last_list_lineno = 1;
     int listsize = 10;
     std::vector<std::pair<std::string, std::function<int()>>> handlers;
+
+    std::string get_next_cmd();
+    int execute_cmd();
 
   public:
     enum status {
@@ -38,8 +43,9 @@ class Cmder {
     Cmder();
     ~Cmder();
 
-    std::string get_next_cmd();
-    int execute_cmd();
+    void init();
+    std::string receive_request();
+    int handle_request();
 
     int parse_run_cmd();
     int parse_breakpoint_cmd();
