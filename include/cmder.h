@@ -33,19 +33,12 @@ class Cmder: public DebuggerModeBase {
     int execute_cmd();
 
   public:
-    enum status {
-        SUCCESS = 0,
-        FAILED,
-        NEXT_OPLINE,
-        RECV_CMD_AGAIN,
-    };
 
     Cmder();
     ~Cmder();
 
     void init();
-    std::string receive_request();
-    int handle_request();
+    void handle_request(const char *filename, int lineno);
 
     int parse_run_cmd();
     int parse_breakpoint_cmd();
@@ -82,5 +75,3 @@ class Cmder: public DebuggerModeBase {
     }
 };
 }  // namespace yasd
-
-extern yasd::Cmder *cmder;

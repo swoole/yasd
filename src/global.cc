@@ -45,6 +45,8 @@ Global::Global() {
 }
 
 Global::~Global() {
+    delete debugger;
+    debugger = nullptr;
     delete contexts;
     contexts = nullptr;
     delete breakpoints;

@@ -17,7 +17,6 @@
 #include "include/util.h"
 #include "include/context.h"
 #include "include/global.h"
-#include "include/cmder.h"
 
 #include "./php_yasd.h"
 
@@ -96,5 +95,4 @@ void yasd_rinit(int module_number) {
     zend_execute_ex = yasd_execute_ex;
 
     global = new yasd::Global();
-    cmder = new yasd::Cmder();
 }

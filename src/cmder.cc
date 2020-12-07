@@ -29,24 +29,48 @@ END_EXTERN_C()
 
 #include <iostream>
 
-yasd::Cmder *cmder;
-
 namespace yasd {
 
 Cmder::Cmder() {}
 
 void Cmder::init() {
+    int status;
+    std::string cmd;
     register_cmd_handler();
 
     show_welcome_info();
+
+    yasd::Util::reload_cache_breakpoint();
+
+    do {
+        cmd = get_next_cmd();
+        if (cmd == "") {
+            yasd::Util::printfln_info(yasd::Color::YASD_ECHO_RED, "please input cmd!");
+            continue;
+        }
+        status = execute_cmd();
+    } while (status != yasd::DebuggerModeBase::status::NEXT_OPLINE);
 }
 
-std::string Cmder::receive_request() {
-    return get_next_cmd();
-}
+void Cmder::handle_request(const char *filename, int lineno) {
+    int status;
+    std::string cmd;
+    yasd::SourceReader reader(filename);
 
-int Cmder::handle_request() {
-    return execute_cmd();
+    reader.show_contents(lineno, get_listsize(), true, true);
+
+    do {
+        global->do_next = false;
+        global->do_step = false;
+        global->do_finish = false;
+
+        cmd = get_next_cmd();
+        if (cmd == "") {
+            yasd::Util::printfln_info(yasd::Color::YASD_ECHO_RED, "please input cmd!");
+            continue;
+        }
+        status = execute_cmd();
+    } while (status != yasd::DebuggerModeBase::status::NEXT_OPLINE);
 }
 
 Cmder::~Cmder() {}
@@ -241,7 +265,7 @@ int Cmder::parse_list_cmd() {
         last_list_lineno = lineno + listsize;
     }
 
-    reader.show_contents(lineno, cmder->get_listsize());
+    reader.show_contents(lineno, get_listsize());
     return RECV_CMD_AGAIN;
 }
 

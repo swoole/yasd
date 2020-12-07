@@ -18,16 +18,19 @@
 #include <string>
 
 namespace yasd {
-class DebuggerModeBase
-{
-public:
-  DebuggerModeBase() {}
-  virtual ~DebuggerModeBase() {}
+class DebuggerModeBase {
+  public:
+    enum status {
+        SUCCESS = 0,
+        FAILED,
+        NEXT_OPLINE,
+        RECV_CMD_AGAIN,
+    };
 
-  virtual void init() = 0;
-  virtual std::string receive_request() = 0;
-  virtual int handle_request() = 0;
+    DebuggerModeBase() {}
+    virtual ~DebuggerModeBase() {}
+
+    virtual void init() = 0;
+    virtual void handle_request(const char *filename, int lineno) = 0;
 };
 }  // namespace yasd
-
-
