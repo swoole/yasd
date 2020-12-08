@@ -15,22 +15,27 @@
 */
 #pragma once
 
-#include <string>
-#include <sys/socket.h> 
+#include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
+#include <string>
+
 #include "include/debuger_mode_base.h"
+#include "thirdparty/tinyxml2/tinyxml2.h"
 
 namespace yasd {
-class RemoteDebugger: public DebuggerModeBase {
+class RemoteDebugger : public DebuggerModeBase {
   private:
     int sock;
+
   public:
     RemoteDebugger() {}
     ~RemoteDebugger() {}
 
     void init();
     void handle_request(const char *filename, int lineno);
+    std::string make_message(tinyxml2::XMLDocument *doc);
+    ssize_t send_doc(tinyxml2::XMLDocument *doc);
 };
 }  // namespace yasd

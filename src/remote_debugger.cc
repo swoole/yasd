@@ -19,8 +19,6 @@
 #include "include/global.h"
 #include "include/remote_debugger.h"
 
-#include "thirdparty/tinyxml2/tinyxml2.h"
-
 #include "main/php.h"
 
 namespace yasd {
@@ -81,11 +79,29 @@ void RemoteDebugger::init() {
     root->SetAttribute("appid", std::to_string(getpid()).c_str());
     root->SetAttribute("idekey", "hantaohuang");
 
-    tinyxml2::XMLPrinter printer;
-    doc->Print();
-    doc->Print(&printer);
+    send_doc(doc.get());
+}
 
+void RemoteDebugger::handle_request(const char *filename, int lineno) {}
+
+ssize_t RemoteDebugger::send_doc(tinyxml2::XMLDocument *doc) {
+    ssize_t ret;
+    std::string message = make_message(doc);
+
+    ret = send(sock, message.c_str(), message.length(), 0);
+    printf("send: %ld\n", ret);
+    char buffer[4096];
+    ret = recv(sock, buffer, 4096, 0);
+    printf("recv: %ld\n", ret);
+
+    return ret;
+}
+
+std::string RemoteDebugger::make_message(tinyxml2::XMLDocument *doc) {
     std::string message = "";
+    tinyxml2::XMLPrinter printer;
+
+    doc->Print(&printer);
 
     message =
         message + std::to_string(printer.CStrSize() + sizeof("<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n") - 1);
@@ -94,10 +110,7 @@ void RemoteDebugger::init() {
     message += '\0';
     message += printer.CStr();
 
-    ssize_t ret = send(sock, message.c_str(), message.length(), 0);
-    printf("send: %ld\n", ret);
+    return message;
 }
-
-void RemoteDebugger::handle_request(const char *filename, int lineno) {}
 
 }  // namespace yasd
