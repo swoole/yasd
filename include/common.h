@@ -56,6 +56,12 @@
 #endif
 /*}}}*/
 
+# if PHP_VERSION_ID >= 70300
+#  define YASD_ZEND_CONSTANT_MODULE_NUMBER(v) ZEND_CONSTANT_MODULE_NUMBER((v))
+# else
+#  define YASD_ZEND_CONSTANT_MODULE_NUMBER(v) ((v)->module_number)
+# endif
+
 static void yasd_zend_update_property_null_ex(zend_class_entry *scope, zval *object, zend_string *s) {
     zval tmp;
 

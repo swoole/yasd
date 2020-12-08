@@ -198,10 +198,17 @@ void RemoteDebugger::init_response_xml_root_node(tinyxml2::XMLElement *root, std
 }
 
 void RemoteDebugger::init_local_variables_xml_child_node(tinyxml2::XMLElement *root) {
+    // 465<?xml version="1.0" encoding="iso-8859-1"?>
+    // <response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="context_get"
+    // transaction_id="9" context="0">
+    //     <property name="$foo" fullname="$foo" type="uninitialized"></property>
+    //     <property name="$i" fullname="$i" type="uninitialized"></property>
+    //     <property name="$j" fullname="$j" type="uninitialized"></property>
+    //     <property name="$k" fullname="$k" type="uninitialized"></property>
+    // </response>
     tinyxml2::XMLElement *child;
 
     unsigned int i = 0;
-    HashTable *defined_vars;
 
     zend_op_array *op_array = &EG(current_execute_data)->func->op_array;
 
@@ -215,9 +222,93 @@ void RemoteDebugger::init_local_variables_xml_child_node(tinyxml2::XMLElement *r
 
         if (!var) {
             child->SetAttribute("type", "uninitialized");
+        } else {
+            set_property_value_xml_property_node(child, var);
         }
 
         i++;
+    }
+}
+
+void RemoteDebugger::init_superglobal_variables_xml_child_node(tinyxml2::XMLElement *root) {
+    // because our debugger favours Swoole, we do not support superglobal_variables
+    return;
+}
+
+void RemoteDebugger::init_user_defined_constant_variables_xml_child_node(tinyxml2::XMLElement *root) {
+    zend_constant *val;
+    void *tmp;
+
+    // 309<?xml version="1.0" encoding="iso-8859-1"?>
+    // <response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="context_get"
+    // transaction_id="11" context="2">
+    //     <property name="SWOOLE_LIBRARY" fullname="SWOOLE_LIBRARY" type="bool" facet="constant">
+    //         <![CDATA[1]]>
+    //     </property>
+    // </response>
+
+    tinyxml2::XMLElement *child;
+
+    ZEND_HASH_FOREACH_PTR(EG(zend_constants), tmp) {
+        val = reinterpret_cast<zend_constant *>(tmp);
+        zval *zval_value = &val->value;
+
+        if (!val->name) {
+            continue;
+        }
+
+        if (YASD_ZEND_CONSTANT_MODULE_NUMBER(val) != PHP_USER_CONSTANT) {
+            continue;
+        }
+
+        child = root->InsertNewChildElement("property");
+        child->SetAttribute("name", ZSTR_VAL(val->name));
+        child->SetAttribute("fullname", ZSTR_VAL(val->name));
+        child->SetAttribute("facet", "constant");
+        set_property_value_xml_property_node(child, zval_value);
+    }
+    ZEND_HASH_FOREACH_END();
+    return;
+}
+
+void RemoteDebugger::set_property_value_xml_property_node(tinyxml2::XMLElement *child, zval *value) {
+    switch (Z_TYPE_P(value)) {
+    case IS_TRUE:
+        child->SetAttribute("type", "bool");
+        child->InsertNewText("1")->SetCData(true);
+        break;
+    case IS_FALSE:
+        child->SetAttribute("type", "bool");
+        child->InsertNewText("0")->SetCData(true);
+        break;
+    case IS_NULL:
+        child->SetAttribute("type", "null");
+        break;
+    case IS_LONG:
+        child->SetAttribute("type", "int");
+        child->InsertNewText(std::to_string(Z_LVAL_P(value)).c_str())->SetCData(true);
+        break;
+    case IS_DOUBLE:
+        child->SetAttribute("type", "float");
+        child->InsertNewText(std::to_string(Z_DVAL_P(value)).c_str())->SetCData(true);
+        break;
+    case IS_STRING:
+        child->SetAttribute("type", "string");
+        child->InsertNewText(Z_STRVAL_P(value))->SetCData(true);
+        break;
+    case IS_ARRAY:
+        child->SetAttribute("type", "array");
+        child->InsertNewText("Array")->SetCData(true);
+        break;
+    case IS_OBJECT:
+        child->SetAttribute("type", "object");
+        child->InsertNewText("Object")->SetCData(true);
+        break;
+    case IS_UNDEF:
+        child->SetAttribute("type", "uninitialized");
+        break;
+    default:
+        break;
     }
 }
 
@@ -396,15 +487,6 @@ int RemoteDebugger::parse_context_get_cmd() {
     }
     context_id = atoi(exploded_cmd[6].c_str());
 
-    // 465<?xml version="1.0" encoding="iso-8859-1"?>
-    // <response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="context_get"
-    // transaction_id="9" context="0">
-    //     <property name="$foo" fullname="$foo" type="uninitialized"></property>
-    //     <property name="$i" fullname="$i" type="uninitialized"></property>
-    //     <property name="$j" fullname="$j" type="uninitialized"></property>
-    //     <property name="$k" fullname="$k" type="uninitialized"></property>
-    // </response>
-
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
     tinyxml2::XMLElement *root;
 
@@ -415,6 +497,10 @@ int RemoteDebugger::parse_context_get_cmd() {
 
     if (context_id == LOCALS) {
         init_local_variables_xml_child_node(root);
+    } else if (context_id == SUPER_GLOBALS) {
+        init_superglobal_variables_xml_child_node(root);
+    } else {
+        init_user_defined_constant_variables_xml_child_node(root);
     }
 
     send_doc(doc.get());

@@ -45,6 +45,9 @@ class RemoteDebugger : public DebuggerModeBase {
 
     void init_response_xml_root_node(tinyxml2::XMLElement *root, std::string cmd);
     void init_local_variables_xml_child_node(tinyxml2::XMLElement *root);
+    void init_superglobal_variables_xml_child_node(tinyxml2::XMLElement *root);
+    void init_user_defined_constant_variables_xml_child_node(tinyxml2::XMLElement *root);
+    void set_property_value_xml_property_node(tinyxml2::XMLElement *child, zval *value);
 
   public:
     RemoteDebugger() {}
