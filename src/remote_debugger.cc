@@ -15,6 +15,7 @@
 */
 
 #include <iostream>
+#include <memory>
 
 #include "include/global.h"
 #include "include/remote_debugger.h"
