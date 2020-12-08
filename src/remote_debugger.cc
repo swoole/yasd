@@ -299,10 +299,44 @@ int RemoteDebugger::parse_run_cmd() {
     return yasd::DebuggerModeBase::NEXT_OPLINE;
 }
 
+int RemoteDebugger::parse_stack_get_cmd() {
+    std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
+    tinyxml2::XMLElement *root;
+    tinyxml2::XMLElement *child;
+
+    // <response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="stack_get"
+    // transaction_id="7">
+    // <stack where="{main}" level="0" type="file" filename="file:///Users/hantaohuang/codeDir/cppCode/yasd/test.php"
+    // lineno="31"></stack>
+    // </response>
+
+    root = doc->NewElement("response");
+    doc->LinkEndChild(root);
+    root->SetAttribute("xmlns", "urn:debugger_protocol_v1");
+    root->SetAttribute("xmlns:xdebug", "https://xdebug.org/dbgp/xdebug");
+    root->SetAttribute("command", "stack_get");
+    root->SetAttribute("transaction_id", transaction_id);
+    root->SetAttribute("id", breakpoint_admin_add());
+
+    std::string fileuri = "file://" + std::string(yasd::Util::get_executed_filename());
+
+    child = root->InsertNewChildElement("stack");
+    child->SetAttribute("where", "{main}");
+    child->SetAttribute("level", "0");
+    child->SetAttribute("type", "file");
+    child->SetAttribute("filename", fileuri.c_str());
+    child->SetAttribute("lineno", yasd::Util::get_executed_file_lineno());
+
+    send_doc(doc.get());
+
+    return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
+}
+
 void RemoteDebugger::register_cmd_handler() {
     handlers.push_back(std::make_pair("breakpoint_list", std::bind(&RemoteDebugger::parse_breakpoint_list_cmd, this)));
     handlers.push_back(std::make_pair("breakpoint_set", std::bind(&RemoteDebugger::parse_breakpoint_set_cmd, this)));
     handlers.push_back(std::make_pair("run", std::bind(&RemoteDebugger::parse_run_cmd, this)));
+    handlers.push_back(std::make_pair("stack_get", std::bind(&RemoteDebugger::parse_stack_get_cmd, this)));
 }
 
 std::function<int()> RemoteDebugger::find_cmd_handler(std::string cmd) {
