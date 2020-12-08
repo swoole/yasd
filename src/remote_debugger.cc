@@ -118,8 +118,11 @@ int RemoteDebugger::execute_cmd() {
     auto handler = find_cmd_handler(exploded_cmd[0]);
 
     if (!handler) {
+        printf("not found handler\n");
         return FAILED;
     }
+
+    printf("found handler\n");
 
     return handler();
 }
@@ -511,6 +514,23 @@ int RemoteDebugger::parse_context_get_cmd() {
     return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
 }
 
+int RemoteDebugger::parse_step_over_cmd() {
+    // step_over -i 10
+    yasd::Context *context = global->get_current_context();
+    zend_execute_data *frame = EG(current_execute_data);
+
+    int func_line_end = frame->func->op_array.line_end;
+
+    if (frame->opline->lineno == func_line_end) {
+        global->do_step = true;
+    } else {
+        context->next_level = context->level;
+        global->do_next = true;
+    }
+
+    return NEXT_OPLINE;
+}
+
 void RemoteDebugger::register_cmd_handler() {
     handlers.push_back(std::make_pair("breakpoint_list", std::bind(&RemoteDebugger::parse_breakpoint_list_cmd, this)));
     handlers.push_back(std::make_pair("breakpoint_set", std::bind(&RemoteDebugger::parse_breakpoint_set_cmd, this)));
@@ -518,6 +538,7 @@ void RemoteDebugger::register_cmd_handler() {
     handlers.push_back(std::make_pair("stack_get", std::bind(&RemoteDebugger::parse_stack_get_cmd, this)));
     handlers.push_back(std::make_pair("context_names", std::bind(&RemoteDebugger::parse_context_names_cmd, this)));
     handlers.push_back(std::make_pair("context_get", std::bind(&RemoteDebugger::parse_context_get_cmd, this)));
+    handlers.push_back(std::make_pair("step_over", std::bind(&RemoteDebugger::parse_step_over_cmd, this)));
 }
 
 std::function<int()> RemoteDebugger::find_cmd_handler(std::string cmd) {
