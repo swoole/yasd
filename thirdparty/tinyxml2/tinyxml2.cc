@@ -2588,7 +2588,7 @@ void XMLPrinter::Putc( char ch )
 void XMLPrinter::PrintSpace( int depth )
 {
     for( int i=0; i<depth; ++i ) {
-        Write( "    " );
+        // Write( "    " );
     }
 }
 
@@ -2670,7 +2670,7 @@ void XMLPrinter::PrepareForNewNode( bool compactMode )
     if ( _firstElement ) {
         PrintSpace (_depth);
     } else if ( _textDepth < 0) {
-        Putc( '\n' );
+        // Putc( '\n' );
         PrintSpace( _depth );
     }
 
@@ -2759,7 +2759,7 @@ void XMLPrinter::CloseElement( bool compactMode )
     }
     else {
         if ( _textDepth < 0 && !compactMode) {
-            Putc( '\n' );
+            // Putc( '\n' );
             PrintSpace( _depth );
         }
         Write ( "</" );
@@ -2771,7 +2771,7 @@ void XMLPrinter::CloseElement( bool compactMode )
         _textDepth = -1;
     }
     if ( _depth == 0 && !compactMode) {
-        Putc( '\n' );
+        // Putc( '\n' );
     }
     _elementJustOpened = false;
 }
