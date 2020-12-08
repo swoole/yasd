@@ -332,11 +332,69 @@ int RemoteDebugger::parse_stack_get_cmd() {
     return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
 }
 
+int RemoteDebugger::parse_context_names_cmd() {
+    // 329<?xml version="1.0" encoding="iso-8859-1"?>
+    // <response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="context_names"
+    // transaction_id="8">
+    //     <context name="Locals" id="0"></context>
+    //     <context name="Superglobals" id="1"></context>
+    //     <context name="User defined constants" id="2"></context>
+    // </response>
+
+    std::cout << "parse_context_names_cmd" << std::endl;
+
+    std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
+    tinyxml2::XMLElement *root;
+    tinyxml2::XMLElement *child;
+    int id = 0;
+
+    root = doc->NewElement("response");
+    doc->LinkEndChild(root);
+    root->SetAttribute("xmlns", "urn:debugger_protocol_v1");
+    root->SetAttribute("xmlns:xdebug", "https://xdebug.org/dbgp/xdebug");
+    root->SetAttribute("command", "context_names");
+    root->SetAttribute("transaction_id", transaction_id);
+    root->SetAttribute("id", breakpoint_admin_add());
+
+    child = root->InsertNewChildElement("context");
+    child->SetAttribute("name", "Locals");
+    child->SetAttribute("id", id++);
+
+    child = root->InsertNewChildElement("context");
+    child->SetAttribute("name", "Superglobals");
+    child->SetAttribute("id", id++);
+
+    child = root->InsertNewChildElement("context");
+    child->SetAttribute("name", "User defined constants");
+    child->SetAttribute("id", id++);
+
+    send_doc(doc.get());
+
+    return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
+}
+
+int RemoteDebugger::parse_step_over_cmd() {
+    std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
+    tinyxml2::XMLElement *root;
+    tinyxml2::XMLElement *child;
+
+    // 465<?xml version="1.0" encoding="iso-8859-1"?>
+    // <response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="context_get"
+    // transaction_id="9" context="0">
+    //     <property name="$foo" fullname="$foo" type="uninitialized"></property><property name="$i" fullname="$i"
+    //     type="uninitialized"></property> <property name="$j" fullname="$j" type="uninitialized"></property><property
+    //     name="$k" fullname="$k" type="uninitialized"></property>
+    // </response>
+    return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
+}
+
 void RemoteDebugger::register_cmd_handler() {
     handlers.push_back(std::make_pair("breakpoint_list", std::bind(&RemoteDebugger::parse_breakpoint_list_cmd, this)));
     handlers.push_back(std::make_pair("breakpoint_set", std::bind(&RemoteDebugger::parse_breakpoint_set_cmd, this)));
     handlers.push_back(std::make_pair("run", std::bind(&RemoteDebugger::parse_run_cmd, this)));
     handlers.push_back(std::make_pair("stack_get", std::bind(&RemoteDebugger::parse_stack_get_cmd, this)));
+    handlers.push_back(
+        std::make_pair("context_names", std::bind(&RemoteDebugger::parse_context_names_cmd, this)));
 }
 
 std::function<int()> RemoteDebugger::find_cmd_handler(std::string cmd) {
