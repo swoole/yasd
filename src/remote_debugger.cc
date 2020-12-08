@@ -98,6 +98,10 @@ std::string RemoteDebugger::get_next_cmd() {
     char buffer[4096];
 
     ret = recv(sock, buffer, 4096, 0);
+    if (ret == 0) {
+        printf("connection closed\n");
+        exit(255);
+    }
     printf("recv: %ld\n", ret);
     std::string tmp(buffer, buffer + ret);
     last_cmd = tmp;
@@ -120,7 +124,43 @@ int RemoteDebugger::execute_cmd() {
     return handler();
 }
 
-void RemoteDebugger::handle_request(const char *filename, int lineno) {}
+void RemoteDebugger::handle_request(const char *filename, int lineno) {
+    // 316<?xml version="1.0" encoding="iso-8859-1"?>
+    // <response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="run"
+    // transaction_id="6" status="break" reason="ok"><xdebug:message
+    // filename="file:///Users/hantaohuang/codeDir/cppCode/yasd/test.php" lineno="31"></xdebug:message></response>
+
+    int status;
+
+    std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
+    tinyxml2::XMLElement *root;
+    tinyxml2::XMLElement *child;
+
+    root = doc->NewElement("response");
+    doc->LinkEndChild(root);
+    root->SetAttribute("xmlns", "urn:debugger_protocol_v1");
+    root->SetAttribute("xmlns:xdebug", "https://xdebug.org/dbgp/xdebug");
+    root->SetAttribute("command", "run");
+    root->SetAttribute("transaction_id", transaction_id);
+    root->SetAttribute("status", "break");
+    root->SetAttribute("reason", "ok");
+
+    child = root->InsertNewChildElement("xdebug:message");
+    std::string filename_ = "file://" + std::string(filename);
+    child->SetAttribute("filename", filename_.c_str());
+    child->SetAttribute("lineno", lineno);
+
+    send_doc(doc.get());
+
+    do {
+        global->do_next = false;
+        global->do_step = false;
+        global->do_finish = false;
+
+        get_next_cmd();
+        status = execute_cmd();
+    } while (status != yasd::DebuggerModeBase::status::NEXT_OPLINE);
+}
 
 ssize_t RemoteDebugger::send_doc(tinyxml2::XMLDocument *doc) {
     ssize_t ret;
@@ -253,9 +293,16 @@ int RemoteDebugger::parse_breakpoint_set_exception_cmd() {
     return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
 }
 
+int RemoteDebugger::parse_run_cmd() {
+    global->is_running = true;
+
+    return yasd::DebuggerModeBase::NEXT_OPLINE;
+}
+
 void RemoteDebugger::register_cmd_handler() {
     handlers.push_back(std::make_pair("breakpoint_list", std::bind(&RemoteDebugger::parse_breakpoint_list_cmd, this)));
     handlers.push_back(std::make_pair("breakpoint_set", std::bind(&RemoteDebugger::parse_breakpoint_set_cmd, this)));
+    handlers.push_back(std::make_pair("run", std::bind(&RemoteDebugger::parse_run_cmd, this)));
 }
 
 std::function<int()> RemoteDebugger::find_cmd_handler(std::string cmd) {

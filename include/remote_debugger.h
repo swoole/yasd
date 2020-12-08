@@ -21,6 +21,8 @@
 
 #include <string>
 #include <functional>
+#include <vector>
+#include <utility>
 
 #include "include/debuger_mode_base.h"
 #include "thirdparty/tinyxml2/tinyxml2.h"
@@ -48,6 +50,7 @@ class RemoteDebugger : public DebuggerModeBase {
     int parse_breakpoint_list_cmd();
     int parse_breakpoint_set_cmd();
     int parse_breakpoint_set_exception_cmd();
+    int parse_run_cmd();
 
     void register_cmd_handler();
     std::function<int()> find_cmd_handler(std::string cmd);
