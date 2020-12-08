@@ -373,21 +373,6 @@ int RemoteDebugger::parse_context_names_cmd() {
     return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
 }
 
-int RemoteDebugger::parse_step_over_cmd() {
-    std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
-    tinyxml2::XMLElement *root;
-    tinyxml2::XMLElement *child;
-
-    // 465<?xml version="1.0" encoding="iso-8859-1"?>
-    // <response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="context_get"
-    // transaction_id="9" context="0">
-    //     <property name="$foo" fullname="$foo" type="uninitialized"></property><property name="$i" fullname="$i"
-    //     type="uninitialized"></property> <property name="$j" fullname="$j" type="uninitialized"></property><property
-    //     name="$k" fullname="$k" type="uninitialized"></property>
-    // </response>
-    return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
-}
-
 void RemoteDebugger::register_cmd_handler() {
     handlers.push_back(std::make_pair("breakpoint_list", std::bind(&RemoteDebugger::parse_breakpoint_list_cmd, this)));
     handlers.push_back(std::make_pair("breakpoint_set", std::bind(&RemoteDebugger::parse_breakpoint_set_cmd, this)));
