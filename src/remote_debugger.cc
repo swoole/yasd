@@ -197,6 +197,30 @@ void RemoteDebugger::init_response_xml_root_node(tinyxml2::XMLElement *root, std
     root->SetAttribute("transaction_id", transaction_id);
 }
 
+void RemoteDebugger::init_local_variables_xml_child_node(tinyxml2::XMLElement *root) {
+    tinyxml2::XMLElement *child;
+
+    unsigned int i = 0;
+    HashTable *defined_vars;
+
+    zend_op_array *op_array = &EG(current_execute_data)->func->op_array;
+
+    while (i < (unsigned int) op_array->last_var) {
+        child = root->InsertNewChildElement("property");
+        zend_string *var_name = op_array->vars[i];
+        child->SetAttribute("name", ZSTR_VAL(var_name));
+        child->SetAttribute("fullname", ZSTR_VAL(var_name));
+
+        zval *var = yasd::Util::find_variable(ZSTR_VAL(var_name));
+
+        if (!var) {
+            child->SetAttribute("type", "uninitialized");
+        }
+
+        i++;
+    }
+}
+
 // breakpoint_list -i 1
 int RemoteDebugger::parse_breakpoint_list_cmd() {
     auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
@@ -363,13 +387,48 @@ int RemoteDebugger::parse_context_names_cmd() {
     return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
 }
 
+int RemoteDebugger::parse_context_get_cmd() {
+    // context_get -i 10 -d 0 -c 1
+    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+    int context_id;
+    if (exploded_cmd[0] != "context_get") {
+        return yasd::DebuggerModeBase::FAILED;
+    }
+    context_id = atoi(exploded_cmd[6].c_str());
+
+    // 465<?xml version="1.0" encoding="iso-8859-1"?>
+    // <response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="context_get"
+    // transaction_id="9" context="0">
+    //     <property name="$foo" fullname="$foo" type="uninitialized"></property>
+    //     <property name="$i" fullname="$i" type="uninitialized"></property>
+    //     <property name="$j" fullname="$j" type="uninitialized"></property>
+    //     <property name="$k" fullname="$k" type="uninitialized"></property>
+    // </response>
+
+    std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
+    tinyxml2::XMLElement *root;
+
+    root = doc->NewElement("response");
+    doc->LinkEndChild(root);
+    init_response_xml_root_node(root, "context_get");
+    root->SetAttribute("context", 0);
+
+    if (context_id == LOCALS) {
+        init_local_variables_xml_child_node(root);
+    }
+
+    send_doc(doc.get());
+
+    return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
+}
+
 void RemoteDebugger::register_cmd_handler() {
     handlers.push_back(std::make_pair("breakpoint_list", std::bind(&RemoteDebugger::parse_breakpoint_list_cmd, this)));
     handlers.push_back(std::make_pair("breakpoint_set", std::bind(&RemoteDebugger::parse_breakpoint_set_cmd, this)));
     handlers.push_back(std::make_pair("run", std::bind(&RemoteDebugger::parse_run_cmd, this)));
     handlers.push_back(std::make_pair("stack_get", std::bind(&RemoteDebugger::parse_stack_get_cmd, this)));
-    handlers.push_back(
-        std::make_pair("context_names", std::bind(&RemoteDebugger::parse_context_names_cmd, this)));
+    handlers.push_back(std::make_pair("context_names", std::bind(&RemoteDebugger::parse_context_names_cmd, this)));
+    handlers.push_back(std::make_pair("context_get", std::bind(&RemoteDebugger::parse_context_get_cmd, this)));
 }
 
 std::function<int()> RemoteDebugger::find_cmd_handler(std::string cmd) {

@@ -30,6 +30,11 @@
 namespace yasd {
 class RemoteDebugger : public DebuggerModeBase {
   private:
+    enum ContextID {
+        LOCALS,
+        SUPER_GLOBALS,
+        USER_DEFINED_CONSTANTS,
+    };
     int sock;
     std::string last_cmd;
     int transaction_id = 0;
@@ -39,6 +44,7 @@ class RemoteDebugger : public DebuggerModeBase {
     int execute_cmd();
 
     void init_response_xml_root_node(tinyxml2::XMLElement *root, std::string cmd);
+    void init_local_variables_xml_child_node(tinyxml2::XMLElement *root);
 
   public:
     RemoteDebugger() {}
@@ -55,6 +61,7 @@ class RemoteDebugger : public DebuggerModeBase {
     int parse_run_cmd();
     int parse_stack_get_cmd();
     int parse_context_names_cmd();
+    int parse_context_get_cmd();
 
     void register_cmd_handler();
     std::function<int()> find_cmd_handler(std::string cmd);
