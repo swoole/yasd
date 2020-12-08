@@ -190,6 +190,13 @@ std::string RemoteDebugger::make_message(tinyxml2::XMLDocument *doc) {
     return message;
 }
 
+void RemoteDebugger::init_response_xml_root_node(tinyxml2::XMLElement *root, std::string cmd) {
+    root->SetAttribute("xmlns", "urn:debugger_protocol_v1");
+    root->SetAttribute("xmlns:xdebug", "https://xdebug.org/dbgp/xdebug");
+    root->SetAttribute("command", cmd.c_str());
+    root->SetAttribute("transaction_id", transaction_id);
+}
+
 // breakpoint_list -i 1
 int RemoteDebugger::parse_breakpoint_list_cmd() {
     auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
@@ -210,10 +217,7 @@ int RemoteDebugger::parse_breakpoint_list_cmd() {
 
     root = doc->NewElement("response");
     doc->LinkEndChild(root);
-    root->SetAttribute("xmlns", "urn:debugger_protocol_v1");
-    root->SetAttribute("xmlns:xdebug", "https://xdebug.org/dbgp/xdebug");
-    root->SetAttribute("command", "breakpoint_list");
-    root->SetAttribute("transaction_id", transaction_id);
+    init_response_xml_root_node(root, "breakpoint_list");
 
     send_doc(doc.get());
 
@@ -264,10 +268,7 @@ int RemoteDebugger::parse_breakpoint_set_cmd() {
 
     root = doc->NewElement("response");
     doc->LinkEndChild(root);
-    root->SetAttribute("xmlns", "urn:debugger_protocol_v1");
-    root->SetAttribute("xmlns:xdebug", "https://xdebug.org/dbgp/xdebug");
-    root->SetAttribute("command", "breakpoint_set");
-    root->SetAttribute("transaction_id", transaction_id);
+    init_response_xml_root_node(root, "breakpoint_set");
     root->SetAttribute("id", breakpoint_admin_add());
 
     send_doc(doc.get());
@@ -282,10 +283,7 @@ int RemoteDebugger::parse_breakpoint_set_exception_cmd() {
 
     root = doc->NewElement("response");
     doc->LinkEndChild(root);
-    root->SetAttribute("xmlns", "urn:debugger_protocol_v1");
-    root->SetAttribute("xmlns:xdebug", "https://xdebug.org/dbgp/xdebug");
-    root->SetAttribute("command", "breakpoint_set");
-    root->SetAttribute("transaction_id", transaction_id);
+    init_response_xml_root_node(root, "breakpoint_set");
     root->SetAttribute("id", breakpoint_admin_add());
 
     send_doc(doc.get());
@@ -312,10 +310,7 @@ int RemoteDebugger::parse_stack_get_cmd() {
 
     root = doc->NewElement("response");
     doc->LinkEndChild(root);
-    root->SetAttribute("xmlns", "urn:debugger_protocol_v1");
-    root->SetAttribute("xmlns:xdebug", "https://xdebug.org/dbgp/xdebug");
-    root->SetAttribute("command", "stack_get");
-    root->SetAttribute("transaction_id", transaction_id);
+    init_response_xml_root_node(root, "stack_get");
     root->SetAttribute("id", breakpoint_admin_add());
 
     std::string fileuri = "file://" + std::string(yasd::Util::get_executed_filename());
@@ -341,8 +336,6 @@ int RemoteDebugger::parse_context_names_cmd() {
     //     <context name="User defined constants" id="2"></context>
     // </response>
 
-    std::cout << "parse_context_names_cmd" << std::endl;
-
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
     tinyxml2::XMLElement *root;
     tinyxml2::XMLElement *child;
@@ -350,10 +343,7 @@ int RemoteDebugger::parse_context_names_cmd() {
 
     root = doc->NewElement("response");
     doc->LinkEndChild(root);
-    root->SetAttribute("xmlns", "urn:debugger_protocol_v1");
-    root->SetAttribute("xmlns:xdebug", "https://xdebug.org/dbgp/xdebug");
-    root->SetAttribute("command", "context_names");
-    root->SetAttribute("transaction_id", transaction_id);
+    init_response_xml_root_node(root, "context_names");
     root->SetAttribute("id", breakpoint_admin_add());
 
     child = root->InsertNewChildElement("context");

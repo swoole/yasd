@@ -38,6 +38,8 @@ class RemoteDebugger : public DebuggerModeBase {
     std::string get_next_cmd();
     int execute_cmd();
 
+    void init_response_xml_root_node(tinyxml2::XMLElement *root, std::string cmd);
+
   public:
     RemoteDebugger() {}
     ~RemoteDebugger() {}
