@@ -496,10 +496,13 @@ int RemoteDebugger::parse_context_get_cmd() {
     root->SetAttribute("context", 0);
 
     if (context_id == LOCALS) {
+        // Locals
         init_local_variables_xml_child_node(root);
     } else if (context_id == SUPER_GLOBALS) {
+        // Superglobals
         init_superglobal_variables_xml_child_node(root);
     } else {
+        // User defined constants
         init_user_defined_constant_variables_xml_child_node(root);
     }
 
