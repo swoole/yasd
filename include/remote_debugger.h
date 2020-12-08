@@ -20,6 +20,7 @@
 #include <netinet/in.h>
 
 #include <string>
+#include <functional>
 
 #include "include/debuger_mode_base.h"
 #include "thirdparty/tinyxml2/tinyxml2.h"
