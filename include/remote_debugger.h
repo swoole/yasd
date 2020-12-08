@@ -28,6 +28,12 @@ namespace yasd {
 class RemoteDebugger : public DebuggerModeBase {
   private:
     int sock;
+    std::string last_cmd;
+    int transaction_id = 0;
+    std::vector<std::pair<std::string, std::function<int()>>> handlers;
+
+    std::string get_next_cmd();
+    int execute_cmd();
 
   public:
     RemoteDebugger() {}
@@ -37,5 +43,15 @@ class RemoteDebugger : public DebuggerModeBase {
     void handle_request(const char *filename, int lineno);
     std::string make_message(tinyxml2::XMLDocument *doc);
     ssize_t send_doc(tinyxml2::XMLDocument *doc);
+
+    int parse_breakpoint_list_cmd();
+    int parse_breakpoint_set_cmd();
+    int parse_breakpoint_set_exception_cmd();
+
+    void register_cmd_handler();
+    std::function<int()> find_cmd_handler(std::string cmd);
+    std::string get_full_name(std::string sub_cmd);
+
+    int breakpoint_admin_add();
 };
 }  // namespace yasd

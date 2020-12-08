@@ -31,6 +31,8 @@ class Global {
     bool do_next = false;
     bool do_finish = false;
 
+    int breakpoint_count = 0;
+
     DebuggerModeBase *debugger = nullptr;
 
     char *entry_file = nullptr;
