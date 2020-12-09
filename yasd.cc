@@ -144,7 +144,7 @@ ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
     }
 
     if (global->do_next || global->do_finish) {
-        if (context->level <= context->next_level) {
+        if (context->level <= context->next_level && global->next_cid == context->cid) {
             yasd::Util::printf_info(yasd::Color::YASD_ECHO_MAGENTA, "stop because of next ");
             return global->debugger->handle_request(filename, lineno);
         }

@@ -31,6 +31,9 @@ class Global {
     bool do_next = false;
     bool do_finish = false;
 
+    // because cid does not repeat, next_cid can be global
+    int64_t next_cid = 0;
+
     int breakpoint_count = 0;
 
     DebuggerModeBase *debugger = nullptr;

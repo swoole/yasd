@@ -213,10 +213,11 @@ int CmderDebugger::parse_next_cmd() {
 
     int func_line_end = frame->func->op_array.line_end;
 
-    if (frame->opline->lineno == func_line_end) {
+    if (frame->opline->lineno == func_line_end && context->level != 1) {
         global->do_step = true;
     } else {
         context->next_level = context->level;
+        global->next_cid = context->cid;
         global->do_next = true;
     }
 

@@ -40,6 +40,8 @@ class StackFrame {
 class Context {
   public:
     int64_t cid;
+
+    // when a new coroutine is created, the level is reset to 0, so each coroutine needs a level
     int64_t level = 0;
     int64_t next_level = 0;
 
