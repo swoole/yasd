@@ -23,6 +23,8 @@
 #include "include/base64.h"
 #include "include/remote_debugger.h"
 
+#include "./php_yasd.h"
+
 #include "main/php.h"
 
 namespace yasd {
@@ -38,9 +40,9 @@ void RemoteDebugger::init() {
     }
 
     ide_address.sin_family = AF_INET;
-    ide_address.sin_port = htons(8000);
+    ide_address.sin_port = htons(YASD_G(remote_port));
 
-    if (inet_pton(AF_INET, "127.0.0.1", &ide_address.sin_addr) <= 0) {
+    if (inet_pton(AF_INET, YASD_G(remote_host), &ide_address.sin_addr) <= 0) {
         perror("Invalid address/ Address not supported");
         exit(EXIT_FAILURE);
     }
