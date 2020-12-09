@@ -35,8 +35,7 @@ yasd::StackFrame *save_prev_stack_frame(zend_execute_data *execute_data) {
     frame->level = context->level;
     frame->filename = yasd::Util::get_prev_executed_filename();
     frame->lineno = yasd::Util::get_prev_executed_file_lineno();
-    frame->function_name =
-        execute_data->func->common.function_name ? execute_data->func->common.function_name->val : "main";
+    frame->function_name = yasd::Util::get_prev_executed_function_name();
     context->strace->push_back(frame);
     return frame;
 }
