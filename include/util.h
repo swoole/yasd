@@ -44,8 +44,10 @@ class Util {
 
     static void show_breakpoint_hit_info();
     static const char *get_executed_filename();
+    static const char *get_executed_function_name();
     static int get_executed_file_lineno();
     static const char *get_prev_executed_filename();
+    static const char *get_prev_executed_function_name();
     static int get_prev_executed_file_lineno();
     static bool is_match(std::string sub_str, std::string target_str);
 

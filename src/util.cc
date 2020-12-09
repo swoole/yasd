@@ -197,6 +197,19 @@ const char *Util::get_executed_filename() {
     return ZSTR_VAL(filename);
 }
 
+const char *Util::get_executed_function_name() {
+    zend_execute_data *ptr = EG(current_execute_data);
+
+    while (ptr && (!ptr->func || !ZEND_USER_CODE(ptr->func->type))) {
+        ptr = ptr->prev_execute_data;
+    }
+
+    if (ptr && ptr->func && ptr->func->op_array.function_name) {
+        return ZSTR_VAL(ptr->func->op_array.function_name);
+    }
+    return "main";
+}
+
 int Util::get_executed_file_lineno() {
     if (!EG(current_execute_data)) {
         return 0;
@@ -215,7 +228,20 @@ const char *Util::get_prev_executed_filename() {
         return ptr->func->op_array.filename->val;
     }
 
-    return "uknow file";
+    return nullptr;
+}
+
+const char *Util::get_prev_executed_function_name() {
+    zend_execute_data *ptr = EG(current_execute_data)->prev_execute_data;
+
+    while (ptr && (!ptr->func || !ZEND_USER_CODE(ptr->func->type))) {
+        ptr = ptr->prev_execute_data;
+    }
+
+    if (ptr && ptr->func && ptr->func->op_array.function_name) {
+        return ZSTR_VAL(ptr->func->op_array.function_name);
+    }
+    return "main";
 }
 
 int Util::get_prev_executed_file_lineno() {

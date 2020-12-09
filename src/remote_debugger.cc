@@ -460,6 +460,8 @@ int RemoteDebugger::parse_run_cmd() {
 int RemoteDebugger::parse_stack_get_cmd() {
     // https://xdebug.org/docs/dbgp#stack-get
 
+    yasd::Context *context = global->get_current_context();
+
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
     tinyxml2::XMLElement *root;
     tinyxml2::XMLElement *child;
@@ -469,14 +471,28 @@ int RemoteDebugger::parse_stack_get_cmd() {
     init_response_xml_root_node(root, "stack_get");
     root->SetAttribute("id", breakpoint_admin_add());
 
-    std::string fileuri = "file://" + std::string(yasd::Util::get_executed_filename());
-
     child = root->InsertNewChildElement("stack");
-    child->SetAttribute("where", "{main}");
+    const char *tmp = yasd::Util::get_executed_function_name();
+    printf("function_name: %p\n", tmp);
+    child->SetAttribute("where", tmp);
     child->SetAttribute("level", "0");
     child->SetAttribute("type", "file");
+
+    std::string fileuri = "file://" + std::string(yasd::Util::get_executed_filename());
     child->SetAttribute("filename", fileuri.c_str());
     child->SetAttribute("lineno", yasd::Util::get_executed_file_lineno());
+
+    for (auto iter = context->strace->rbegin(); iter != context->strace->rend(); ++iter) {
+        yasd::Util::printfln_info(YASD_ECHO_GREEN, "%s:%d", (*iter)->filename.c_str(), (*iter)->lineno);
+        child = root->InsertNewChildElement("stack");
+        child->SetAttribute("where", (*iter)->function_name.c_str());
+        child->SetAttribute("level", (*iter)->level);
+        child->SetAttribute("type", "file");
+
+        std::string fileuri = "file://" + (*iter)->filename;
+        child->SetAttribute("filename", fileuri.c_str());
+        child->SetAttribute("lineno", (*iter)->lineno);
+    }
 
     send_doc(doc.get());
 
