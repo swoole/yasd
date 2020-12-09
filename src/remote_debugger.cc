@@ -311,17 +311,24 @@ void RemoteDebugger::set_property_value_xml_property_node(tinyxml2::XMLElement *
         } else {
             ZEND_HASH_FOREACH_KEY_VAL_IND(ht, num, key, val) {
                 tinyxml2::XMLElement *property = child->InsertNewChildElement("property");
+                std::string fullname;
                 if (key == nullptr) {  // num key
-                    property->SetAttribute("type", zend_zval_type_name(val));
                     property->SetAttribute("name", num);
-                    // printf("%s\n", Z_STRVAL_P(value));
-                    std::string fullname = "$" + name + "[" + std::to_string(num) + "]";
-                    property->SetAttribute("fullname", fullname.c_str());
+                    fullname = "$" + name + "[" + std::to_string(num) + "]";
+                } else {  // string key
+                    property->SetAttribute("name", ZSTR_VAL(key));
+                    fullname = "$" + name + "[" + ZSTR_VAL(key) + "]";
+                }
+
+                property->SetAttribute("type", zend_zval_type_name(val));
+                property->SetAttribute("fullname", fullname.c_str());
+                if (Z_TYPE_P(val) == IS_STRING) {
                     property->SetAttribute("size", (uint64_t) Z_STRLEN_P(val));
                     property->SetAttribute("encoding", "base64");
                     property->InsertNewText(base64_encode((unsigned char *) Z_STRVAL_P(val), Z_STRLEN_P(val)).c_str())
                         ->SetCData(true);
-                } else {  // string key
+                } else {
+                    property->InsertNewText(std::to_string(Z_LVAL_P(val)).c_str())->SetCData(true);
                 }
             }
             ZEND_HASH_FOREACH_END();
