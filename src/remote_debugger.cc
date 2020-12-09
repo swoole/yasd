@@ -100,17 +100,17 @@ std::string RemoteDebugger::get_next_cmd() {
 
     ret = recv(sock, buffer, 4096, 0);
     if (ret == 0) {
-        printf("connection closed\n");
+        // printf("connection closed\n");
         exit(255);
     }
-    printf("recv: %ld\n", ret);
+    // printf("recv: %ld\n", ret);
     std::string tmp(buffer, buffer + ret);
     last_cmd = tmp;
     return last_cmd;
 }
 
 int RemoteDebugger::execute_cmd() {
-    std::cout << last_cmd << std::endl;
+    // std::cout << last_cmd << std::endl;
 
     auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
 
@@ -119,11 +119,11 @@ int RemoteDebugger::execute_cmd() {
     auto handler = find_cmd_handler(exploded_cmd[0]);
 
     if (!handler) {
-        printf("not found handler\n");
+        // printf("not found handler\n");
         return FAILED;
     }
 
-    printf("found handler\n");
+    // printf("found handler\n");
 
     return handler();
 }
@@ -169,10 +169,10 @@ ssize_t RemoteDebugger::send_doc(tinyxml2::XMLDocument *doc) {
     ssize_t ret;
     std::string message = make_message(doc);
 
-    std::cout << message << std::endl;
+    // std::cout << message << std::endl;
 
     ret = send(sock, message.c_str(), message.length(), 0);
-    printf("send: %ld\n", ret);
+    // printf("send: %ld\n", ret);
 
     return ret;
 }
@@ -316,7 +316,7 @@ void RemoteDebugger::set_property_value_xml_property_node(tinyxml2::XMLElement *
                 if (key == nullptr) {  // num key
                     property->SetAttribute("type", zend_zval_type_name(val));
                     property->SetAttribute("name", num);
-                    printf("%s\n", Z_STRVAL_P(value));
+                    // printf("%s\n", Z_STRVAL_P(value));
                     std::string fullname = "$" + name + "[" + std::to_string(num) + "]";
                     property->SetAttribute("fullname", fullname.c_str());
                     property->SetAttribute("size", (uint64_t) Z_STRLEN_P(val));
