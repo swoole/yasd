@@ -16,3 +16,13 @@
 #include "include/common.h"
 
 char yasd_info_buf[YASD_MSG_SIZE];
+
+#ifdef ZEND_HASH_GET_APPLY_COUNT /* PHP 7.2 or earlier recursion protection */
+zend_bool yasd_zend_hash_is_recursive(zend_array* ht) {
+    return (ZEND_HASH_GET_APPLY_COUNT(ht) > 0);
+}
+#else /* PHP 7.3 or later */
+zend_bool yasd_zend_hash_is_recursive(zend_array* ht) {
+    return GC_IS_RECURSIVE(ht);
+}
+#endif

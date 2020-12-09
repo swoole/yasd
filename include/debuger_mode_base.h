@@ -13,20 +13,12 @@
   | Author: codinghuang  <codinghuang@qq.com>                            |
   +----------------------------------------------------------------------+
 */
-
 #pragma once
 
 #include <string>
-#include <functional>
 
 namespace yasd {
-class Cmder {
-  private:
-    std::string last_cmd;
-    int last_list_lineno = 1;
-    int listsize = 10;
-    std::vector<std::pair<std::string, std::function<int()>>> handlers;
-
+class DebuggerModeBase {
   public:
     enum status {
         SUCCESS = 0,
@@ -35,46 +27,10 @@ class Cmder {
         RECV_CMD_AGAIN,
     };
 
-    Cmder();
-    ~Cmder();
+    DebuggerModeBase() {}
+    virtual ~DebuggerModeBase() {}
 
-    std::string get_next_cmd();
-    int execute_cmd();
-
-    int parse_run_cmd();
-    int parse_breakpoint_cmd();
-    int parse_delete_breakpoint_cmd();
-    int parse_info_cmd();
-    int parse_step_cmd();
-    int parse_level_cmd();
-    int parse_backtrace_cmd();
-    int parse_next_cmd();
-    int parse_continue_cmd();
-    int parse_quit_cmd();
-    int parse_print_cmd();
-    int parse_list_cmd();
-    int parse_set_cmd();
-    int parse_watch_cmd();
-    int parse_unwatch_cmd();
-    int parse_finish_cmd();
-
-    bool is_disable_cmd(std::string cmd);
-    std::string get_full_name(std::string sub_cmd);
-
-    void register_cmd_handler();
-    std::function<int()> find_cmd_handler(std::string cmd);
-
-    void show_welcome_info();
-    void show_breakpoint_hit_info();
-
-    int get_listsize() {
-        return listsize;
-    }
-
-    void set_listsize(int _listsize) {
-        listsize = _listsize;
-    }
+    virtual void init() = 0;
+    virtual void handle_request(const char *filename, int lineno) = 0;
 };
 }  // namespace yasd
-
-extern yasd::Cmder *cmder;

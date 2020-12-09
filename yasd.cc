@@ -36,7 +36,6 @@
 #include "include/context.h"
 #include "include/global.h"
 #include "include/base.h"
-#include "include/cmder.h"
 #include "include/source_reader.h"
 #include "include/redirect_file_to_cin.h"
 
@@ -61,6 +60,8 @@ PHP_FUNCTION(redirectStdin) {
 PHP_INI_BEGIN()
 STD_PHP_INI_ENTRY("yasd.breakpoints_file", ".breakpoints_file.log", PHP_INI_ALL, OnUpdateString,
         breakpoints_file, zend_yasd_globals, yasd_globals)
+STD_PHP_INI_ENTRY("yasd.debug_mode", "cmd", PHP_INI_ALL, OnUpdateString,
+        debug_mode, zend_yasd_globals, yasd_globals)
 PHP_INI_END()
 // clang-format on
 
@@ -68,13 +69,11 @@ static void php_yasd_init_globals(zend_yasd_globals *yasd_globals) {
 }
 
 PHP_RINIT_FUNCTION(yasd) {
+    // use php -e
+    // CG(compiler_options) = CG(compiler_options) | ZEND_COMPILE_EXTENDED_STMT;
     if (!(CG(compiler_options) & ZEND_COMPILE_EXTENDED_INFO)) {
         return SUCCESS;
     }
-    // use php -e
-    // CG(compiler_options) = CG(compiler_options) | ZEND_COMPILE_EXTENDED_STMT;
-    int status;
-    std::string cmd;
 
     yasd_rinit(module_number);
 
@@ -82,18 +81,7 @@ PHP_RINIT_FUNCTION(yasd) {
 
     register_get_cid_function();
 
-    cmder->show_welcome_info();
-
-    yasd::Util::reload_cache_breakpoint();
-
-    do {
-        cmd = cmder->get_next_cmd();
-        if (cmd == "") {
-            yasd::Util::printfln_info(yasd::Color::YASD_ECHO_RED, "please input cmd!");
-            continue;
-        }
-        status = cmder->execute_cmd();
-    } while (status != yasd::Cmder::status::NEXT_OPLINE);
+    global->debugger->init();
 
     return SUCCESS;
 }
@@ -107,9 +95,6 @@ PHP_MINIT_FUNCTION(yasd) {
 
 PHP_MSHUTDOWN_FUNCTION(yasd) {
     delete global;
-    global = nullptr;
-    delete cmder;
-    cmder = nullptr;
 
     return SUCCESS;
 }
@@ -126,27 +111,6 @@ PHP_MINFO_FUNCTION(yasd) {
     php_info_print_table_end();
 
     DISPLAY_INI_ENTRIES();
-}
-
-void hang(const char *filename, int lineno) {
-    int status;
-    std::string cmd;
-    yasd::SourceReader reader(filename);
-
-    reader.show_contents(lineno, cmder->get_listsize(), true, true);
-
-    do {
-        global->do_next = false;
-        global->do_step = false;
-        global->do_finish = false;
-
-        cmd = cmder->get_next_cmd();
-        if (cmd == "") {
-            yasd::Util::printfln_info(yasd::Color::YASD_ECHO_RED, "please input cmd!");
-            continue;
-        }
-        status = cmder->execute_cmd();
-    } while (status != yasd::Cmder::status::NEXT_OPLINE);
 }
 
 ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
@@ -167,18 +131,18 @@ ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
 
     if (yasd::Util::is_hit_watch_point()) {
         yasd::Util::printf_info(yasd::Color::YASD_ECHO_MAGENTA, "stop because of watch point ");
-        return hang(filename, lineno);
+        return global->debugger->handle_request(filename, lineno);
     }
 
     if (global->do_step) {
         yasd::Util::printf_info(yasd::Color::YASD_ECHO_MAGENTA, "stop because of step ");
-        return hang(filename, lineno);
+        return global->debugger->handle_request(filename, lineno);
     }
 
     if (global->do_next || global->do_finish) {
         if (context->level <= context->next_level) {
             yasd::Util::printf_info(yasd::Color::YASD_ECHO_MAGENTA, "stop because of next ");
-            return hang(filename, lineno);
+            return global->debugger->handle_request(filename, lineno);
         }
     }
 
@@ -196,7 +160,7 @@ ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
         }
 
         yasd::Util::printf_info(yasd::Color::YASD_ECHO_MAGENTA, "stop because of breakpoint ");
-        return hang(filename, lineno);
+        return global->debugger->handle_request(filename, lineno);
     }
 }
 

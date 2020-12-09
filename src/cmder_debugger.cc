@@ -15,7 +15,7 @@
 */
 #include "include/common.h"
 #include "include/context.h"
-#include "include/cmder.h"
+#include "include/cmder_debugger.h"
 #include "include/util.h"
 #include "include/global.h"
 #include "include/source_reader.h"
@@ -29,17 +29,53 @@ END_EXTERN_C()
 
 #include <iostream>
 
-yasd::Cmder *cmder;
-
 namespace yasd {
 
-Cmder::Cmder() {
+CmderDebugger::CmderDebugger() {}
+
+void CmderDebugger::init() {
+    int status;
+    std::string cmd;
+
+    show_welcome_info();
+
+    yasd::Util::reload_cache_breakpoint();
     register_cmd_handler();
+
+    do {
+        cmd = get_next_cmd();
+        if (cmd == "") {
+            yasd::Util::printfln_info(yasd::Color::YASD_ECHO_RED, "please input cmd!");
+            continue;
+        }
+        status = execute_cmd();
+    } while (status != yasd::DebuggerModeBase::status::NEXT_OPLINE);
 }
 
-Cmder::~Cmder() {}
+void CmderDebugger::handle_request(const char *filename, int lineno) {
+    int status;
+    std::string cmd;
+    yasd::SourceReader reader(filename);
 
-std::string Cmder::get_next_cmd() {
+    reader.show_contents(lineno, get_listsize(), true, true);
+
+    do {
+        global->do_next = false;
+        global->do_step = false;
+        global->do_finish = false;
+
+        cmd = get_next_cmd();
+        if (cmd == "") {
+            yasd::Util::printfln_info(yasd::Color::YASD_ECHO_RED, "please input cmd!");
+            continue;
+        }
+        status = execute_cmd();
+    } while (status != yasd::DebuggerModeBase::status::NEXT_OPLINE);
+}
+
+CmderDebugger::~CmderDebugger() {}
+
+std::string CmderDebugger::get_next_cmd() {
     std::string tmp;
 
     std::cout << "> ";
@@ -51,13 +87,13 @@ std::string Cmder::get_next_cmd() {
     return last_cmd;
 }
 
-int Cmder::parse_run_cmd() {
+int CmderDebugger::parse_run_cmd() {
     global->is_running = true;
 
     return NEXT_OPLINE;
 }
 
-int Cmder::parse_breakpoint_cmd() {
+int CmderDebugger::parse_breakpoint_cmd() {
     int lineno;
     std::string filename;
 
@@ -95,7 +131,7 @@ int Cmder::parse_breakpoint_cmd() {
     return RECV_CMD_AGAIN;
 }
 
-int Cmder::parse_delete_breakpoint_cmd() {
+int CmderDebugger::parse_delete_breakpoint_cmd() {
     int lineno;
     std::string filename;
 
@@ -130,7 +166,7 @@ int Cmder::parse_delete_breakpoint_cmd() {
     return RECV_CMD_AGAIN;
 }
 
-int Cmder::parse_info_cmd() {
+int CmderDebugger::parse_info_cmd() {
     if (global->breakpoints->empty()) {
         yasd::Util::printfln_info(YASD_ECHO_RED, "no found breakpoints!");
     }
@@ -143,13 +179,13 @@ int Cmder::parse_info_cmd() {
     return RECV_CMD_AGAIN;
 }
 
-int Cmder::parse_step_cmd() {
+int CmderDebugger::parse_step_cmd() {
     global->do_step = true;
 
     return NEXT_OPLINE;
 }
 
-int Cmder::parse_level_cmd() {
+int CmderDebugger::parse_level_cmd() {
     yasd::Context *context = global->get_current_context();
 
     std::cout << "in coroutine: " << context->cid << ", level: " << context->level
@@ -158,7 +194,7 @@ int Cmder::parse_level_cmd() {
     return RECV_CMD_AGAIN;
 }
 
-int Cmder::parse_backtrace_cmd() {
+int CmderDebugger::parse_backtrace_cmd() {
     yasd::Context *context = global->get_current_context();
 
     yasd::Util::printfln_info(
@@ -171,7 +207,7 @@ int Cmder::parse_backtrace_cmd() {
     return RECV_CMD_AGAIN;
 }
 
-int Cmder::parse_next_cmd() {
+int CmderDebugger::parse_next_cmd() {
     yasd::Context *context = global->get_current_context();
     zend_execute_data *frame = EG(current_execute_data);
 
@@ -187,18 +223,18 @@ int Cmder::parse_next_cmd() {
     return NEXT_OPLINE;
 }
 
-int Cmder::parse_continue_cmd() {
+int CmderDebugger::parse_continue_cmd() {
     return NEXT_OPLINE;
 }
 
-int Cmder::parse_quit_cmd() {
+int CmderDebugger::parse_quit_cmd() {
     yasd::Util::printfln_info(YASD_ECHO_RED, "quit!");
     exit(255);
 
     return FAILED;
 }
 
-int Cmder::parse_print_cmd() {
+int CmderDebugger::parse_print_cmd() {
     auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
 
     yasd::Util::print_var(exploded_cmd[1]);
@@ -207,7 +243,7 @@ int Cmder::parse_print_cmd() {
     return RECV_CMD_AGAIN;
 }
 
-int Cmder::parse_list_cmd() {
+int CmderDebugger::parse_list_cmd() {
     int lineno = last_list_lineno;
     const char *filename = yasd::Util::get_executed_filename();
     yasd::SourceReader reader(filename);
@@ -229,11 +265,11 @@ int Cmder::parse_list_cmd() {
         last_list_lineno = lineno + listsize;
     }
 
-    reader.show_contents(lineno, cmder->get_listsize());
+    reader.show_contents(lineno, get_listsize());
     return RECV_CMD_AGAIN;
 }
 
-int Cmder::parse_set_cmd() {
+int CmderDebugger::parse_set_cmd() {
     auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
 
     if (exploded_cmd[1] == "listsize") {
@@ -242,7 +278,7 @@ int Cmder::parse_set_cmd() {
     return RECV_CMD_AGAIN;
 }
 
-int Cmder::parse_watch_cmd() {
+int CmderDebugger::parse_watch_cmd() {
     zend_function *func = EG(current_execute_data)->func;
     std::string var_name;
     yasd::WatchPointElement element;
@@ -291,7 +327,7 @@ int Cmder::parse_watch_cmd() {
     return RECV_CMD_AGAIN;
 }
 
-int Cmder::parse_unwatch_cmd() {
+int CmderDebugger::parse_unwatch_cmd() {
     zend_function *func = EG(current_execute_data)->func;
 
     auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
@@ -318,7 +354,7 @@ int Cmder::parse_unwatch_cmd() {
     return RECV_CMD_AGAIN;
 }
 
-int Cmder::parse_finish_cmd() {
+int CmderDebugger::parse_finish_cmd() {
     yasd::Context *context = global->get_current_context();
     // zend_execute_data *frame = EG(current_execute_data);
 
@@ -330,7 +366,7 @@ int Cmder::parse_finish_cmd() {
     return NEXT_OPLINE;
 }
 
-bool Cmder::is_disable_cmd(std::string cmd) {
+bool CmderDebugger::is_disable_cmd(std::string cmd) {
     // the command in the condition is allowed to execute in non-run state
     if (get_full_name(cmd) != "run" && get_full_name(cmd) != "b" && get_full_name(cmd) != "quit" &&
         get_full_name(cmd) != "info" && get_full_name(cmd) != "delete" && get_full_name(cmd) != "list" &&
@@ -341,7 +377,7 @@ bool Cmder::is_disable_cmd(std::string cmd) {
     return false;
 }
 
-std::string Cmder::get_full_name(std::string sub_cmd) {
+std::string CmderDebugger::get_full_name(std::string sub_cmd) {
     for (auto &&kv : handlers) {
         if (yasd::Util::is_match(sub_cmd, kv.first)) {
             return kv.first;
@@ -350,12 +386,12 @@ std::string Cmder::get_full_name(std::string sub_cmd) {
     return "unknown cmd";
 }
 
-void Cmder::show_welcome_info() {
+void CmderDebugger::show_welcome_info() {
     yasd::Util::printfln_info(YASD_ECHO_GREEN, "[Welcome to yasd, the Swoole debugger]");
     yasd::Util::printfln_info(YASD_ECHO_GREEN, "[You can set breakpoint now]");
 }
 
-int Cmder::execute_cmd() {
+int CmderDebugger::execute_cmd() {
     // yasd::Context *context = global->get_current_context();
 
     auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
@@ -375,26 +411,26 @@ int Cmder::execute_cmd() {
     return handler();
 }
 
-void Cmder::register_cmd_handler() {
-    handlers.push_back(std::make_pair("run", std::bind(&Cmder::parse_run_cmd, this)));
-    handlers.push_back(std::make_pair("b", std::bind(&Cmder::parse_breakpoint_cmd, this)));
-    handlers.push_back(std::make_pair("bt", std::bind(&Cmder::parse_backtrace_cmd, this)));
-    handlers.push_back(std::make_pair("delete", std::bind(&Cmder::parse_delete_breakpoint_cmd, this)));
-    handlers.push_back(std::make_pair("info", std::bind(&Cmder::parse_info_cmd, this)));
-    handlers.push_back(std::make_pair("step", std::bind(&Cmder::parse_step_cmd, this)));
-    handlers.push_back(std::make_pair("list", std::bind(&Cmder::parse_list_cmd, this)));
-    handlers.push_back(std::make_pair("next", std::bind(&Cmder::parse_next_cmd, this)));
-    handlers.push_back(std::make_pair("continue", std::bind(&Cmder::parse_continue_cmd, this)));
-    handlers.push_back(std::make_pair("quit", std::bind(&Cmder::parse_quit_cmd, this)));
-    handlers.push_back(std::make_pair("print", std::bind(&Cmder::parse_print_cmd, this)));
-    handlers.push_back(std::make_pair("finish", std::bind(&Cmder::parse_finish_cmd, this)));
-    handlers.push_back(std::make_pair("set", std::bind(&Cmder::parse_set_cmd, this)));
-    handlers.push_back(std::make_pair("level", std::bind(&Cmder::parse_level_cmd, this)));
-    handlers.push_back(std::make_pair("watch", std::bind(&Cmder::parse_watch_cmd, this)));
-    handlers.push_back(std::make_pair("unwatch", std::bind(&Cmder::parse_unwatch_cmd, this)));
+void CmderDebugger::register_cmd_handler() {
+    handlers.push_back(std::make_pair("run", std::bind(&CmderDebugger::parse_run_cmd, this)));
+    handlers.push_back(std::make_pair("b", std::bind(&CmderDebugger::parse_breakpoint_cmd, this)));
+    handlers.push_back(std::make_pair("bt", std::bind(&CmderDebugger::parse_backtrace_cmd, this)));
+    handlers.push_back(std::make_pair("delete", std::bind(&CmderDebugger::parse_delete_breakpoint_cmd, this)));
+    handlers.push_back(std::make_pair("info", std::bind(&CmderDebugger::parse_info_cmd, this)));
+    handlers.push_back(std::make_pair("step", std::bind(&CmderDebugger::parse_step_cmd, this)));
+    handlers.push_back(std::make_pair("list", std::bind(&CmderDebugger::parse_list_cmd, this)));
+    handlers.push_back(std::make_pair("next", std::bind(&CmderDebugger::parse_next_cmd, this)));
+    handlers.push_back(std::make_pair("continue", std::bind(&CmderDebugger::parse_continue_cmd, this)));
+    handlers.push_back(std::make_pair("quit", std::bind(&CmderDebugger::parse_quit_cmd, this)));
+    handlers.push_back(std::make_pair("print", std::bind(&CmderDebugger::parse_print_cmd, this)));
+    handlers.push_back(std::make_pair("finish", std::bind(&CmderDebugger::parse_finish_cmd, this)));
+    handlers.push_back(std::make_pair("set", std::bind(&CmderDebugger::parse_set_cmd, this)));
+    handlers.push_back(std::make_pair("level", std::bind(&CmderDebugger::parse_level_cmd, this)));
+    handlers.push_back(std::make_pair("watch", std::bind(&CmderDebugger::parse_watch_cmd, this)));
+    handlers.push_back(std::make_pair("unwatch", std::bind(&CmderDebugger::parse_unwatch_cmd, this)));
 }
 
-std::function<int()> Cmder::find_cmd_handler(std::string cmd) {
+std::function<int()> CmderDebugger::find_cmd_handler(std::string cmd) {
     for (auto &&kv : handlers) {
         if (kv.first == get_full_name(cmd)) {
             return kv.second;

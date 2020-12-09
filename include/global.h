@@ -18,6 +18,7 @@
 #include "include/context.h"
 #include "include/redirect_file_to_cin.h"
 #include "include/watch_point.h"
+#include "include/debuger_mode_base.h"
 
 #include <map>
 
@@ -30,6 +31,10 @@ class Global {
     bool do_next = false;
     bool do_finish = false;
 
+    int breakpoint_count = 0;
+
+    DebuggerModeBase *debugger = nullptr;
+
     char *entry_file = nullptr;
 
     std::map<int, Context *> *contexts;
@@ -39,7 +44,7 @@ class Global {
 
     yasd::WatchPoint watchPoints;
 
-    Global(/* args */);
+    Global();
     ~Global();
 
     Context *get_current_context();

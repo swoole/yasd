@@ -81,8 +81,13 @@ if test "$PHP_YASD" != "no"; then
         src/context.cc \
         src/global.cc \
         src/source_reader.cc \
-        src/cmder.cc
+        src/cmder_debugger.cc \
+        src/remote_debugger.cc \
+        src/base64.cc
     "
+
+    yasd_source_file="$yasd_source_file \
+        thirdparty/tinyxml2/tinyxml2.cc"
 
     PHP_NEW_EXTENSION(yasd, $yasd_source_file, $ext_shared,,$EXTRA_CFLAGS, cxx)
 
@@ -95,4 +100,6 @@ if test "$PHP_YASD" != "no"; then
     else
         CXXFLAGS="$CXXFLAGS -std=c++11"
     fi
+
+    PHP_ADD_BUILD_DIR($ext_builddir/thirdparty/tinyxml2)
 fi
