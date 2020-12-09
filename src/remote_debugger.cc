@@ -23,6 +23,8 @@
 #include "include/base64.h"
 #include "include/remote_debugger.h"
 
+#include "./php_yasd.h"
+
 #include "main/php.h"
 
 namespace yasd {
@@ -38,9 +40,9 @@ void RemoteDebugger::init() {
     }
 
     ide_address.sin_family = AF_INET;
-    ide_address.sin_port = htons(8000);
+    ide_address.sin_port = htons(YASD_G(remote_port));
 
-    if (inet_pton(AF_INET, "127.0.0.1", &ide_address.sin_addr) <= 0) {
+    if (inet_pton(AF_INET, YASD_G(remote_host), &ide_address.sin_addr) <= 0) {
         perror("Invalid address/ Address not supported");
         exit(EXIT_FAILURE);
     }
@@ -50,42 +52,7 @@ void RemoteDebugger::init() {
         exit(EXIT_FAILURE);
     }
 
-    std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
-
-    tinyxml2::XMLElement *root;
-    tinyxml2::XMLElement *child;
-
-    root = doc->NewElement("init");
-    doc->LinkEndChild(root);
-    root->SetAttribute("xmlns", "urn:debugger_protocol_v1");
-    root->SetAttribute("xmlns:xdebug", "https://xdebug.org/dbgp/xdebug");
-
-    child = doc->NewElement("engine");
-    root->InsertEndChild(child);
-    child->SetAttribute("version", "0.1.0");
-    child->InsertNewText("Yasd")->SetCData(true);
-
-    child = doc->NewElement("author");
-    root->InsertEndChild(child);
-    child->InsertNewText("Codinghuang")->SetCData(true);
-
-    child = doc->NewElement("url");
-    root->InsertEndChild(child);
-    child->InsertNewText("https://github.com/swoole/yasd")->SetCData(true);
-
-    child = doc->NewElement("copyright");
-    root->InsertEndChild(child);
-    child->InsertNewText("Copyright (c) 2020-2021 by Codinghuang")->SetCData(true);
-
-    std::string fileuri = "file://" + std::string(global->entry_file);
-    root->SetAttribute("fileuri", fileuri.c_str());
-    root->SetAttribute("language", "PHP");
-    root->SetAttribute("xdebug:language_version", PHP_VERSION);
-    root->SetAttribute("protocol_version", "1.0");
-    root->SetAttribute("appid", std::to_string(getpid()).c_str());
-    root->SetAttribute("idekey", "hantaohuang");
-
-    send_doc(doc.get());
+    send_init_event_message();
 
     int status;
     do {
@@ -165,6 +132,47 @@ void RemoteDebugger::handle_request(const char *filename, int lineno) {
     } while (status != yasd::DebuggerModeBase::status::NEXT_OPLINE);
 }
 
+ssize_t RemoteDebugger::send_init_event_message() {
+    // https://xdebug.org/docs/dbgp#connection-initialization
+
+    std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
+
+    tinyxml2::XMLElement *root;
+    tinyxml2::XMLElement *child;
+
+    root = doc->NewElement("init");
+    doc->LinkEndChild(root);
+    root->SetAttribute("xmlns", "urn:debugger_protocol_v1");
+    root->SetAttribute("xmlns:xdebug", "https://xdebug.org/dbgp/xdebug");
+
+    child = doc->NewElement("engine");
+    root->InsertEndChild(child);
+    child->SetAttribute("version", "0.1.0");
+    child->InsertNewText("Yasd")->SetCData(true);
+
+    child = doc->NewElement("author");
+    root->InsertEndChild(child);
+    child->InsertNewText("Codinghuang")->SetCData(true);
+
+    child = doc->NewElement("url");
+    root->InsertEndChild(child);
+    child->InsertNewText("https://github.com/swoole/yasd")->SetCData(true);
+
+    child = doc->NewElement("copyright");
+    root->InsertEndChild(child);
+    child->InsertNewText("Copyright (c) 2020-2021 by Codinghuang")->SetCData(true);
+
+    std::string fileuri = "file://" + std::string(global->entry_file);
+    root->SetAttribute("fileuri", fileuri.c_str());
+    root->SetAttribute("language", "PHP");
+    root->SetAttribute("xdebug:language_version", PHP_VERSION);
+    root->SetAttribute("protocol_version", "1.0");
+    root->SetAttribute("appid", std::to_string(getpid()).c_str());
+    root->SetAttribute("idekey", "hantaohuang");
+
+    return send_doc(doc.get());
+}
+
 ssize_t RemoteDebugger::send_doc(tinyxml2::XMLDocument *doc) {
     ssize_t ret;
     std::string message = make_message(doc);
@@ -178,6 +186,8 @@ ssize_t RemoteDebugger::send_doc(tinyxml2::XMLDocument *doc) {
 }
 
 std::string RemoteDebugger::make_message(tinyxml2::XMLDocument *doc) {
+    // https://xdebug.org/docs/dbgp#response
+
     std::string message = "";
     tinyxml2::XMLPrinter printer;
 
@@ -201,14 +211,8 @@ void RemoteDebugger::init_response_xml_root_node(tinyxml2::XMLElement *root, std
 }
 
 void RemoteDebugger::init_local_variables_xml_child_node(tinyxml2::XMLElement *root) {
-    // 465<?xml version="1.0" encoding="iso-8859-1"?>
-    // <response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="context_get"
-    // transaction_id="9" context="0">
-    //     <property name="$foo" fullname="$foo" type="uninitialized"></property>
-    //     <property name="$i" fullname="$i" type="uninitialized"></property>
-    //     <property name="$j" fullname="$j" type="uninitialized"></property>
-    //     <property name="$k" fullname="$k" type="uninitialized"></property>
-    // </response>
+    // https://xdebug.org/docs/dbgp#properties-variables-and-values
+
     tinyxml2::XMLElement *child;
 
     unsigned int i = 0;
@@ -239,16 +243,10 @@ void RemoteDebugger::init_superglobal_variables_xml_child_node(tinyxml2::XMLElem
 }
 
 void RemoteDebugger::init_user_defined_constant_variables_xml_child_node(tinyxml2::XMLElement *root) {
+    // https://xdebug.org/docs/dbgp#properties-variables-and-values
+
     zend_constant *val;
     void *tmp;
-
-    // 309<?xml version="1.0" encoding="iso-8859-1"?>
-    // <response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="context_get"
-    // transaction_id="11" context="2">
-    //     <property name="SWOOLE_LIBRARY" fullname="SWOOLE_LIBRARY" type="bool" facet="constant">
-    //         <![CDATA[1]]>
-    //     </property>
-    // </response>
 
     tinyxml2::XMLElement *child;
 
@@ -274,7 +272,10 @@ void RemoteDebugger::init_user_defined_constant_variables_xml_child_node(tinyxml
     return;
 }
 
-void RemoteDebugger::set_property_value_xml_property_node(tinyxml2::XMLElement *child, std::string name, zval *value) {
+void RemoteDebugger::set_property_value_xml_property_node(tinyxml2::XMLElement *child,
+                                                          std::string name,
+                                                          zval *value,
+                                                          bool encoding) {
     switch (Z_TYPE_P(value)) {
     case IS_TRUE:
         child->SetAttribute("type", "bool");
@@ -297,7 +298,13 @@ void RemoteDebugger::set_property_value_xml_property_node(tinyxml2::XMLElement *
         break;
     case IS_STRING:
         child->SetAttribute("type", "string");
-        child->InsertNewText(Z_STRVAL_P(value))->SetCData(true);
+        if (encoding) {
+            child->SetAttribute("encoding", "base64");
+            child->InsertNewText(base64_encode((unsigned char *) Z_STRVAL_P(value), Z_STRLEN_P(value)).c_str())
+                ->SetCData(true);
+        } else {
+            child->InsertNewText(Z_STRVAL_P(value))->SetCData(true);
+        }
         break;
     case IS_ARRAY: {
         zend_ulong num;
@@ -313,18 +320,31 @@ void RemoteDebugger::set_property_value_xml_property_node(tinyxml2::XMLElement *
         } else {
             ZEND_HASH_FOREACH_KEY_VAL_IND(ht, num, key, val) {
                 tinyxml2::XMLElement *property = child->InsertNewChildElement("property");
+                std::string fullname;
+                std::string key_str;
+
                 if (key == nullptr) {  // num key
-                    property->SetAttribute("type", zend_zval_type_name(val));
+                    key_str = std::to_string(num);
                     property->SetAttribute("name", num);
-                    // printf("%s\n", Z_STRVAL_P(value));
-                    std::string fullname = "$" + name + "[" + std::to_string(num) + "]";
-                    property->SetAttribute("fullname", fullname.c_str());
-                    property->SetAttribute("size", (uint64_t) Z_STRLEN_P(val));
-                    property->SetAttribute("encoding", "base64");
-                    property->InsertNewText(base64_encode((unsigned char *) Z_STRVAL_P(val), Z_STRLEN_P(val)).c_str())
-                        ->SetCData(true);
+                    fullname = "$" + name + "[" + std::to_string(num) + "]";
                 } else {  // string key
+                    key_str = ZSTR_VAL(key);
+                    property->SetAttribute("name", ZSTR_VAL(key));
+                    fullname = "$" + name + "[" + ZSTR_VAL(key) + "]";
                 }
+
+                property->SetAttribute("type", zend_zval_type_name(val));
+                property->SetAttribute("fullname", fullname.c_str());
+                set_property_value_xml_property_node(property, key_str, val, true);
+                // if (Z_TYPE_P(val) == IS_STRING) {
+                //     property->SetAttribute("size", (uint64_t) Z_STRLEN_P(val));
+                //     property->SetAttribute("encoding", "base64");
+                //     property->InsertNewText(base64_encode((unsigned char *) Z_STRVAL_P(val),
+                //     Z_STRLEN_P(val)).c_str())
+                //         ->SetCData(true);
+                // } else {
+                //     property->InsertNewText(std::to_string(Z_LVAL_P(val)).c_str())->SetCData(true);
+                // }
             }
             ZEND_HASH_FOREACH_END();
         }
@@ -342,8 +362,9 @@ void RemoteDebugger::set_property_value_xml_property_node(tinyxml2::XMLElement *
     }
 }
 
-// breakpoint_list -i 1
 int RemoteDebugger::parse_breakpoint_list_cmd() {
+    // https://xdebug.org/docs/dbgp#id7
+
     auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
     if (exploded_cmd[0] != "breakpoint_list") {
         return yasd::DebuggerModeBase::FAILED;
@@ -351,10 +372,6 @@ int RemoteDebugger::parse_breakpoint_list_cmd() {
     if (exploded_cmd[1] != "-i") {
         return yasd::DebuggerModeBase::FAILED;
     }
-
-    // 189<?xml version="1.0" encoding="iso-8859-1"?>
-    // <response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug"
-    // command="breakpoint_list" transaction_id="1"></response>
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
 
@@ -369,8 +386,9 @@ int RemoteDebugger::parse_breakpoint_list_cmd() {
     return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
 }
 
-// breakpoint_set -i 2 -t line -f file:///Users/hantaohuang/codeDir/cppCode/yasd/test.php -n 31
 int RemoteDebugger::parse_breakpoint_set_cmd() {
+    // https://xdebug.org/docs/dbgp#id3
+
     auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
     if (exploded_cmd[0] != "breakpoint_set") {
         return yasd::DebuggerModeBase::FAILED;
@@ -404,10 +422,6 @@ int RemoteDebugger::parse_breakpoint_set_cmd() {
 
     yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "set breakpoint at %s:%d", filename.c_str(), lineno);
 
-    // 203<?xml version="1.0" encoding="iso-8859-1"?>
-    // <response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="breakpoint_set"
-    // transaction_id="2" id="217190001"></response>
-
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
     tinyxml2::XMLElement *root;
 
@@ -421,8 +435,9 @@ int RemoteDebugger::parse_breakpoint_set_cmd() {
     return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
 }
 
-// breakpoint_set -i 5 -t exception -x *
 int RemoteDebugger::parse_breakpoint_set_exception_cmd() {
+    // https://xdebug.org/docs/dbgp#id3
+
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
     tinyxml2::XMLElement *root;
 
@@ -443,15 +458,11 @@ int RemoteDebugger::parse_run_cmd() {
 }
 
 int RemoteDebugger::parse_stack_get_cmd() {
+    // https://xdebug.org/docs/dbgp#stack-get
+
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
     tinyxml2::XMLElement *root;
     tinyxml2::XMLElement *child;
-
-    // <response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="stack_get"
-    // transaction_id="7">
-    // <stack where="{main}" level="0" type="file" filename="file:///Users/hantaohuang/codeDir/cppCode/yasd/test.php"
-    // lineno="31"></stack>
-    // </response>
 
     root = doc->NewElement("response");
     doc->LinkEndChild(root);
@@ -473,13 +484,7 @@ int RemoteDebugger::parse_stack_get_cmd() {
 }
 
 int RemoteDebugger::parse_context_names_cmd() {
-    // 329<?xml version="1.0" encoding="iso-8859-1"?>
-    // <response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="context_names"
-    // transaction_id="8">
-    //     <context name="Locals" id="0"></context>
-    //     <context name="Superglobals" id="1"></context>
-    //     <context name="User defined constants" id="2"></context>
-    // </response>
+    // https://xdebug.org/docs/dbgp#context-names
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
     tinyxml2::XMLElement *root;
@@ -509,7 +514,8 @@ int RemoteDebugger::parse_context_names_cmd() {
 }
 
 int RemoteDebugger::parse_context_get_cmd() {
-    // context_get -i 10 -d 0 -c 1
+    // https://xdebug.org/docs/dbgp#context-get
+
     auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
     int context_id;
     if (exploded_cmd[0] != "context_get") {
@@ -542,7 +548,8 @@ int RemoteDebugger::parse_context_get_cmd() {
 }
 
 int RemoteDebugger::parse_step_over_cmd() {
-    // step_over -i 10
+    // https://xdebug.org/docs/dbgp#continuation-commands
+
     yasd::Context *context = global->get_current_context();
     zend_execute_data *frame = EG(current_execute_data);
 
@@ -564,6 +571,18 @@ int RemoteDebugger::parse_step_into_cmd() {
     return NEXT_OPLINE;
 }
 
+int RemoteDebugger::parse_step_out_cmd() {
+    yasd::Context *context = global->get_current_context();
+    // zend_execute_data *frame = EG(current_execute_data);
+
+    // int func_line_end = frame->func->op_array.line_end;
+
+    context->next_level = context->level - 1;
+    global->do_finish = true;
+
+    return NEXT_OPLINE;
+}
+
 void RemoteDebugger::register_cmd_handler() {
     handlers.push_back(std::make_pair("breakpoint_list", std::bind(&RemoteDebugger::parse_breakpoint_list_cmd, this)));
     handlers.push_back(std::make_pair("breakpoint_set", std::bind(&RemoteDebugger::parse_breakpoint_set_cmd, this)));
@@ -573,6 +592,7 @@ void RemoteDebugger::register_cmd_handler() {
     handlers.push_back(std::make_pair("context_get", std::bind(&RemoteDebugger::parse_context_get_cmd, this)));
     handlers.push_back(std::make_pair("step_over", std::bind(&RemoteDebugger::parse_step_over_cmd, this)));
     handlers.push_back(std::make_pair("step_into", std::bind(&RemoteDebugger::parse_step_into_cmd, this)));
+    handlers.push_back(std::make_pair("step_out", std::bind(&RemoteDebugger::parse_step_out_cmd, this)));
 }
 
 std::function<int()> RemoteDebugger::find_cmd_handler(std::string cmd) {

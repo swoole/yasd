@@ -34,6 +34,8 @@ php --ri yasd
 ```ini
 zend_extension=yasd
 yasd.debug_mode=remote
+yasd.remote_host=127.0.0.1
+yasd.remote_port=9000
 ```
 
 ### cmd debug mode

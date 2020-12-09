@@ -47,7 +47,10 @@ class RemoteDebugger : public DebuggerModeBase {
     void init_local_variables_xml_child_node(tinyxml2::XMLElement *root);
     void init_superglobal_variables_xml_child_node(tinyxml2::XMLElement *root);
     void init_user_defined_constant_variables_xml_child_node(tinyxml2::XMLElement *root);
-    void set_property_value_xml_property_node(tinyxml2::XMLElement *child, std::string name, zval *value);
+    void set_property_value_xml_property_node(tinyxml2::XMLElement *child,
+                                              std::string name,
+                                              zval *value,
+                                              bool encoding = false);
 
   public:
     RemoteDebugger() {}
@@ -58,6 +61,8 @@ class RemoteDebugger : public DebuggerModeBase {
     std::string make_message(tinyxml2::XMLDocument *doc);
     ssize_t send_doc(tinyxml2::XMLDocument *doc);
 
+    ssize_t send_init_event_message();
+
     int parse_breakpoint_list_cmd();
     int parse_breakpoint_set_cmd();
     int parse_breakpoint_set_exception_cmd();
@@ -67,6 +72,7 @@ class RemoteDebugger : public DebuggerModeBase {
     int parse_context_get_cmd();
     int parse_step_over_cmd();
     int parse_step_into_cmd();
+    int parse_step_out_cmd();
 
     void register_cmd_handler();
     std::function<int()> find_cmd_handler(std::string cmd);
