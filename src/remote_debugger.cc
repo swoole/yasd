@@ -139,12 +139,11 @@ void RemoteDebugger::handle_request(const char *filename, int lineno) {
     tinyxml2::XMLElement *root;
     tinyxml2::XMLElement *child;
 
+    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+
     root = doc->NewElement("response");
     doc->LinkEndChild(root);
-    root->SetAttribute("xmlns", "urn:debugger_protocol_v1");
-    root->SetAttribute("xmlns:xdebug", "https://xdebug.org/dbgp/xdebug");
-    root->SetAttribute("command", "run");
-    root->SetAttribute("transaction_id", transaction_id);
+    init_response_xml_root_node(root, exploded_cmd[0]);
     root->SetAttribute("status", "break");
     root->SetAttribute("reason", "ok");
 
