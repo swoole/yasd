@@ -20,6 +20,7 @@
 #include "include/global.h"
 #include "include/util.h"
 #include "include/common.h"
+#include "include/base64.h"
 #include "include/remote_debugger.h"
 
 #include "main/php.h"
@@ -225,7 +226,7 @@ void RemoteDebugger::init_local_variables_xml_child_node(tinyxml2::XMLElement *r
         if (!var) {
             child->SetAttribute("type", "uninitialized");
         } else {
-            set_property_value_xml_property_node(child, var);
+            set_property_value_xml_property_node(child, ZSTR_VAL(var_name), var);
         }
 
         i++;
@@ -267,13 +268,13 @@ void RemoteDebugger::init_user_defined_constant_variables_xml_child_node(tinyxml
         child->SetAttribute("name", ZSTR_VAL(val->name));
         child->SetAttribute("fullname", ZSTR_VAL(val->name));
         child->SetAttribute("facet", "constant");
-        set_property_value_xml_property_node(child, zval_value);
+        set_property_value_xml_property_node(child, ZSTR_VAL(val->name), zval_value);
     }
     ZEND_HASH_FOREACH_END();
     return;
 }
 
-void RemoteDebugger::set_property_value_xml_property_node(tinyxml2::XMLElement *child, zval *value) {
+void RemoteDebugger::set_property_value_xml_property_node(tinyxml2::XMLElement *child, std::string name, zval *value) {
     switch (Z_TYPE_P(value)) {
     case IS_TRUE:
         child->SetAttribute("type", "bool");
@@ -298,10 +299,37 @@ void RemoteDebugger::set_property_value_xml_property_node(tinyxml2::XMLElement *
         child->SetAttribute("type", "string");
         child->InsertNewText(Z_STRVAL_P(value))->SetCData(true);
         break;
-    case IS_ARRAY:
+    case IS_ARRAY: {
+        zend_ulong num;
+        zend_string *key;
+        zval *val;
+        zend_array *ht = Z_ARRVAL_P(value);
+
         child->SetAttribute("type", "array");
-        child->InsertNewText("Array")->SetCData(true);
+        child->SetAttribute("children", ht->nNumOfElements > 0 ? "1" : "0");
+        child->SetAttribute("numchildren", ht->nNumOfElements);
+        if (yasd_zend_hash_is_recursive(ht)) {
+            child->SetAttribute("recursive", 1);
+        } else {
+            ZEND_HASH_FOREACH_KEY_VAL_IND(ht, num, key, val) {
+                tinyxml2::XMLElement *property = child->InsertNewChildElement("property");
+                if (key == nullptr) {  // num key
+                    property->SetAttribute("type", zend_zval_type_name(val));
+                    property->SetAttribute("name", num);
+                    printf("%s\n", Z_STRVAL_P(value));
+                    std::string fullname = "$" + name + "[" + std::to_string(num) + "]";
+                    property->SetAttribute("fullname", fullname.c_str());
+                    property->SetAttribute("size", (uint64_t) Z_STRLEN_P(val));
+                    property->SetAttribute("encoding", "base64");
+                    property->InsertNewText(base64_encode((unsigned char *) Z_STRVAL_P(val), Z_STRLEN_P(val)).c_str())
+                        ->SetCData(true);
+                } else {  // string key
+                }
+            }
+            ZEND_HASH_FOREACH_END();
+        }
         break;
+    }
     case IS_OBJECT:
         child->SetAttribute("type", "object");
         child->InsertNewText("Object")->SetCData(true);

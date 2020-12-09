@@ -82,7 +82,8 @@ if test "$PHP_YASD" != "no"; then
         src/global.cc \
         src/source_reader.cc \
         src/cmder_debugger.cc \
-        src/remote_debugger.cc
+        src/remote_debugger.cc \
+        src/base64.cc
     "
 
     yasd_source_file="$yasd_source_file \
