@@ -530,6 +530,12 @@ int RemoteDebugger::parse_step_over_cmd() {
     return NEXT_OPLINE;
 }
 
+int RemoteDebugger::parse_step_into_cmd() {
+    global->do_step = true;
+
+    return NEXT_OPLINE;
+}
+
 void RemoteDebugger::register_cmd_handler() {
     handlers.push_back(std::make_pair("breakpoint_list", std::bind(&RemoteDebugger::parse_breakpoint_list_cmd, this)));
     handlers.push_back(std::make_pair("breakpoint_set", std::bind(&RemoteDebugger::parse_breakpoint_set_cmd, this)));
@@ -538,6 +544,7 @@ void RemoteDebugger::register_cmd_handler() {
     handlers.push_back(std::make_pair("context_names", std::bind(&RemoteDebugger::parse_context_names_cmd, this)));
     handlers.push_back(std::make_pair("context_get", std::bind(&RemoteDebugger::parse_context_get_cmd, this)));
     handlers.push_back(std::make_pair("step_over", std::bind(&RemoteDebugger::parse_step_over_cmd, this)));
+    handlers.push_back(std::make_pair("step_into", std::bind(&RemoteDebugger::parse_step_into_cmd, this)));
 }
 
 std::function<int()> RemoteDebugger::find_cmd_handler(std::string cmd) {
