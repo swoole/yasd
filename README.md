@@ -29,15 +29,31 @@ see the extension info:
 php --ri yasd
 ```
 
+### IDE debug mode
+
+```ini
+zend_extension=yasd
+yasd.debug_mode=remote
+```
+
+### cmd debug mode
+
 All command supports fuzzy matching of priorities.
 
-### start debug
+set the ini file:
+
+```ini
+zend_extension=yasd
+yasd.debug_mode=cmd
+```
+
+#### start debug
 
 ```bash
 php -e test.php
 ```
 
-### list
+#### list
 
 ```bash
 l
@@ -45,7 +61,7 @@ l
 
 list source code
 
-### breakpoint
+#### breakpoint
 
 ```bash
 b absolute-file-path lineno
@@ -61,7 +77,7 @@ yasd.breakpoints_file="yasd.log"
 
 If the cache file exists, the breakpoints in the file are automatically loaded when debug is started.
 
-### Delete breakpoints
+#### Delete breakpoints
 
 ```bash
 d absolute-file-path lineno
@@ -69,7 +85,7 @@ d absolute-file-path lineno
 
 If a breakpoint is set or deleted without specifying `absolute-file-path`, It will set breakpoint in the current file.
 
-### watch point
+#### watch point
 
 We can monitor the variable changes or conditions, for example:
 
@@ -85,37 +101,37 @@ watch a > 10
 watch name == swoole
 ```
 
-### run
+#### run
 
 ```bash
 r
 ```
 
-### step over
+#### step over
 
 ```bash
 n
 ```
 
-### step into
+#### step into
 
 ```bash
 s
 ```
 
-### step out
+#### step out
 
 ```bash
 f
 ```
 
-### backtrace
+#### backtrace
 
 ```bash
 bt
 ```
 
-### info
+#### info
 
 show all breakpoints:
 
@@ -123,19 +139,19 @@ show all breakpoints:
 i
 ```
 
-### continue
+#### continue
 
 ```bash
 c
 ```
 
-### quit
+#### quit
 
 ```bash
 q
 ```
 
-### print
+#### print
 
 ```bash
 p
@@ -149,7 +165,7 @@ p this
 p this->prop
 ```
 
-### level
+#### level
 
 ```bash
 le
