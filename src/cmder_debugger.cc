@@ -182,8 +182,8 @@ int CmderDebugger::parse_info_cmd() {
 int CmderDebugger::parse_level_cmd() {
     yasd::Context *context = global->get_current_context();
 
-    std::cout << "in coroutine: " << context->cid << ", level: " << context->level
-              << ", next level: " << context->next_level << std::endl;
+    std::cout << "in coroutine: " << context->cid << "next coroutine: " << global->next_cid
+              << ", level: " << context->level << ", next level: " << context->next_level << std::endl;
 
     return RECV_CMD_AGAIN;
 }

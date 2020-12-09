@@ -27,6 +27,9 @@ int DebuggerModeBase::parse_step_over_cmd() {
 
     if (frame->opline->lineno == func_line_end && context->level != 1) {
         global->do_step = true;
+    } else if (frame->opline->lineno == func_line_end && context->level == 1) {
+        global->do_step = false;
+        global->do_next = false;
     } else {
         context->next_level = context->level;
         global->next_cid = context->cid;
