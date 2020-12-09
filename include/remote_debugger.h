@@ -70,9 +70,6 @@ class RemoteDebugger : public DebuggerModeBase {
     int parse_stack_get_cmd();
     int parse_context_names_cmd();
     int parse_context_get_cmd();
-    int parse_step_over_cmd();
-    int parse_step_into_cmd();
-    int parse_step_out_cmd();
 
     void register_cmd_handler();
     std::function<int()> find_cmd_handler(std::string cmd);

@@ -44,10 +44,8 @@ class CmderDebugger: public DebuggerModeBase {
     int parse_breakpoint_cmd();
     int parse_delete_breakpoint_cmd();
     int parse_info_cmd();
-    int parse_step_cmd();
     int parse_level_cmd();
     int parse_backtrace_cmd();
-    int parse_next_cmd();
     int parse_continue_cmd();
     int parse_quit_cmd();
     int parse_print_cmd();
@@ -55,7 +53,6 @@ class CmderDebugger: public DebuggerModeBase {
     int parse_set_cmd();
     int parse_watch_cmd();
     int parse_unwatch_cmd();
-    int parse_finish_cmd();
 
     bool is_disable_cmd(std::string cmd);
     std::string get_full_name(std::string sub_cmd);

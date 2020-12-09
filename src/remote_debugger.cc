@@ -563,43 +563,6 @@ int RemoteDebugger::parse_context_get_cmd() {
     return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
 }
 
-int RemoteDebugger::parse_step_over_cmd() {
-    // https://xdebug.org/docs/dbgp#continuation-commands
-
-    yasd::Context *context = global->get_current_context();
-    zend_execute_data *frame = EG(current_execute_data);
-
-    int func_line_end = frame->func->op_array.line_end;
-
-    if (frame->opline->lineno == func_line_end && context->level != 1) {
-        global->do_step = true;
-    } else {
-        context->next_level = context->level;
-        global->next_cid = context->cid;
-        global->do_next = true;
-    }
-
-    return NEXT_OPLINE;
-}
-
-int RemoteDebugger::parse_step_into_cmd() {
-    global->do_step = true;
-
-    return NEXT_OPLINE;
-}
-
-int RemoteDebugger::parse_step_out_cmd() {
-    yasd::Context *context = global->get_current_context();
-    // zend_execute_data *frame = EG(current_execute_data);
-
-    // int func_line_end = frame->func->op_array.line_end;
-
-    context->next_level = context->level - 1;
-    global->do_finish = true;
-
-    return NEXT_OPLINE;
-}
-
 void RemoteDebugger::register_cmd_handler() {
     handlers.push_back(std::make_pair("breakpoint_list", std::bind(&RemoteDebugger::parse_breakpoint_list_cmd, this)));
     handlers.push_back(std::make_pair("breakpoint_set", std::bind(&RemoteDebugger::parse_breakpoint_set_cmd, this)));

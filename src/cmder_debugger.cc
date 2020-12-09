@@ -179,12 +179,6 @@ int CmderDebugger::parse_info_cmd() {
     return RECV_CMD_AGAIN;
 }
 
-int CmderDebugger::parse_step_cmd() {
-    global->do_step = true;
-
-    return NEXT_OPLINE;
-}
-
 int CmderDebugger::parse_level_cmd() {
     yasd::Context *context = global->get_current_context();
 
@@ -205,23 +199,6 @@ int CmderDebugger::parse_backtrace_cmd() {
     }
 
     return RECV_CMD_AGAIN;
-}
-
-int CmderDebugger::parse_next_cmd() {
-    yasd::Context *context = global->get_current_context();
-    zend_execute_data *frame = EG(current_execute_data);
-
-    int func_line_end = frame->func->op_array.line_end;
-
-    if (frame->opline->lineno == func_line_end && context->level != 1) {
-        global->do_step = true;
-    } else {
-        context->next_level = context->level;
-        global->next_cid = context->cid;
-        global->do_next = true;
-    }
-
-    return NEXT_OPLINE;
 }
 
 int CmderDebugger::parse_continue_cmd() {
@@ -355,18 +332,6 @@ int CmderDebugger::parse_unwatch_cmd() {
     return RECV_CMD_AGAIN;
 }
 
-int CmderDebugger::parse_finish_cmd() {
-    yasd::Context *context = global->get_current_context();
-    // zend_execute_data *frame = EG(current_execute_data);
-
-    // int func_line_end = frame->func->op_array.line_end;
-
-    context->next_level = context->level - 1;
-    global->do_finish = true;
-
-    return NEXT_OPLINE;
-}
-
 bool CmderDebugger::is_disable_cmd(std::string cmd) {
     // the command in the condition is allowed to execute in non-run state
     if (get_full_name(cmd) != "run" && get_full_name(cmd) != "b" && get_full_name(cmd) != "quit" &&
@@ -418,13 +383,13 @@ void CmderDebugger::register_cmd_handler() {
     handlers.push_back(std::make_pair("bt", std::bind(&CmderDebugger::parse_backtrace_cmd, this)));
     handlers.push_back(std::make_pair("delete", std::bind(&CmderDebugger::parse_delete_breakpoint_cmd, this)));
     handlers.push_back(std::make_pair("info", std::bind(&CmderDebugger::parse_info_cmd, this)));
-    handlers.push_back(std::make_pair("step", std::bind(&CmderDebugger::parse_step_cmd, this)));
+    handlers.push_back(std::make_pair("step", std::bind(&CmderDebugger::parse_step_into_cmd, this)));
     handlers.push_back(std::make_pair("list", std::bind(&CmderDebugger::parse_list_cmd, this)));
-    handlers.push_back(std::make_pair("next", std::bind(&CmderDebugger::parse_next_cmd, this)));
+    handlers.push_back(std::make_pair("next", std::bind(&CmderDebugger::parse_step_over_cmd, this)));
     handlers.push_back(std::make_pair("continue", std::bind(&CmderDebugger::parse_continue_cmd, this)));
     handlers.push_back(std::make_pair("quit", std::bind(&CmderDebugger::parse_quit_cmd, this)));
     handlers.push_back(std::make_pair("print", std::bind(&CmderDebugger::parse_print_cmd, this)));
-    handlers.push_back(std::make_pair("finish", std::bind(&CmderDebugger::parse_finish_cmd, this)));
+    handlers.push_back(std::make_pair("finish", std::bind(&CmderDebugger::parse_step_out_cmd, this)));
     handlers.push_back(std::make_pair("set", std::bind(&CmderDebugger::parse_set_cmd, this)));
     handlers.push_back(std::make_pair("level", std::bind(&CmderDebugger::parse_level_cmd, this)));
     handlers.push_back(std::make_pair("watch", std::bind(&CmderDebugger::parse_watch_cmd, this)));

@@ -30,6 +30,10 @@ class DebuggerModeBase {
     DebuggerModeBase() {}
     virtual ~DebuggerModeBase() {}
 
+    int parse_step_over_cmd();
+    int parse_step_into_cmd();
+    int parse_step_out_cmd();
+
     virtual void init() = 0;
     virtual void handle_request(const char *filename, int lineno) = 0;
 };
