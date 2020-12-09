@@ -52,42 +52,7 @@ void RemoteDebugger::init() {
         exit(EXIT_FAILURE);
     }
 
-    std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
-
-    tinyxml2::XMLElement *root;
-    tinyxml2::XMLElement *child;
-
-    root = doc->NewElement("init");
-    doc->LinkEndChild(root);
-    root->SetAttribute("xmlns", "urn:debugger_protocol_v1");
-    root->SetAttribute("xmlns:xdebug", "https://xdebug.org/dbgp/xdebug");
-
-    child = doc->NewElement("engine");
-    root->InsertEndChild(child);
-    child->SetAttribute("version", "0.1.0");
-    child->InsertNewText("Yasd")->SetCData(true);
-
-    child = doc->NewElement("author");
-    root->InsertEndChild(child);
-    child->InsertNewText("Codinghuang")->SetCData(true);
-
-    child = doc->NewElement("url");
-    root->InsertEndChild(child);
-    child->InsertNewText("https://github.com/swoole/yasd")->SetCData(true);
-
-    child = doc->NewElement("copyright");
-    root->InsertEndChild(child);
-    child->InsertNewText("Copyright (c) 2020-2021 by Codinghuang")->SetCData(true);
-
-    std::string fileuri = "file://" + std::string(global->entry_file);
-    root->SetAttribute("fileuri", fileuri.c_str());
-    root->SetAttribute("language", "PHP");
-    root->SetAttribute("xdebug:language_version", PHP_VERSION);
-    root->SetAttribute("protocol_version", "1.0");
-    root->SetAttribute("appid", std::to_string(getpid()).c_str());
-    root->SetAttribute("idekey", "hantaohuang");
-
-    send_doc(doc.get());
+    send_init_event_message();
 
     int status;
     do {
@@ -165,6 +130,45 @@ void RemoteDebugger::handle_request(const char *filename, int lineno) {
         get_next_cmd();
         status = execute_cmd();
     } while (status != yasd::DebuggerModeBase::status::NEXT_OPLINE);
+}
+
+ssize_t RemoteDebugger::send_init_event_message() {
+    std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
+
+    tinyxml2::XMLElement *root;
+    tinyxml2::XMLElement *child;
+
+    root = doc->NewElement("init");
+    doc->LinkEndChild(root);
+    root->SetAttribute("xmlns", "urn:debugger_protocol_v1");
+    root->SetAttribute("xmlns:xdebug", "https://xdebug.org/dbgp/xdebug");
+
+    child = doc->NewElement("engine");
+    root->InsertEndChild(child);
+    child->SetAttribute("version", "0.1.0");
+    child->InsertNewText("Yasd")->SetCData(true);
+
+    child = doc->NewElement("author");
+    root->InsertEndChild(child);
+    child->InsertNewText("Codinghuang")->SetCData(true);
+
+    child = doc->NewElement("url");
+    root->InsertEndChild(child);
+    child->InsertNewText("https://github.com/swoole/yasd")->SetCData(true);
+
+    child = doc->NewElement("copyright");
+    root->InsertEndChild(child);
+    child->InsertNewText("Copyright (c) 2020-2021 by Codinghuang")->SetCData(true);
+
+    std::string fileuri = "file://" + std::string(global->entry_file);
+    root->SetAttribute("fileuri", fileuri.c_str());
+    root->SetAttribute("language", "PHP");
+    root->SetAttribute("xdebug:language_version", PHP_VERSION);
+    root->SetAttribute("protocol_version", "1.0");
+    root->SetAttribute("appid", std::to_string(getpid()).c_str());
+    root->SetAttribute("idekey", "hantaohuang");
+
+    return send_doc(doc.get());
 }
 
 ssize_t RemoteDebugger::send_doc(tinyxml2::XMLDocument *doc) {

@@ -58,6 +58,8 @@ class RemoteDebugger : public DebuggerModeBase {
     std::string make_message(tinyxml2::XMLDocument *doc);
     ssize_t send_doc(tinyxml2::XMLDocument *doc);
 
+    ssize_t send_init_event_message();
+
     int parse_breakpoint_list_cmd();
     int parse_breakpoint_set_cmd();
     int parse_breakpoint_set_exception_cmd();
