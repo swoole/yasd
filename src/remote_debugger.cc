@@ -473,7 +473,6 @@ int RemoteDebugger::parse_stack_get_cmd() {
 
     child = root->InsertNewChildElement("stack");
     const char *tmp = yasd::Util::get_executed_function_name();
-    printf("function_name: %p\n", tmp);
     child->SetAttribute("where", tmp);
     child->SetAttribute("level", "0");
     child->SetAttribute("type", "file");
