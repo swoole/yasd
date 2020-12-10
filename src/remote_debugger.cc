@@ -63,15 +63,22 @@ void RemoteDebugger::init() {
 
 std::string RemoteDebugger::get_next_cmd() {
     ssize_t ret;
+    char c;
     char buffer[4096];
+    char *p = buffer;
 
-    ret = recv(sock, buffer, 4096, 0);
-    if (ret == 0) {
-        // printf("connection closed\n");
-        exit(255);
-    }
+    do {
+        ret = recv(sock, &c, 1, 0);
+        *p = c;
+        if (ret == 0) {
+            // printf("connection closed\n");
+            exit(255);
+        }
+        p++;
+    } while (c != '\0');
+
     // printf("recv: %ld\n", ret);
-    std::string tmp(buffer, buffer + ret);
+    std::string tmp(buffer, buffer + (p - buffer));
     last_cmd = tmp;
     return last_cmd;
 }
@@ -90,7 +97,7 @@ int RemoteDebugger::execute_cmd() {
         return FAILED;
     }
 
-    // printf("found handler\n");
+    // printf("found hasndler\n");
 
     return handler();
 }
@@ -194,8 +201,7 @@ std::string RemoteDebugger::make_message(tinyxml2::XMLDocument *doc) {
     doc->Print(&printer);
 
     int size = printer.CStrSize() - 1 + sizeof("<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n") - 1;
-    message =
-        message + std::to_string(size);
+    message = message + std::to_string(size);
     message += '\0';
     message += "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
     message += printer.CStr();
@@ -361,6 +367,84 @@ void RemoteDebugger::set_property_value_xml_property_node(tinyxml2::XMLElement *
     default:
         break;
     }
+}
+
+int RemoteDebugger::parse_feature_set_cmd() {
+    // https://xdebug.org/docs/dbgp#feature-set
+
+    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+
+    std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
+
+    tinyxml2::XMLElement *root;
+
+    root = doc->NewElement("response");
+    doc->LinkEndChild(root);
+    init_response_xml_root_node(root, "feature_set");
+    root->SetAttribute("feature", exploded_cmd[4].c_str());
+    root->SetAttribute("success", 0);
+
+    send_doc(doc.get());
+
+    return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
+}
+
+int RemoteDebugger::parse_stdout_cmd() {
+    // https://xdebug.org/docs/dbgp#stdout-stderr
+
+    std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
+
+    tinyxml2::XMLElement *root;
+
+    root = doc->NewElement("response");
+    doc->LinkEndChild(root);
+    init_response_xml_root_node(root, "stdout");
+    root->SetAttribute("success", 0);
+
+    send_doc(doc.get());
+
+    return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
+}
+
+int RemoteDebugger::parse_status_cmd() {
+    // https://xdebug.org/docs/dbgp#status
+
+    std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
+
+    tinyxml2::XMLElement *root;
+
+    root = doc->NewElement("response");
+    doc->LinkEndChild(root);
+    init_response_xml_root_node(root, "status");
+    root->SetAttribute("status", "starting");
+    root->SetAttribute("reason", "ok");
+
+    send_doc(doc.get());
+
+    return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
+}
+
+// 225<?xml version="1.0" encoding="iso-8859-1"?>
+// <response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="eval" transaction_id="10"><property type="bool"><![CDATA[0]]></property></response>
+int RemoteDebugger::parse_eval_cmd() {
+    // https://xdebug.org/docs/dbgp#eval
+
+    std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
+
+    tinyxml2::XMLElement *root;
+    tinyxml2::XMLElement *child;
+
+    root = doc->NewElement("response");
+    doc->LinkEndChild(root);
+    init_response_xml_root_node(root, "eval");
+
+    child = root->InsertNewChildElement("property");
+    child->SetAttribute("type", "bool");
+    child->InsertNewText("0")->SetCData(true);
+
+    send_doc(doc.get());
+
+    return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
 }
 
 int RemoteDebugger::parse_breakpoint_list_cmd() {
@@ -583,6 +667,10 @@ int RemoteDebugger::parse_stop_cmd() {
 }
 
 void RemoteDebugger::register_cmd_handler() {
+    handlers.emplace_back(std::make_pair("feature_set", std::bind(&RemoteDebugger::parse_feature_set_cmd, this)));
+    handlers.emplace_back(std::make_pair("stdout", std::bind(&RemoteDebugger::parse_stdout_cmd, this)));
+    handlers.emplace_back(std::make_pair("status", std::bind(&RemoteDebugger::parse_status_cmd, this)));
+    handlers.emplace_back(std::make_pair("eval", std::bind(&RemoteDebugger::parse_eval_cmd, this)));
     handlers.emplace_back(
         std::make_pair("breakpoint_list", std::bind(&RemoteDebugger::parse_breakpoint_list_cmd, this)));
     handlers.emplace_back(std::make_pair("breakpoint_set", std::bind(&RemoteDebugger::parse_breakpoint_set_cmd, this)));
