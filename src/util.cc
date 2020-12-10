@@ -228,7 +228,7 @@ const char *Util::get_prev_executed_filename() {
         return ptr->func->op_array.filename->val;
     }
 
-    return nullptr;
+    return "unknow file";
 }
 
 const char *Util::get_prev_executed_function_name() {
