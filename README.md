@@ -29,9 +29,11 @@ see the extension info:
 php --ri yasd
 ```
 
-### Notice
+### Q&A
 
-If the `Hyperf` framework starts slowly when using `Yasd`, you can start with the following command:
+#### Slow Start Framework
+
+When using `yasd`, if the framework starts slowly (most of the time it's because the framework is scanning a lot of files, for example `Hyperf`), you can execute the following command:
 
 ```bash
 composer dump-autoload -o
@@ -42,6 +44,12 @@ Then modify the following configuration `config/config.php`:
 ```php
 'scan_cacheable' => env('SCAN_CACHEABLE', true)
 ```
+
+#### The breakpoint is not triggered
+
+1. No absolute path to the file is used
+2. The breakpoint is not a valid line, such as a function declaration, blank line, etc
+3. The code is generated with proxy classes, such as Hyperf. So you need to set breakpoints in the proxy class.
 
 ### IDE debug mode
 
