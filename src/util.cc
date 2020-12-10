@@ -48,7 +48,7 @@ std::vector<std::string> Util::explode(const std::string &target, const std::str
         }
 
         if (j == del_len) {
-            arr.push_back(target.substr(k, i - k));
+            arr.emplace_back(target.substr(k, i - k));
             i += del_len;
             k = i;
         } else {
@@ -56,7 +56,7 @@ std::vector<std::string> Util::explode(const std::string &target, const std::str
         }
     }
 
-    arr.push_back(target.substr(k, i - k));
+    arr.emplace_back(target.substr(k, i - k));
     return arr;
 }
 

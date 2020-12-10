@@ -378,22 +378,22 @@ int CmderDebugger::execute_cmd() {
 }
 
 void CmderDebugger::register_cmd_handler() {
-    handlers.push_back(std::make_pair("run", std::bind(&CmderDebugger::parse_run_cmd, this)));
-    handlers.push_back(std::make_pair("b", std::bind(&CmderDebugger::parse_breakpoint_cmd, this)));
-    handlers.push_back(std::make_pair("bt", std::bind(&CmderDebugger::parse_backtrace_cmd, this)));
-    handlers.push_back(std::make_pair("delete", std::bind(&CmderDebugger::parse_delete_breakpoint_cmd, this)));
-    handlers.push_back(std::make_pair("info", std::bind(&CmderDebugger::parse_info_cmd, this)));
-    handlers.push_back(std::make_pair("step", std::bind(&CmderDebugger::parse_step_into_cmd, this)));
-    handlers.push_back(std::make_pair("list", std::bind(&CmderDebugger::parse_list_cmd, this)));
-    handlers.push_back(std::make_pair("next", std::bind(&CmderDebugger::parse_step_over_cmd, this)));
-    handlers.push_back(std::make_pair("continue", std::bind(&CmderDebugger::parse_continue_cmd, this)));
-    handlers.push_back(std::make_pair("quit", std::bind(&CmderDebugger::parse_quit_cmd, this)));
-    handlers.push_back(std::make_pair("print", std::bind(&CmderDebugger::parse_print_cmd, this)));
-    handlers.push_back(std::make_pair("finish", std::bind(&CmderDebugger::parse_step_out_cmd, this)));
-    handlers.push_back(std::make_pair("set", std::bind(&CmderDebugger::parse_set_cmd, this)));
-    handlers.push_back(std::make_pair("level", std::bind(&CmderDebugger::parse_level_cmd, this)));
-    handlers.push_back(std::make_pair("watch", std::bind(&CmderDebugger::parse_watch_cmd, this)));
-    handlers.push_back(std::make_pair("unwatch", std::bind(&CmderDebugger::parse_unwatch_cmd, this)));
+    handlers.emplace_back(std::make_pair("run", std::bind(&CmderDebugger::parse_run_cmd, this)));
+    handlers.emplace_back(std::make_pair("b", std::bind(&CmderDebugger::parse_breakpoint_cmd, this)));
+    handlers.emplace_back(std::make_pair("bt", std::bind(&CmderDebugger::parse_backtrace_cmd, this)));
+    handlers.emplace_back(std::make_pair("delete", std::bind(&CmderDebugger::parse_delete_breakpoint_cmd, this)));
+    handlers.emplace_back(std::make_pair("info", std::bind(&CmderDebugger::parse_info_cmd, this)));
+    handlers.emplace_back(std::make_pair("step", std::bind(&CmderDebugger::parse_step_into_cmd, this)));
+    handlers.emplace_back(std::make_pair("list", std::bind(&CmderDebugger::parse_list_cmd, this)));
+    handlers.emplace_back(std::make_pair("next", std::bind(&CmderDebugger::parse_step_over_cmd, this)));
+    handlers.emplace_back(std::make_pair("continue", std::bind(&CmderDebugger::parse_continue_cmd, this)));
+    handlers.emplace_back(std::make_pair("quit", std::bind(&CmderDebugger::parse_quit_cmd, this)));
+    handlers.emplace_back(std::make_pair("print", std::bind(&CmderDebugger::parse_print_cmd, this)));
+    handlers.emplace_back(std::make_pair("finish", std::bind(&CmderDebugger::parse_step_out_cmd, this)));
+    handlers.emplace_back(std::make_pair("set", std::bind(&CmderDebugger::parse_set_cmd, this)));
+    handlers.emplace_back(std::make_pair("level", std::bind(&CmderDebugger::parse_level_cmd, this)));
+    handlers.emplace_back(std::make_pair("watch", std::bind(&CmderDebugger::parse_watch_cmd, this)));
+    handlers.emplace_back(std::make_pair("unwatch", std::bind(&CmderDebugger::parse_unwatch_cmd, this)));
 }
 
 std::function<int()> CmderDebugger::find_cmd_handler(std::string cmd) {
