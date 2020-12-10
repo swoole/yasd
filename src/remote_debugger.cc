@@ -67,6 +67,7 @@ std::string RemoteDebugger::get_next_cmd() {
     char buffer[4096];
     char *p = buffer;
 
+    // The IDE may send multiple commands, so we need to determine the delimiter.
     do {
         ret = recv(sock, &c, 1, 0);
         *p = c;
