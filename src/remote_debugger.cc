@@ -193,12 +193,13 @@ std::string RemoteDebugger::make_message(tinyxml2::XMLDocument *doc) {
 
     doc->Print(&printer);
 
+    int size = printer.CStrSize() - 1 + sizeof("<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n") - 1;
     message =
-        message + std::to_string(printer.CStrSize() + sizeof("<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n") - 1);
+        message + std::to_string(size);
     message += '\0';
     message += "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
-    message += '\0';
     message += printer.CStr();
+    message += '\0';
 
     return message;
 }
