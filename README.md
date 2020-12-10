@@ -29,6 +29,20 @@ see the extension info:
 php --ri yasd
 ```
 
+### Notice
+
+If the `Hyperf` framework starts slowly when using `Yasd`, you can start with the following command:
+
+```bash
+composer dump-autoload -o
+```
+
+Then modify the following configuration `config/config.php`:
+
+```php
+'scan_cacheable' => env('SCAN_CACHEABLE', true)
+```
+
 ### IDE debug mode
 
 ```ini
