@@ -562,8 +562,28 @@ int RemoteDebugger::parse_context_get_cmd() {
     return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
 }
 
+int RemoteDebugger::parse_stop_cmd() {
+    // there is no good way to shut down the server,
+    // so let the debugger and the process separate first
+    global->is_detach = true;
+
+    std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
+    tinyxml2::XMLElement *root;
+
+    root = doc->NewElement("response");
+    doc->LinkEndChild(root);
+    init_response_xml_root_node(root, "stop");
+    root->SetAttribute("status", "stopped");
+    root->SetAttribute("reason", "ok");
+
+    send_doc(doc.get());
+
+    return yasd::DebuggerModeBase::NEXT_OPLINE;
+}
+
 void RemoteDebugger::register_cmd_handler() {
-    handlers.emplace_back(std::make_pair("breakpoint_list", std::bind(&RemoteDebugger::parse_breakpoint_list_cmd, this)));
+    handlers.emplace_back(
+        std::make_pair("breakpoint_list", std::bind(&RemoteDebugger::parse_breakpoint_list_cmd, this)));
     handlers.emplace_back(std::make_pair("breakpoint_set", std::bind(&RemoteDebugger::parse_breakpoint_set_cmd, this)));
     handlers.emplace_back(std::make_pair("run", std::bind(&RemoteDebugger::parse_run_cmd, this)));
     handlers.emplace_back(std::make_pair("stack_get", std::bind(&RemoteDebugger::parse_stack_get_cmd, this)));
@@ -572,6 +592,7 @@ void RemoteDebugger::register_cmd_handler() {
     handlers.emplace_back(std::make_pair("step_over", std::bind(&RemoteDebugger::parse_step_over_cmd, this)));
     handlers.emplace_back(std::make_pair("step_into", std::bind(&RemoteDebugger::parse_step_into_cmd, this)));
     handlers.emplace_back(std::make_pair("step_out", std::bind(&RemoteDebugger::parse_step_out_cmd, this)));
+    handlers.emplace_back(std::make_pair("stop", std::bind(&RemoteDebugger::parse_stop_cmd, this)));
 }
 
 std::function<int()> RemoteDebugger::find_cmd_handler(std::string cmd) {

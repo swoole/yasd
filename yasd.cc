@@ -69,8 +69,7 @@ STD_PHP_INI_ENTRY("yasd.remote_port", "9000", PHP_INI_ALL, OnUpdateLong,
 PHP_INI_END()
 // clang-format on
 
-static void php_yasd_init_globals(zend_yasd_globals *yasd_globals) {
-}
+static void php_yasd_init_globals(zend_yasd_globals *yasd_globals) {}
 
 PHP_RINIT_FUNCTION(yasd) {
     // use php -e
@@ -118,6 +117,10 @@ PHP_MINFO_FUNCTION(yasd) {
 }
 
 ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
+    if (UNEXPECTED(global->is_detach)) {
+        return;
+    }
+
     // zend_op_array *op_array = &frame->func->op_array;
     const zend_op *online = EG(current_execute_data)->opline;
     const char *filename;

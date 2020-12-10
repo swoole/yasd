@@ -31,6 +31,8 @@ class Global {
     bool do_next = false;
     bool do_finish = false;
 
+    bool is_detach = false;
+
     // because cid does not repeat, next_cid can be global
     int64_t next_cid = 0;
 
