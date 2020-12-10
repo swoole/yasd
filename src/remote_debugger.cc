@@ -567,6 +567,17 @@ int RemoteDebugger::parse_stop_cmd() {
     // so let the debugger and the process separate first
     global->is_detach = true;
 
+    std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
+    tinyxml2::XMLElement *root;
+
+    root = doc->NewElement("response");
+    doc->LinkEndChild(root);
+    init_response_xml_root_node(root, "stop");
+    root->SetAttribute("status", "stopped");
+    root->SetAttribute("reason", "ok");
+
+    send_doc(doc.get());
+
     return yasd::DebuggerModeBase::NEXT_OPLINE;
 }
 
