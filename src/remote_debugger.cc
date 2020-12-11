@@ -289,7 +289,7 @@ void RemoteDebugger::init_user_defined_constant_variables_xml_child_node(tinyxml
 
 void RemoteDebugger::init_xml_property_node(
     tinyxml2::XMLElement *child, std::string name, zval *value, int level, bool encoding) {
-    if (level > 3) {
+    if (level > YASD_G(depth)) {
         return;
     }
 

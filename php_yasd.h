@@ -29,6 +29,7 @@ ZEND_BEGIN_MODULE_GLOBALS(yasd)
     char *debug_mode;
     char *remote_host;
     uint16_t remote_port;
+    uint16_t depth;
 ZEND_END_MODULE_GLOBALS(yasd)
 
 extern ZEND_DECLARE_MODULE_GLOBALS(yasd);

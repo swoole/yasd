@@ -66,6 +66,8 @@ STD_PHP_INI_ENTRY("yasd.remote_host", "127.0.0.1", PHP_INI_ALL, OnUpdateString,
         remote_host, zend_yasd_globals, yasd_globals)
 STD_PHP_INI_ENTRY("yasd.remote_port", "9000", PHP_INI_ALL, OnUpdateLong,
         remote_port, zend_yasd_globals, yasd_globals)
+STD_PHP_INI_ENTRY("yasd.depth", "3", PHP_INI_ALL, OnUpdateLong,
+        depth, zend_yasd_globals, yasd_globals)
 PHP_INI_END()
 // clang-format on
 
