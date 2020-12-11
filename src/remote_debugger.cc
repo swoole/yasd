@@ -425,10 +425,21 @@ int RemoteDebugger::parse_status_cmd() {
     return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
 }
 
-// 225<?xml version="1.0" encoding="iso-8859-1"?>
-// <response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="eval" transaction_id="10"><property type="bool"><![CDATA[0]]></property></response>
 int RemoteDebugger::parse_eval_cmd() {
     // https://xdebug.org/docs/dbgp#eval
+
+    zval ret_zval;
+    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+
+    if (exploded_cmd[3] != "--") {
+        return yasd::DebuggerModeBase::FAILED;
+    }
+
+    std::string eval_str = exploded_cmd[4];
+
+    eval_str = base64_decode(eval_str);
+
+    zend_eval_string(const_cast<char *>(eval_str.c_str()), &ret_zval, const_cast<char *>("yasd://debug-eval"));
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
 
@@ -439,9 +450,9 @@ int RemoteDebugger::parse_eval_cmd() {
     doc->LinkEndChild(root);
     init_response_xml_root_node(root, "eval");
 
+
     child = root->InsertNewChildElement("property");
-    child->SetAttribute("type", "bool");
-    child->InsertNewText("0")->SetCData(true);
+    set_property_value_xml_property_node(child, "", &ret_zval);
 
     send_doc(doc.get());
 
