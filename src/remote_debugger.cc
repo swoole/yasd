@@ -238,7 +238,7 @@ void RemoteDebugger::init_local_variables_xml_child_node(tinyxml2::XMLElement *r
         if (!var) {
             child->SetAttribute("type", "uninitialized");
         } else {
-            set_property_value_xml_property_node(child, ZSTR_VAL(var_name), var);
+            init_xml_property_node(child, ZSTR_VAL(var_name), var);
         }
 
         i++;
@@ -274,13 +274,13 @@ void RemoteDebugger::init_user_defined_constant_variables_xml_child_node(tinyxml
         child->SetAttribute("name", ZSTR_VAL(val->name));
         child->SetAttribute("fullname", ZSTR_VAL(val->name));
         child->SetAttribute("facet", "constant");
-        set_property_value_xml_property_node(child, ZSTR_VAL(val->name), zval_value);
+        init_xml_property_node(child, ZSTR_VAL(val->name), zval_value);
     }
     ZEND_HASH_FOREACH_END();
     return;
 }
 
-void RemoteDebugger::set_property_value_xml_property_node(tinyxml2::XMLElement *child,
+void RemoteDebugger::init_xml_property_node(tinyxml2::XMLElement *child,
                                                           std::string name,
                                                           zval *value,
                                                           bool encoding) {
@@ -343,7 +343,7 @@ void RemoteDebugger::set_property_value_xml_property_node(tinyxml2::XMLElement *
 
                 property->SetAttribute("type", zend_zval_type_name(val));
                 property->SetAttribute("fullname", fullname.c_str());
-                set_property_value_xml_property_node(property, key_str, val, true);
+                init_xml_property_node(property, key_str, val, true);
                 // if (Z_TYPE_P(val) == IS_STRING) {
                 //     property->SetAttribute("size", (uint64_t) Z_STRLEN_P(val));
                 //     property->SetAttribute("encoding", "base64");
@@ -451,7 +451,7 @@ int RemoteDebugger::parse_eval_cmd() {
     init_response_xml_root_node(root, "eval");
 
     child = root->InsertNewChildElement("property");
-    set_property_value_xml_property_node(child, "", &ret_zval);
+    init_xml_property_node(child, "", &ret_zval);
 
     send_doc(doc.get());
 
