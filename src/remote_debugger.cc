@@ -287,7 +287,12 @@ void RemoteDebugger::init_user_defined_constant_variables_xml_child_node(tinyxml
     return;
 }
 
-void RemoteDebugger::init_xml_property_node(tinyxml2::XMLElement *child, std::string name, zval *value, bool encoding) {
+void RemoteDebugger::init_xml_property_node(
+    tinyxml2::XMLElement *child, std::string name, zval *value, int level, bool encoding) {
+    if (level > 3) {
+        return;
+    }
+
     switch (Z_TYPE_P(value)) {
     case IS_TRUE:
         child->SetAttribute("type", "bool");
@@ -347,7 +352,9 @@ void RemoteDebugger::init_xml_property_node(tinyxml2::XMLElement *child, std::st
 
                 property->SetAttribute("type", zend_zval_type_name(val));
                 property->SetAttribute("fullname", fullname.c_str());
-                init_xml_property_node(property, key_str, val, true);
+                level++;
+                init_xml_property_node(property, key_str, val, level, true);
+                level--;
             }
             ZEND_HASH_FOREACH_END();
         }
@@ -378,7 +385,9 @@ void RemoteDebugger::init_xml_property_node(tinyxml2::XMLElement *child, std::st
 
             property->SetAttribute("type", zend_zval_type_name(val));
             property->SetAttribute("fullname", fullname.c_str());
-            init_xml_property_node(property, key_str, val, true);
+            level++;
+            init_xml_property_node(property, key_str, val, level, true);
+            level--;
         }
         ZEND_HASH_FOREACH_END();
         break;
