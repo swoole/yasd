@@ -344,15 +344,6 @@ void RemoteDebugger::init_xml_property_node(tinyxml2::XMLElement *child,
                 property->SetAttribute("type", zend_zval_type_name(val));
                 property->SetAttribute("fullname", fullname.c_str());
                 init_xml_property_node(property, key_str, val, true);
-                // if (Z_TYPE_P(val) == IS_STRING) {
-                //     property->SetAttribute("size", (uint64_t) Z_STRLEN_P(val));
-                //     property->SetAttribute("encoding", "base64");
-                //     property->InsertNewText(base64_encode((unsigned char *) Z_STRVAL_P(val),
-                //     Z_STRLEN_P(val)).c_str())
-                //         ->SetCData(true);
-                // } else {
-                //     property->InsertNewText(std::to_string(Z_LVAL_P(val)).c_str())->SetCData(true);
-                // }
             }
             ZEND_HASH_FOREACH_END();
         }
