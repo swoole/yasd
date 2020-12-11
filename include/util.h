@@ -65,5 +65,7 @@ class Util {
     static bool is_integer(const std::string & s);
 
     static bool eval(char *str, zval *retval_ptr, char *string_name);
+
+    static zend_array *get_properties(zval *zobj);
 };
 }  // namespace yasd

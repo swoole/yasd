@@ -413,4 +413,12 @@ bool Util::eval(char *str, zval *retval_ptr, char *string_name) {
 
     return true;
 }
+
+zend_array *Util::get_properties(zval *zobj) {
+    if (Z_OBJ_HANDLER_P(zobj, get_properties)) {
+        return Z_OBJPROP_P(zobj);
+    }
+    return nullptr;
+}
+
 }  // namespace yasd

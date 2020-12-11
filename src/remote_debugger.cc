@@ -227,6 +227,13 @@ void RemoteDebugger::init_local_variables_xml_child_node(tinyxml2::XMLElement *r
 
     zend_op_array *op_array = &EG(current_execute_data)->func->op_array;
 
+    if (Z_TYPE(EG(current_execute_data)->This) == IS_OBJECT) {
+        child = root->InsertNewChildElement("property");
+        child->SetAttribute("name", "$this");
+        child->SetAttribute("fullname", "$this");
+        init_xml_property_node(child, "", &EG(current_execute_data)->This);
+    }
+
     while (i < (unsigned int) op_array->last_var) {
         child = root->InsertNewChildElement("property");
         zend_string *var_name = op_array->vars[i];
@@ -280,10 +287,7 @@ void RemoteDebugger::init_user_defined_constant_variables_xml_child_node(tinyxml
     return;
 }
 
-void RemoteDebugger::init_xml_property_node(tinyxml2::XMLElement *child,
-                                                          std::string name,
-                                                          zval *value,
-                                                          bool encoding) {
+void RemoteDebugger::init_xml_property_node(tinyxml2::XMLElement *child, std::string name, zval *value, bool encoding) {
     switch (Z_TYPE_P(value)) {
     case IS_TRUE:
         child->SetAttribute("type", "bool");
@@ -349,10 +353,36 @@ void RemoteDebugger::init_xml_property_node(tinyxml2::XMLElement *child,
         }
         break;
     }
-    case IS_OBJECT:
+    case IS_OBJECT: {
+        zend_string *class_name;
+        zend_array *properties;
+        class_name = Z_OBJCE_P(value)->name;
+        zend_ulong num;
+        zend_string *key;
+        zval *val;
+        properties = yasd::Util::get_properties(value);
+
         child->SetAttribute("type", "object");
-        child->InsertNewText("Object")->SetCData(true);
+        child->SetAttribute("classname", ZSTR_VAL(class_name));
+        child->SetAttribute("children", properties->nNumOfElements > 0 ? "1" : "0");
+        child->SetAttribute("numchildren", properties->nNumOfElements);
+
+        ZEND_HASH_FOREACH_KEY_VAL_IND(properties, num, key, val) {
+            tinyxml2::XMLElement *property = child->InsertNewChildElement("property");
+            std::string fullname;
+            std::string key_str;
+
+            key_str = ZSTR_VAL(key);
+            property->SetAttribute("name", key_str.c_str());
+            fullname = "$this->" + key_str;
+
+            property->SetAttribute("type", zend_zval_type_name(val));
+            property->SetAttribute("fullname", fullname.c_str());
+            init_xml_property_node(property, key_str, val, true);
+        }
+        ZEND_HASH_FOREACH_END();
         break;
+    }
     case IS_UNDEF:
         child->SetAttribute("type", "uninitialized");
         break;
