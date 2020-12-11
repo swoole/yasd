@@ -439,7 +439,7 @@ int RemoteDebugger::parse_eval_cmd() {
 
     eval_str = base64_decode(eval_str);
 
-    zend_eval_string(const_cast<char *>(eval_str.c_str()), &ret_zval, const_cast<char *>("yasd://debug-eval"));
+    yasd::Util::eval(const_cast<char *>(eval_str.c_str()), &ret_zval, const_cast<char *>("yasd://debug-eval"));
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
 
@@ -449,7 +449,6 @@ int RemoteDebugger::parse_eval_cmd() {
     root = doc->NewElement("response");
     doc->LinkEndChild(root);
     init_response_xml_root_node(root, "eval");
-
 
     child = root->InsertNewChildElement("property");
     set_property_value_xml_property_node(child, "", &ret_zval);

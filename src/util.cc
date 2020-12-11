@@ -347,7 +347,7 @@ bool Util::is_hit_watch_point() {
     for (auto watchpointIter = var_watchpoint->second->begin(); watchpointIter != var_watchpoint->second->end();
          watchpointIter++) {
         std::string var_name = watchpointIter->first;
-        yasd::WatchPointElement& watchpoint = watchpointIter->second;
+        yasd::WatchPointElement &watchpoint = watchpointIter->second;
 
         zval *new_var = yasd::Util::find_variable(var_name);
         if (new_var == nullptr) {
@@ -395,5 +395,22 @@ bool Util::is_integer(const std::string &s) {
     strtol(s.c_str(), &p, 10);
 
     return (*p == 0);
+}
+
+bool Util::eval(char *str, zval *retval_ptr, char *string_name) {
+    int origin_error_reporting = EG(error_reporting);
+
+    // we need to turn off the warning if the variable is UNDEF
+    EG(error_reporting) = 0;
+
+    int ret;
+    ret = zend_eval_string(str, retval_ptr, const_cast<char *>("xdebug://debug-eval"));
+    if (ret == FAILURE) {
+        return false;
+    }
+
+    EG(error_reporting) = origin_error_reporting;
+
+    return true;
 }
 }  // namespace yasd
