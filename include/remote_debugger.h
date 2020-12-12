@@ -72,6 +72,7 @@ class RemoteDebugger : public DebuggerModeBase {
     int parse_stack_get_cmd();
     int parse_context_names_cmd();
     int parse_context_get_cmd();
+    int parse_property_get_cmd();
     int parse_stop_cmd();
 
     void register_cmd_handler();

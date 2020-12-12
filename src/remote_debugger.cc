@@ -70,13 +70,11 @@ std::string RemoteDebugger::get_next_cmd() {
     // The IDE may send multiple commands, so we need to determine the delimiter.
     do {
         ret = recv(sock, &c, 1, 0);
-        *p = c;
         if (ret == 0) {
             // printf("connection closed\n");
             exit(255);
         }
-        p++;
-    } while (c != '\0');
+    } while ((c != '\0') && (*p = c) && p++);
 
     // printf("recv: %ld\n", ret);
     std::string tmp(buffer, buffer + (p - buffer));
@@ -85,7 +83,7 @@ std::string RemoteDebugger::get_next_cmd() {
 }
 
 int RemoteDebugger::execute_cmd() {
-    // std::cout << last_cmd << std::endl;
+    std::cout << last_cmd << std::endl;
 
     auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
 
@@ -185,7 +183,7 @@ ssize_t RemoteDebugger::send_doc(tinyxml2::XMLDocument *doc) {
     ssize_t ret;
     std::string message = make_message(doc);
 
-    // std::cout << message << std::endl;
+    std::cout << message << std::endl;
 
     ret = send(sock, message.c_str(), message.length(), 0);
     // printf("send: %ld\n", ret);
@@ -227,18 +225,13 @@ void RemoteDebugger::init_local_variables_xml_child_node(tinyxml2::XMLElement *r
 
     zend_op_array *op_array = &EG(current_execute_data)->func->op_array;
 
-    if (Z_TYPE(EG(current_execute_data)->This) == IS_OBJECT) {
-        child = root->InsertNewChildElement("property");
-        child->SetAttribute("name", "$this");
-        child->SetAttribute("fullname", "$this");
-        init_xml_property_node(child, "", &EG(current_execute_data)->This);
-    }
-
     while (i < (unsigned int) op_array->last_var) {
         child = root->InsertNewChildElement("property");
         zend_string *var_name = op_array->vars[i];
-        child->SetAttribute("name", ZSTR_VAL(var_name));
-        child->SetAttribute("fullname", ZSTR_VAL(var_name));
+        std::string name = "$" + std::string(ZSTR_VAL(var_name));
+        std::string fullname = "$" + std::string(ZSTR_VAL(var_name));
+        child->SetAttribute("name", name.c_str());
+        child->SetAttribute("fullname", fullname.c_str());
 
         zval *var = yasd::Util::find_variable(ZSTR_VAL(var_name));
 
@@ -249,6 +242,13 @@ void RemoteDebugger::init_local_variables_xml_child_node(tinyxml2::XMLElement *r
         }
 
         i++;
+    }
+
+    if (Z_TYPE(EG(current_execute_data)->This) == IS_OBJECT) {
+        child = root->InsertNewChildElement("property");
+        child->SetAttribute("name", "$this");
+        child->SetAttribute("fullname", "$this");
+        init_xml_property_node(child, "$this", &EG(current_execute_data)->This);
     }
 }
 
@@ -316,6 +316,7 @@ void RemoteDebugger::init_xml_property_node(
     case IS_STRING:
         child->SetAttribute("type", "string");
         if (encoding) {
+            child->SetAttribute("size", (uint64_t) Z_STRLEN_P(value));
             child->SetAttribute("encoding", "base64");
             child->InsertNewText(base64_encode((unsigned char *) Z_STRVAL_P(value), Z_STRLEN_P(value)).c_str())
                 ->SetCData(true);
@@ -354,6 +355,9 @@ void RemoteDebugger::init_xml_property_node(
                 property->SetAttribute("fullname", fullname.c_str());
                 level++;
                 init_xml_property_node(property, key_str, val, level, true);
+                if (level > YASD_G(depth)) {
+                    child->DeleteChild(property);
+                }
                 level--;
             }
             ZEND_HASH_FOREACH_END();
@@ -381,12 +385,15 @@ void RemoteDebugger::init_xml_property_node(
 
             key_str = ZSTR_VAL(key);
             property->SetAttribute("name", key_str.c_str());
-            fullname = "$this->" + key_str;
+            fullname = name + "->" + key_str;
 
-            property->SetAttribute("type", zend_zval_type_name(val));
             property->SetAttribute("fullname", fullname.c_str());
+            property->SetAttribute("type", zend_zval_type_name(val));
             level++;
             init_xml_property_node(property, key_str, val, level, true);
+            if (level > YASD_G(depth)) {
+                child->DeleteChild(property);
+            }
             level--;
         }
         ZEND_HASH_FOREACH_END();
@@ -688,6 +695,54 @@ int RemoteDebugger::parse_context_get_cmd() {
     return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
 }
 
+int RemoteDebugger::parse_property_get_cmd() {
+    // property_get -i 10 -d 0 -c 0 -n "$this->foo2"
+
+    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+    std::string name;
+
+    if (exploded_cmd[0] != "property_get") {
+        return yasd::DebuggerModeBase::FAILED;
+    }
+
+    std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
+    tinyxml2::XMLElement *root;
+    tinyxml2::XMLElement *child;
+
+    root = doc->NewElement("response");
+    doc->LinkEndChild(root);
+    init_response_xml_root_node(root, "property_get");
+
+    name = exploded_cmd[8];
+
+    name.erase(0, 1);
+    name.pop_back();
+
+    std::cout << name << std::endl;
+
+    auto exploded_name = yasd::Util::explode(name, "->");
+
+    if (Z_TYPE(EG(current_execute_data)->This) != IS_OBJECT) {
+        return yasd::DebuggerModeBase::FAILED;
+    }
+
+    zval *zobj = &EG(current_execute_data)->This;
+    zval *property;
+
+    for (auto iter = exploded_name.begin() + 1; iter != exploded_name.end(); iter++) {
+        std::cout << *iter << std::endl;
+        property = yasd_zend_read_property(Z_OBJCE_P(zobj), zobj, iter->c_str(), iter->length(), 1);
+        zobj = property;
+    }
+
+    child = root->InsertNewChildElement("property");
+    init_xml_property_node(child, name, property);
+
+    send_doc(doc.get());
+
+    return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
+}
+
 int RemoteDebugger::parse_stop_cmd() {
     // there is no good way to shut down the server,
     // so let the debugger and the process separate first
@@ -717,6 +772,7 @@ void RemoteDebugger::register_cmd_handler() {
     handlers.emplace_back(std::make_pair("breakpoint_set", std::bind(&RemoteDebugger::parse_breakpoint_set_cmd, this)));
     handlers.emplace_back(std::make_pair("run", std::bind(&RemoteDebugger::parse_run_cmd, this)));
     handlers.emplace_back(std::make_pair("stack_get", std::bind(&RemoteDebugger::parse_stack_get_cmd, this)));
+    handlers.emplace_back(std::make_pair("property_get", std::bind(&RemoteDebugger::parse_property_get_cmd, this)));
     handlers.emplace_back(std::make_pair("context_names", std::bind(&RemoteDebugger::parse_context_names_cmd, this)));
     handlers.emplace_back(std::make_pair("context_get", std::bind(&RemoteDebugger::parse_context_get_cmd, this)));
     handlers.emplace_back(std::make_pair("step_over", std::bind(&RemoteDebugger::parse_step_over_cmd, this)));
