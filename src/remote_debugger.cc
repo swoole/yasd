@@ -365,54 +365,7 @@ void RemoteDebugger::init_xml_property_node(
         break;
     }
     case IS_OBJECT: {
-        zend_string *class_name;
-        zend_array *properties;
-        class_name = Z_OBJCE_P(value)->name;
-        zend_ulong num;
-        zend_string *key;
-        zval *val;
-        properties = yasd::Util::get_properties(value);
-
-        child->SetAttribute("type", "object");
-        child->SetAttribute("classname", ZSTR_VAL(class_name));
-        child->SetAttribute("children", properties->nNumOfElements > 0 ? "1" : "0");
-        child->SetAttribute("numchildren", properties->nNumOfElements);
-
-        std::vector<yasd::ZendPropertyInfo> summary_properties_info;
-
-        // TODO(codinghuang): may we have a better way to get private properties
-        void *property_info;
-        ZEND_HASH_FOREACH_STR_KEY_PTR(&Z_OBJCE_P(value)->properties_info, key, property_info) {
-            ZendPropertyInfo info;
-            info.property_name = key;
-            summary_properties_info.emplace_back(info);
-        }
-        ZEND_HASH_FOREACH_END();
-
-        int i = 0;
-        ZEND_HASH_FOREACH_KEY_VAL_IND(properties, num, key, val) {
-            tinyxml2::XMLElement *property = child->InsertNewChildElement("property");
-            std::string fullname;
-            std::string key_str;
-
-            ZendPropertyInfo info = summary_properties_info[i];
-            key = info.property_name;
-
-            key_str = ZSTR_VAL(key);
-            property->SetAttribute("name", key_str.c_str());
-            fullname = name + "->" + key_str;
-
-            property->SetAttribute("fullname", fullname.c_str());
-            property->SetAttribute("type", zend_zval_type_name(val));
-            level++;
-            init_xml_property_node(property, key_str, val, level, true);
-            if (level > YASD_G(depth)) {
-                child->DeleteChild(property);
-            }
-            level--;
-            i++;
-        }
-        ZEND_HASH_FOREACH_END();
+        init_zend_object_property_xml_property_node(child, name, value, level, encoding);
         break;
     }
     case IS_UNDEF:
@@ -421,6 +374,58 @@ void RemoteDebugger::init_xml_property_node(
     default:
         break;
     }
+}
+
+void RemoteDebugger::init_zend_object_property_xml_property_node(
+    tinyxml2::XMLElement *child, std::string name, zval *value, int level, bool encoding) {
+    zend_string *class_name;
+    zend_array *properties;
+    class_name = Z_OBJCE_P(value)->name;
+    zend_ulong num;
+    zend_string *key;
+    zval *val;
+    properties = yasd::Util::get_properties(value);
+
+    child->SetAttribute("type", "object");
+    child->SetAttribute("classname", ZSTR_VAL(class_name));
+    child->SetAttribute("children", properties->nNumOfElements > 0 ? "1" : "0");
+    child->SetAttribute("numchildren", properties->nNumOfElements);
+
+    std::vector<yasd::ZendPropertyInfo> summary_properties_info;
+
+    // TODO(codinghuang): may we have a better way to get private properties
+    void *property_info;
+    ZEND_HASH_FOREACH_STR_KEY_PTR(&Z_OBJCE_P(value)->properties_info, key, property_info) {
+        ZendPropertyInfo info;
+        info.property_name = key;
+        summary_properties_info.emplace_back(info);
+    }
+    ZEND_HASH_FOREACH_END();
+
+    int i = 0;
+    ZEND_HASH_FOREACH_KEY_VAL_IND(properties, num, key, val) {
+        tinyxml2::XMLElement *property = child->InsertNewChildElement("property");
+        std::string fullname;
+        std::string key_str;
+
+        ZendPropertyInfo info = summary_properties_info[i];
+        key = info.property_name;
+
+        key_str = ZSTR_VAL(key);
+        property->SetAttribute("name", key_str.c_str());
+        fullname = name + "->" + key_str;
+
+        property->SetAttribute("fullname", fullname.c_str());
+        property->SetAttribute("type", zend_zval_type_name(val));
+        level++;
+        init_xml_property_node(property, key_str, val, level, true);
+        if (level > YASD_G(depth)) {
+            child->DeleteChild(property);
+        }
+        level--;
+        i++;
+    }
+    ZEND_HASH_FOREACH_END();
 }
 
 int RemoteDebugger::parse_feature_set_cmd() {
