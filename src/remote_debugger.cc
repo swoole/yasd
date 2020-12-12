@@ -247,8 +247,8 @@ void RemoteDebugger::init_local_variables_xml_child_node(tinyxml2::XMLElement *r
     if (Z_TYPE(EG(current_execute_data)->This) == IS_OBJECT) {
         child = root->InsertNewChildElement("property");
         child->SetAttribute("name", "$this");
-        child->SetAttribute("fullname", "$this");
-        init_xml_property_node(child, "$this", &EG(current_execute_data)->This);
+        child->SetAttribute("fullname", "this");
+        init_xml_property_node(child, "this", &EG(current_execute_data)->This);
     }
 }
 
