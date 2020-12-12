@@ -415,9 +415,13 @@ bool Util::eval(char *str, zval *retval_ptr, char *string_name) {
 }
 
 zend_array *Util::get_properties(zval *zobj) {
+#if PHP_VERSION_ID >= 70400
+    return zend_get_properties_for(zobj, ZEND_PROP_PURPOSE_VAR_EXPORT);
+#else
     if (Z_OBJ_HANDLER_P(zobj, get_properties)) {
         return Z_OBJPROP_P(zobj);
     }
+#endif
     return nullptr;
 }
 

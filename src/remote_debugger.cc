@@ -22,6 +22,7 @@
 #include "include/common.h"
 #include "include/base64.h"
 #include "include/remote_debugger.h"
+#include "include/zend_property_info.h"
 
 #include "./php_yasd.h"
 
@@ -79,12 +80,11 @@ std::string RemoteDebugger::get_next_cmd() {
     // printf("recv: %ld\n", ret);
     std::string tmp(buffer, buffer + (p - buffer));
     last_cmd = tmp;
+    // printf("last_cmd: %s\n", last_cmd.c_str());
     return last_cmd;
 }
 
 int RemoteDebugger::execute_cmd() {
-    std::cout << last_cmd << std::endl;
-
     auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
 
     transaction_id = atoi(exploded_cmd[2].c_str());
@@ -96,7 +96,7 @@ int RemoteDebugger::execute_cmd() {
         return FAILED;
     }
 
-    // printf("found hasndler\n");
+    // printf("found handler\n");
 
     return handler();
 }
@@ -183,7 +183,7 @@ ssize_t RemoteDebugger::send_doc(tinyxml2::XMLDocument *doc) {
     ssize_t ret;
     std::string message = make_message(doc);
 
-    std::cout << message << std::endl;
+    // std::cout << message << std::endl;
 
     ret = send(sock, message.c_str(), message.length(), 0);
     // printf("send: %ld\n", ret);
@@ -378,10 +378,25 @@ void RemoteDebugger::init_xml_property_node(
         child->SetAttribute("children", properties->nNumOfElements > 0 ? "1" : "0");
         child->SetAttribute("numchildren", properties->nNumOfElements);
 
+        std::vector<yasd::ZendPropertyInfo> summary_properties_info;
+
+        // TODO(codinghuang): may we have a better way to get private properties
+        void *property_info;
+        ZEND_HASH_FOREACH_STR_KEY_PTR(&Z_OBJCE_P(value)->properties_info, key, property_info) {
+            ZendPropertyInfo info;
+            info.property_name = key;
+            summary_properties_info.emplace_back(info);
+        }
+        ZEND_HASH_FOREACH_END();
+
+        int i = 0;
         ZEND_HASH_FOREACH_KEY_VAL_IND(properties, num, key, val) {
             tinyxml2::XMLElement *property = child->InsertNewChildElement("property");
             std::string fullname;
             std::string key_str;
+
+            ZendPropertyInfo info = summary_properties_info[i];
+            key = info.property_name;
 
             key_str = ZSTR_VAL(key);
             property->SetAttribute("name", key_str.c_str());
@@ -395,6 +410,7 @@ void RemoteDebugger::init_xml_property_node(
                 child->DeleteChild(property);
             }
             level--;
+            i++;
         }
         ZEND_HASH_FOREACH_END();
         break;
@@ -726,8 +742,6 @@ int RemoteDebugger::parse_property_get_cmd() {
         name.pop_back();
     }
 
-    std::cout << name << std::endl;
-
     auto exploded_name = yasd::Util::explode(name, "->");
 
     if (Z_TYPE(EG(current_execute_data)->This) == IS_OBJECT) {
@@ -737,7 +751,6 @@ int RemoteDebugger::parse_property_get_cmd() {
     }
 
     for (auto iter = exploded_name.begin() + 1; iter != exploded_name.end(); iter++) {
-        std::cout << *iter << std::endl;
         property = yasd_zend_read_property(Z_OBJCE_P(zobj), zobj, iter->c_str(), iter->length(), 1);
         zobj = property;
     }
