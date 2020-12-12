@@ -50,6 +50,9 @@ class RemoteDebugger : public DebuggerModeBase {
     void init_superglobal_variables_xml_child_node(tinyxml2::XMLElement *root);
     void init_user_defined_constant_variables_xml_child_node(tinyxml2::XMLElement *root);
 
+    void init_zend_array_element_xml_property_node(
+        tinyxml2::XMLElement *child, std::string name, zval *value, int level = 0, bool encoding = false);
+
     void init_zend_object_property_xml_property_node(
         tinyxml2::XMLElement *child, std::string name, zval *value, int level = 0, bool encoding = false);
 

@@ -324,46 +324,9 @@ void RemoteDebugger::init_xml_property_node(
             child->InsertNewText(Z_STRVAL_P(value))->SetCData(true);
         }
         break;
-    case IS_ARRAY: {
-        zend_ulong num;
-        zend_string *key;
-        zval *val;
-        zend_array *ht = Z_ARRVAL_P(value);
-
-        child->SetAttribute("type", "array");
-        child->SetAttribute("children", ht->nNumOfElements > 0 ? "1" : "0");
-        child->SetAttribute("numchildren", ht->nNumOfElements);
-        if (yasd_zend_hash_is_recursive(ht)) {
-            child->SetAttribute("recursive", 1);
-        } else {
-            ZEND_HASH_FOREACH_KEY_VAL_IND(ht, num, key, val) {
-                tinyxml2::XMLElement *property = child->InsertNewChildElement("property");
-                std::string fullname;
-                std::string key_str;
-
-                if (key == nullptr) {  // num key
-                    key_str = std::to_string(num);
-                    property->SetAttribute("name", num);
-                    fullname = "$" + name + "[" + std::to_string(num) + "]";
-                } else {  // string key
-                    key_str = ZSTR_VAL(key);
-                    property->SetAttribute("name", ZSTR_VAL(key));
-                    fullname = "$" + name + "[" + ZSTR_VAL(key) + "]";
-                }
-
-                property->SetAttribute("type", zend_zval_type_name(val));
-                property->SetAttribute("fullname", fullname.c_str());
-                level++;
-                init_xml_property_node(property, key_str, val, level, true);
-                if (level > YASD_G(depth)) {
-                    child->DeleteChild(property);
-                }
-                level--;
-            }
-            ZEND_HASH_FOREACH_END();
-        }
+    case IS_ARRAY:
+        init_zend_array_element_xml_property_node(child, name, value, level, encoding);
         break;
-    }
     case IS_OBJECT: {
         init_zend_object_property_xml_property_node(child, name, value, level, encoding);
         break;
@@ -373,6 +336,47 @@ void RemoteDebugger::init_xml_property_node(
         break;
     default:
         break;
+    }
+}
+
+void RemoteDebugger::init_zend_array_element_xml_property_node(
+    tinyxml2::XMLElement *child, std::string name, zval *value, int level, bool encoding) {
+    zend_ulong num;
+    zend_string *key;
+    zval *val;
+    zend_array *ht = Z_ARRVAL_P(value);
+
+    child->SetAttribute("type", "array");
+    child->SetAttribute("children", ht->nNumOfElements > 0 ? "1" : "0");
+    child->SetAttribute("numchildren", ht->nNumOfElements);
+    if (yasd_zend_hash_is_recursive(ht)) {
+        child->SetAttribute("recursive", 1);
+    } else {
+        ZEND_HASH_FOREACH_KEY_VAL_IND(ht, num, key, val) {
+            tinyxml2::XMLElement *property = child->InsertNewChildElement("property");
+            std::string fullname;
+            std::string key_str;
+
+            if (key == nullptr) {  // num key
+                key_str = std::to_string(num);
+                property->SetAttribute("name", num);
+                fullname = "$" + name + "[" + std::to_string(num) + "]";
+            } else {  // string key
+                key_str = ZSTR_VAL(key);
+                property->SetAttribute("name", ZSTR_VAL(key));
+                fullname = "$" + name + "[" + ZSTR_VAL(key) + "]";
+            }
+
+            property->SetAttribute("type", zend_zval_type_name(val));
+            property->SetAttribute("fullname", fullname.c_str());
+            level++;
+            init_xml_property_node(property, key_str, val, level, true);
+            if (level > YASD_G(depth)) {
+                child->DeleteChild(property);
+            }
+            level--;
+        }
+        ZEND_HASH_FOREACH_END();
     }
 }
 
