@@ -696,10 +696,12 @@ int RemoteDebugger::parse_context_get_cmd() {
 }
 
 int RemoteDebugger::parse_property_get_cmd() {
-    // property_get -i 10 -d 0 -c 0 -n "$this->foo2"
+    // https://xdebug.org/docs/dbgp#property-get-property-set-property-value
 
     auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
     std::string name;
+    zval *zobj;
+    zval *property;
 
     if (exploded_cmd[0] != "property_get") {
         return yasd::DebuggerModeBase::FAILED;
@@ -713,21 +715,26 @@ int RemoteDebugger::parse_property_get_cmd() {
     doc->LinkEndChild(root);
     init_response_xml_root_node(root, "property_get");
 
-    name = exploded_cmd[8];
+    name = yasd::Util::get_option_value(exploded_cmd, "-n");
 
-    name.erase(0, 1);
-    name.pop_back();
+    // vscode has double quotes, but PhpStorm does not
+    if (name.front() == '"') {
+        name.erase(0, 1);
+    }
+
+    if (name.back() == '"') {
+        name.pop_back();
+    }
 
     std::cout << name << std::endl;
 
     auto exploded_name = yasd::Util::explode(name, "->");
 
-    if (Z_TYPE(EG(current_execute_data)->This) != IS_OBJECT) {
-        return yasd::DebuggerModeBase::FAILED;
+    if (Z_TYPE(EG(current_execute_data)->This) == IS_OBJECT) {
+        zobj = &EG(current_execute_data)->This;
+    } else {
+        zobj = yasd::Util::find_variable(exploded_name[0]);
     }
-
-    zval *zobj = &EG(current_execute_data)->This;
-    zval *property;
 
     for (auto iter = exploded_name.begin() + 1; iter != exploded_name.end(); iter++) {
         std::cout << *iter << std::endl;

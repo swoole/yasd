@@ -62,10 +62,12 @@ class Util {
 
     static bool is_hit_watch_point();
 
-    static bool is_integer(const std::string & s);
+    static bool is_integer(const std::string &s);
 
     static bool eval(char *str, zval *retval_ptr, char *string_name);
 
     static zend_array *get_properties(zval *zobj);
+
+    static std::string get_option_value(const std::vector<std::string> &options, std::string option);
 };
 }  // namespace yasd

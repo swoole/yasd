@@ -421,4 +421,16 @@ zend_array *Util::get_properties(zval *zobj) {
     return nullptr;
 }
 
+std::string Util::get_option_value(const std::vector<std::string> &options, std::string option) {
+    auto iter = options.begin();
+
+    for (; iter != options.end(); iter++) {
+        if (option == *iter) {
+            break;
+        }
+    }
+
+    return *(++iter);
+}
+
 }  // namespace yasd
