@@ -139,18 +139,15 @@ ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
     start_lineno = lineno = online->lineno;
 
     if (yasd::Util::is_hit_watch_point()) {
-        yasd::Util::printf_info(yasd::Color::YASD_ECHO_MAGENTA, "stop because of watch point ");
         return global->debugger->handle_request(filename, lineno);
     }
 
     if (global->do_step) {
-        yasd::Util::printf_info(yasd::Color::YASD_ECHO_MAGENTA, "stop because of step ");
         return global->debugger->handle_request(filename, lineno);
     }
 
     if (global->do_next || global->do_finish) {
         if (global->next_cid == context->cid && context->level <= context->next_level) {
-            yasd::Util::printf_info(yasd::Color::YASD_ECHO_MAGENTA, "stop because of next ");
             return global->debugger->handle_request(filename, lineno);
         }
     }
@@ -168,7 +165,6 @@ ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
             return;
         }
 
-        yasd::Util::printf_info(yasd::Color::YASD_ECHO_MAGENTA, "stop because of breakpoint ");
         return global->debugger->handle_request(filename, lineno);
     }
 }

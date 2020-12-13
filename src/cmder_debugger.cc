@@ -57,6 +57,15 @@ void CmderDebugger::handle_request(const char *filename, int lineno) {
     std::string cmd;
     yasd::SourceReader reader(filename);
 
+    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+
+    if (get_full_name(exploded_cmd[0]) == "run" || get_full_name(exploded_cmd[0]) == "continue") {
+        yasd::Util::printf_info(yasd::Color::YASD_ECHO_MAGENTA, "stop because of breakpoint ");
+    } else {
+        yasd::Util::printf_info(
+            yasd::Color::YASD_ECHO_MAGENTA, "stop because of %s ", get_full_name(exploded_cmd[0]).c_str());
+    }
+
     reader.show_contents(lineno, get_listsize(), true, true);
 
     do {

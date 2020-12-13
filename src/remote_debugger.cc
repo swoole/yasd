@@ -80,7 +80,7 @@ std::string RemoteDebugger::get_next_cmd() {
     // printf("recv: %ld\n", ret);
     std::string tmp(buffer, buffer + (p - buffer));
     last_cmd = tmp;
-    printf("last_cmd: %s\n", last_cmd.c_str());
+    // printf("last_cmd: %s\n", last_cmd.c_str());
     return last_cmd;
 }
 
@@ -183,7 +183,7 @@ ssize_t RemoteDebugger::send_doc(tinyxml2::XMLDocument *doc) {
     ssize_t ret;
     std::string message = make_message(doc);
 
-    std::cout << message << std::endl;
+    // std::cout << message << std::endl;
 
     ret = send(sock, message.c_str(), message.length(), 0);
     // printf("send: %ld\n", ret);
@@ -578,7 +578,7 @@ int RemoteDebugger::parse_breakpoint_set_cmd() {
         global->breakpoints->insert(std::make_pair(filename, lineno_set));
     }
 
-    yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "set breakpoint at %s:%d", filename.c_str(), lineno);
+    // yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "set breakpoint at %s:%d", filename.c_str(), lineno);
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
     tinyxml2::XMLElement *root;
@@ -640,7 +640,7 @@ int RemoteDebugger::parse_stack_get_cmd() {
     child->SetAttribute("lineno", yasd::Util::get_executed_file_lineno());
 
     for (auto iter = context->strace->rbegin(); iter != context->strace->rend(); ++iter) {
-        yasd::Util::printfln_info(YASD_ECHO_GREEN, "%s:%d", (*iter)->filename.c_str(), (*iter)->lineno);
+        // yasd::Util::printfln_info(YASD_ECHO_GREEN, "%s:%d", (*iter)->filename.c_str(), (*iter)->lineno);
         child = root->InsertNewChildElement("stack");
         child->SetAttribute("where", (*iter)->function_name.c_str());
         child->SetAttribute("level", (*iter)->level);
@@ -725,7 +725,6 @@ int RemoteDebugger::parse_property_get_cmd() {
 
     auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
     std::string name;
-    zval *zobj;
     zval *property;
 
     if (exploded_cmd[0] != "property_get") {
