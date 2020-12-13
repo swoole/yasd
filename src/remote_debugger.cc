@@ -80,7 +80,7 @@ std::string RemoteDebugger::get_next_cmd() {
     // printf("recv: %ld\n", ret);
     std::string tmp(buffer, buffer + (p - buffer));
     last_cmd = tmp;
-    // printf("last_cmd: %s\n", last_cmd.c_str());
+    printf("last_cmd: %s\n", last_cmd.c_str());
     return last_cmd;
 }
 
@@ -183,7 +183,7 @@ ssize_t RemoteDebugger::send_doc(tinyxml2::XMLDocument *doc) {
     ssize_t ret;
     std::string message = make_message(doc);
 
-    // std::cout << message << std::endl;
+    std::cout << message << std::endl;
 
     ret = send(sock, message.c_str(), message.length(), 0);
     // printf("send: %ld\n", ret);
@@ -360,11 +360,11 @@ void RemoteDebugger::init_zend_array_element_xml_property_node(
             if (key == nullptr) {  // num key
                 key_str = std::to_string(num);
                 property->SetAttribute("name", num);
-                fullname = "$" + name + "[" + std::to_string(num) + "]";
+                fullname = name + "[" + std::to_string(num) + "]";
             } else {  // string key
                 key_str = ZSTR_VAL(key);
                 property->SetAttribute("name", ZSTR_VAL(key));
-                fullname = "$" + name + "[" + ZSTR_VAL(key) + "]";
+                fullname = name + "[" + ZSTR_VAL(key) + "]";
             }
 
             property->SetAttribute("type", zend_zval_type_name(val));
@@ -751,18 +751,20 @@ int RemoteDebugger::parse_property_get_cmd() {
         name.pop_back();
     }
 
-    auto exploded_name = yasd::Util::explode(name, "->");
+    // auto exploded_name = yasd::Util::explode(name, "->");
 
-    if (Z_TYPE(EG(current_execute_data)->This) == IS_OBJECT) {
-        zobj = &EG(current_execute_data)->This;
-    } else {
-        zobj = yasd::Util::find_variable(exploded_name[0]);
-    }
+    // if (Z_TYPE(EG(current_execute_data)->This) == IS_OBJECT) {
+    //     zobj = &EG(current_execute_data)->This;
+    // } else {
+    //     zobj = yasd::Util::find_variable(exploded_name[0]);
+    // }
 
-    for (auto iter = exploded_name.begin() + 1; iter != exploded_name.end(); iter++) {
-        property = yasd_zend_read_property(Z_OBJCE_P(zobj), zobj, iter->c_str(), iter->length(), 1);
-        zobj = property;
-    }
+    property = yasd::Util::fetch_zval_by_fullname(name);
+
+    // for (auto iter = exploded_name.begin() + 1; iter != exploded_name.end(); iter++) {
+    //     property = yasd_zend_read_property(Z_OBJCE_P(zobj), zobj, iter->c_str(), iter->length(), 1);
+    //     zobj = property;
+    // }
 
     child = root->InsertNewChildElement("property");
     init_xml_property_node(child, name, property);
