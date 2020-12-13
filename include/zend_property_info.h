@@ -13,43 +13,16 @@
   | Author: codinghuang  <codinghuang@qq.com>                            |
   +----------------------------------------------------------------------+
 */
+#pragma once
 
-#ifndef PHP_YASD_H_
-#define PHP_YASD_H_
+#include <string>
 
 #include "main/php.h"
 
-extern zend_module_entry yasd_module_entry;
-#define phpext_yasd_ptr &yasd_module_entry
-
-#define PHP_YASD_VERSION "0.1.0"
-
-ZEND_BEGIN_MODULE_GLOBALS(yasd)
-    char *breakpoints_file;
-    char *debug_mode;
-    char *remote_host;
-    uint16_t remote_port;
-    uint16_t depth;
-ZEND_END_MODULE_GLOBALS(yasd)
-
-extern ZEND_DECLARE_MODULE_GLOBALS(yasd);
-
-#define YASD_G(v) (yasd_globals.v)
-
-namespace yasd { namespace function {
-class ReturnValue {
+namespace yasd {
+class ZendPropertyInfo {
   public:
-    zval value;
-    ReturnValue() {
-        value = {};
-    }
-    ~ReturnValue() {
-        zval_dtor(&value);
-    }
+    zend_string *property_name;
+    zval *value;
 };
-
-ReturnValue call(const std::string &func_name, int argc, zval *argv);
-}
-}
-
-#endif /* PHP_YASD_H_ */
+}  // namespace yasd

@@ -31,6 +31,7 @@ class Util {
 
     static HashTable *get_defined_vars();
     static zval *find_variable(std::string var_name);
+    static zval *find_variable(zend_array *symbol_table, std::string var_name);
     static void print_var(std::string var_name);
     static void print_property(std::string obj_name, std::string property_name);
 
@@ -62,6 +63,14 @@ class Util {
 
     static bool is_hit_watch_point();
 
-    static bool is_integer(const std::string & s);
+    static bool is_integer(const std::string &s);
+
+    static bool eval(char *str, zval *retval_ptr, char *string_name);
+
+    static zend_array *get_properties(zval *zobj);
+
+    static std::string get_option_value(const std::vector<std::string> &options, std::string option);
+
+    static zval *fetch_zval_by_fullname(std::string fullname);
 };
 }  // namespace yasd

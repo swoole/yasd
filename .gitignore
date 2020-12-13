@@ -32,8 +32,6 @@ mkinstalldirs
 
 # debug
 debug
-test.php
-header.php
 composer.json
 composer.lock
 vendor

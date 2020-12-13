@@ -63,6 +63,8 @@
 # endif
 
 zend_bool yasd_zend_hash_is_recursive(zend_array* ht);
+zend_bool yasd_zend_hash_apply_protection_begin(zend_array* ht);
+zend_bool yasd_zend_hash_apply_protection_end(zend_array* ht);
 
 static void yasd_zend_update_property_null_ex(zend_class_entry *scope, zval *object, zend_string *s) {
     zval tmp;

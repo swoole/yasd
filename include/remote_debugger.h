@@ -44,13 +44,17 @@ class RemoteDebugger : public DebuggerModeBase {
     int execute_cmd();
 
     void init_response_xml_root_node(tinyxml2::XMLElement *root, std::string cmd);
+    void init_xml_property_node(
+        tinyxml2::XMLElement *child, std::string name, zval *value, int level = 0, bool encoding = false);
     void init_local_variables_xml_child_node(tinyxml2::XMLElement *root);
     void init_superglobal_variables_xml_child_node(tinyxml2::XMLElement *root);
     void init_user_defined_constant_variables_xml_child_node(tinyxml2::XMLElement *root);
-    void set_property_value_xml_property_node(tinyxml2::XMLElement *child,
-                                              std::string name,
-                                              zval *value,
-                                              bool encoding = false);
+
+    void init_zend_array_element_xml_property_node(
+        tinyxml2::XMLElement *child, std::string name, zval *value, int level = 0, bool encoding = false);
+
+    void init_zend_object_property_xml_property_node(
+        tinyxml2::XMLElement *child, std::string name, zval *value, int level = 0, bool encoding = false);
 
   public:
     RemoteDebugger() {}
@@ -63,6 +67,10 @@ class RemoteDebugger : public DebuggerModeBase {
 
     ssize_t send_init_event_message();
 
+    int parse_feature_set_cmd();
+    int parse_stdout_cmd();
+    int parse_status_cmd();
+    int parse_eval_cmd();
     int parse_breakpoint_list_cmd();
     int parse_breakpoint_set_cmd();
     int parse_breakpoint_set_exception_cmd();
@@ -70,6 +78,7 @@ class RemoteDebugger : public DebuggerModeBase {
     int parse_stack_get_cmd();
     int parse_context_names_cmd();
     int parse_context_get_cmd();
+    int parse_property_get_cmd();
     int parse_stop_cmd();
 
     void register_cmd_handler();

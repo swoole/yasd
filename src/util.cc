@@ -93,6 +93,32 @@ zval *Util::find_variable(std::string var_name) {
     return var;
 }
 
+zval *Util::find_variable(zend_array *symbol_table, std::string var_name) {
+    zval *var;
+
+    if (var_name == "this") {
+        return &EG(current_execute_data)->This;
+    }
+
+    var = zend_hash_str_find(symbol_table, var_name.c_str(), var_name.length());
+
+    // not define variable
+    if (!var) {
+        return nullptr;
+    }
+
+    while (Z_TYPE_P(var) == IS_INDIRECT) {
+        var = Z_INDIRECT_P(var);
+    }
+
+    // the statement that defines the variable has not yet been executed
+    if (Z_TYPE_P(var) == IS_UNDEF) {
+        return nullptr;
+    }
+
+    return var;
+}
+
 void Util::print_var(std::string var_name) {
     zval *var;
     zend_execute_data *execute_data = EG(current_execute_data);
@@ -347,7 +373,7 @@ bool Util::is_hit_watch_point() {
     for (auto watchpointIter = var_watchpoint->second->begin(); watchpointIter != var_watchpoint->second->end();
          watchpointIter++) {
         std::string var_name = watchpointIter->first;
-        yasd::WatchPointElement& watchpoint = watchpointIter->second;
+        yasd::WatchPointElement &watchpoint = watchpointIter->second;
 
         zval *new_var = yasd::Util::find_variable(var_name);
         if (new_var == nullptr) {
@@ -396,4 +422,164 @@ bool Util::is_integer(const std::string &s) {
 
     return (*p == 0);
 }
+
+bool Util::eval(char *str, zval *retval_ptr, char *string_name) {
+    int origin_error_reporting = EG(error_reporting);
+
+    // we need to turn off the warning if the variable is UNDEF
+    EG(error_reporting) = 0;
+
+    int ret;
+    ret = zend_eval_string(str, retval_ptr, const_cast<char *>("xdebug://debug-eval"));
+    if (ret == FAILURE) {
+        return false;
+    }
+
+    EG(error_reporting) = origin_error_reporting;
+
+    return true;
+}
+
+zend_array *Util::get_properties(zval *zobj) {
+#if PHP_VERSION_ID >= 70400
+    return zend_get_properties_for(zobj, ZEND_PROP_PURPOSE_VAR_EXPORT);
+#else
+    if (Z_OBJ_HANDLER_P(zobj, get_properties)) {
+        return Z_OBJPROP_P(zobj);
+    }
+#endif
+    return nullptr;
+}
+
+std::string Util::get_option_value(const std::vector<std::string> &options, std::string option) {
+    auto iter = options.begin();
+
+    for (; iter != options.end(); iter++) {
+        if (option == *iter) {
+            break;
+        }
+    }
+
+    return *(++iter);
+}
+
+// TODO(codinghuang): maybe we can use re2c and yacc later
+zval *Util::fetch_zval_by_fullname(std::string fullname) {
+    std::string name;
+    int state = 0;
+    const char *ptr = fullname.c_str();
+    const char *keyword = ptr, *keyword_end = nullptr;
+    const char *end = fullname.c_str() + fullname.length() - 1;
+    zval *retval_ptr = nullptr;
+    zval *zobj;
+
+    zend_array *symbol_table = zend_rebuild_symbol_table();
+
+    // aa->bb->cc
+    // aa[bb][cc]
+
+    do {
+        switch (state) {
+        case 0:
+            keyword = ptr;
+            state = 1;
+        case 1:
+            if (*ptr == '[') {
+                keyword_end = ptr;
+                if (keyword) {
+                    std::string name(keyword, keyword_end - keyword);
+
+                    if (!retval_ptr) {
+                        retval_ptr = find_variable(symbol_table, name);
+                    } else if (Z_TYPE_P(retval_ptr) == IS_ARRAY) {
+                        retval_ptr = find_variable(Z_ARRVAL_P(retval_ptr), name);
+                    } else {
+                        retval_ptr =
+                            yasd_zend_read_property(Z_OBJCE_P(retval_ptr), retval_ptr, name.c_str(), name.length(), 1);
+                    }
+                    keyword = nullptr;
+                }
+                state = 3;
+            } else if (*ptr == '-') {
+                keyword_end = ptr;
+                if (keyword) {
+                    std::string name(keyword, keyword_end - keyword);
+
+                    if (!retval_ptr) {
+                        retval_ptr = find_variable(symbol_table, name);
+                    } else if (Z_TYPE_P(retval_ptr) == IS_ARRAY) {
+                        retval_ptr = find_variable(Z_ARRVAL_P(retval_ptr), name);
+                    } else {
+                        retval_ptr =
+                            yasd_zend_read_property(Z_OBJCE_P(retval_ptr), retval_ptr, name.c_str(), name.length(), 1);
+                    }
+                    keyword = nullptr;
+                }
+                state = 2;
+            }
+            break;
+        case 2:
+            assert(*ptr == '>');
+            keyword = ptr + 1;
+            state = 1;
+            break;
+        case 3:
+            if ((*ptr >= 'a' && *ptr <= 'z') || (*ptr >= 'A' && *ptr <= 'Z')) {
+                state = 6;
+                keyword = ptr;
+            } else if (*ptr >= '0' && *ptr <= '9') {
+                state = 6;
+                keyword = ptr;
+            }
+            break;
+        case 4:
+            break;
+        case 5:
+            if (*ptr == ']') {
+                state = 1;
+            }
+            break;
+        case 6:
+            if (*ptr == ']') {
+                keyword_end = ptr;
+                if (keyword) {
+                    std::string name(keyword, keyword_end - keyword);
+
+                    if (!retval_ptr) {
+                        retval_ptr = find_variable(symbol_table, name);
+                    } else if (Z_TYPE_P(retval_ptr) == IS_ARRAY) {
+                        retval_ptr = find_variable(Z_ARRVAL_P(retval_ptr), name);
+                    } else {
+                        retval_ptr =
+                            yasd_zend_read_property(Z_OBJCE_P(retval_ptr), retval_ptr, name.c_str(), name.length(), 1);
+                    }
+                    keyword = nullptr;
+                }
+                state = 1;
+            }
+            break;
+        default:
+            break;
+        }
+        ptr++;
+    } while (ptr <= end);
+
+    if (keyword) {
+        keyword_end = ptr;
+        std::string name(keyword, keyword_end - keyword);
+
+        if (!retval_ptr) {
+            retval_ptr = find_variable(symbol_table, name);
+        } else if (Z_TYPE_P(retval_ptr) == IS_ARRAY) {
+            retval_ptr = find_variable(Z_ARRVAL_P(retval_ptr), name);
+        } else {
+            retval_ptr =
+                yasd_zend_read_property(Z_OBJCE_P(retval_ptr), retval_ptr, name.c_str(), name.length(), 1);
+        }
+        keyword = nullptr;
+    }
+
+    return retval_ptr;
+}
+
 }  // namespace yasd

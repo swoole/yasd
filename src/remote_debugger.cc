@@ -22,6 +22,7 @@
 #include "include/common.h"
 #include "include/base64.h"
 #include "include/remote_debugger.h"
+#include "include/zend_property_info.h"
 
 #include "./php_yasd.h"
 
@@ -63,22 +64,27 @@ void RemoteDebugger::init() {
 
 std::string RemoteDebugger::get_next_cmd() {
     ssize_t ret;
+    char c;
     char buffer[4096];
+    char *p = buffer;
 
-    ret = recv(sock, buffer, 4096, 0);
-    if (ret == 0) {
-        // printf("connection closed\n");
-        exit(255);
-    }
+    // The IDE may send multiple commands, so we need to determine the delimiter.
+    do {
+        ret = recv(sock, &c, 1, 0);
+        if (ret == 0) {
+            // printf("connection closed\n");
+            exit(255);
+        }
+    } while ((c != '\0') && (*p = c) && p++);
+
     // printf("recv: %ld\n", ret);
-    std::string tmp(buffer, buffer + ret);
+    std::string tmp(buffer, buffer + (p - buffer));
     last_cmd = tmp;
+    printf("last_cmd: %s\n", last_cmd.c_str());
     return last_cmd;
 }
 
 int RemoteDebugger::execute_cmd() {
-    // std::cout << last_cmd << std::endl;
-
     auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
 
     transaction_id = atoi(exploded_cmd[2].c_str());
@@ -177,7 +183,7 @@ ssize_t RemoteDebugger::send_doc(tinyxml2::XMLDocument *doc) {
     ssize_t ret;
     std::string message = make_message(doc);
 
-    // std::cout << message << std::endl;
+    std::cout << message << std::endl;
 
     ret = send(sock, message.c_str(), message.length(), 0);
     // printf("send: %ld\n", ret);
@@ -193,12 +199,12 @@ std::string RemoteDebugger::make_message(tinyxml2::XMLDocument *doc) {
 
     doc->Print(&printer);
 
-    message =
-        message + std::to_string(printer.CStrSize() + sizeof("<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n") - 1);
+    int size = printer.CStrSize() - 1 + sizeof("<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n") - 1;
+    message = message + std::to_string(size);
     message += '\0';
     message += "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
-    message += '\0';
     message += printer.CStr();
+    message += '\0';
 
     return message;
 }
@@ -222,18 +228,27 @@ void RemoteDebugger::init_local_variables_xml_child_node(tinyxml2::XMLElement *r
     while (i < (unsigned int) op_array->last_var) {
         child = root->InsertNewChildElement("property");
         zend_string *var_name = op_array->vars[i];
-        child->SetAttribute("name", ZSTR_VAL(var_name));
-        child->SetAttribute("fullname", ZSTR_VAL(var_name));
+        std::string name = "$" + std::string(ZSTR_VAL(var_name));
+        std::string fullname = "$" + std::string(ZSTR_VAL(var_name));
+        child->SetAttribute("name", name.c_str());
+        child->SetAttribute("fullname", fullname.c_str());
 
         zval *var = yasd::Util::find_variable(ZSTR_VAL(var_name));
 
         if (!var) {
             child->SetAttribute("type", "uninitialized");
         } else {
-            set_property_value_xml_property_node(child, ZSTR_VAL(var_name), var);
+            init_xml_property_node(child, ZSTR_VAL(var_name), var);
         }
 
         i++;
+    }
+
+    if (Z_TYPE(EG(current_execute_data)->This) == IS_OBJECT) {
+        child = root->InsertNewChildElement("property");
+        child->SetAttribute("name", "$this");
+        child->SetAttribute("fullname", "this");
+        init_xml_property_node(child, "this", &EG(current_execute_data)->This);
     }
 }
 
@@ -266,16 +281,18 @@ void RemoteDebugger::init_user_defined_constant_variables_xml_child_node(tinyxml
         child->SetAttribute("name", ZSTR_VAL(val->name));
         child->SetAttribute("fullname", ZSTR_VAL(val->name));
         child->SetAttribute("facet", "constant");
-        set_property_value_xml_property_node(child, ZSTR_VAL(val->name), zval_value);
+        init_xml_property_node(child, ZSTR_VAL(val->name), zval_value);
     }
     ZEND_HASH_FOREACH_END();
     return;
 }
 
-void RemoteDebugger::set_property_value_xml_property_node(tinyxml2::XMLElement *child,
-                                                          std::string name,
-                                                          zval *value,
-                                                          bool encoding) {
+void RemoteDebugger::init_xml_property_node(
+    tinyxml2::XMLElement *child, std::string name, zval *value, int level, bool encoding) {
+    if (level > YASD_G(depth)) {
+        return;
+    }
+
     switch (Z_TYPE_P(value)) {
     case IS_TRUE:
         child->SetAttribute("type", "bool");
@@ -299,6 +316,7 @@ void RemoteDebugger::set_property_value_xml_property_node(tinyxml2::XMLElement *
     case IS_STRING:
         child->SetAttribute("type", "string");
         if (encoding) {
+            child->SetAttribute("size", (uint64_t) Z_STRLEN_P(value));
             child->SetAttribute("encoding", "base64");
             child->InsertNewText(base64_encode((unsigned char *) Z_STRVAL_P(value), Z_STRLEN_P(value)).c_str())
                 ->SetCData(true);
@@ -306,60 +324,200 @@ void RemoteDebugger::set_property_value_xml_property_node(tinyxml2::XMLElement *
             child->InsertNewText(Z_STRVAL_P(value))->SetCData(true);
         }
         break;
-    case IS_ARRAY: {
-        zend_ulong num;
-        zend_string *key;
-        zval *val;
-        zend_array *ht = Z_ARRVAL_P(value);
-
-        child->SetAttribute("type", "array");
-        child->SetAttribute("children", ht->nNumOfElements > 0 ? "1" : "0");
-        child->SetAttribute("numchildren", ht->nNumOfElements);
-        if (yasd_zend_hash_is_recursive(ht)) {
-            child->SetAttribute("recursive", 1);
-        } else {
-            ZEND_HASH_FOREACH_KEY_VAL_IND(ht, num, key, val) {
-                tinyxml2::XMLElement *property = child->InsertNewChildElement("property");
-                std::string fullname;
-                std::string key_str;
-
-                if (key == nullptr) {  // num key
-                    key_str = std::to_string(num);
-                    property->SetAttribute("name", num);
-                    fullname = "$" + name + "[" + std::to_string(num) + "]";
-                } else {  // string key
-                    key_str = ZSTR_VAL(key);
-                    property->SetAttribute("name", ZSTR_VAL(key));
-                    fullname = "$" + name + "[" + ZSTR_VAL(key) + "]";
-                }
-
-                property->SetAttribute("type", zend_zval_type_name(val));
-                property->SetAttribute("fullname", fullname.c_str());
-                set_property_value_xml_property_node(property, key_str, val, true);
-                // if (Z_TYPE_P(val) == IS_STRING) {
-                //     property->SetAttribute("size", (uint64_t) Z_STRLEN_P(val));
-                //     property->SetAttribute("encoding", "base64");
-                //     property->InsertNewText(base64_encode((unsigned char *) Z_STRVAL_P(val),
-                //     Z_STRLEN_P(val)).c_str())
-                //         ->SetCData(true);
-                // } else {
-                //     property->InsertNewText(std::to_string(Z_LVAL_P(val)).c_str())->SetCData(true);
-                // }
-            }
-            ZEND_HASH_FOREACH_END();
-        }
+    case IS_ARRAY:
+        init_zend_array_element_xml_property_node(child, name, value, level, encoding);
+        break;
+    case IS_OBJECT: {
+        init_zend_object_property_xml_property_node(child, name, value, level, encoding);
         break;
     }
-    case IS_OBJECT:
-        child->SetAttribute("type", "object");
-        child->InsertNewText("Object")->SetCData(true);
-        break;
     case IS_UNDEF:
         child->SetAttribute("type", "uninitialized");
         break;
     default:
         break;
     }
+}
+
+void RemoteDebugger::init_zend_array_element_xml_property_node(
+    tinyxml2::XMLElement *child, std::string name, zval *value, int level, bool encoding) {
+    zend_ulong num;
+    zend_string *key;
+    zval *val;
+    zend_array *ht = Z_ARRVAL_P(value);
+
+    child->SetAttribute("type", "array");
+    child->SetAttribute("children", ht->nNumOfElements > 0 ? "1" : "0");
+    child->SetAttribute("numchildren", ht->nNumOfElements);
+    if (yasd_zend_hash_is_recursive(ht)) {
+        child->SetAttribute("recursive", 1);
+    } else {
+        ZEND_HASH_FOREACH_KEY_VAL_IND(ht, num, key, val) {
+            tinyxml2::XMLElement *property = child->InsertNewChildElement("property");
+            std::string fullname;
+            std::string key_str;
+
+            if (key == nullptr) {  // num key
+                key_str = std::to_string(num);
+                property->SetAttribute("name", num);
+                fullname = name + "[" + std::to_string(num) + "]";
+            } else {  // string key
+                key_str = ZSTR_VAL(key);
+                property->SetAttribute("name", ZSTR_VAL(key));
+                fullname = name + "[" + ZSTR_VAL(key) + "]";
+            }
+
+            property->SetAttribute("type", zend_zval_type_name(val));
+            property->SetAttribute("fullname", fullname.c_str());
+            level++;
+            init_xml_property_node(property, key_str, val, level, true);
+            if (level > YASD_G(depth)) {
+                child->DeleteChild(property);
+            }
+            level--;
+        }
+        ZEND_HASH_FOREACH_END();
+    }
+}
+
+void RemoteDebugger::init_zend_object_property_xml_property_node(
+    tinyxml2::XMLElement *child, std::string name, zval *value, int level, bool encoding) {
+    zend_string *class_name;
+    zend_array *properties;
+    class_name = Z_OBJCE_P(value)->name;
+    zend_ulong num;
+    zend_string *key;
+    zval *val;
+    properties = yasd::Util::get_properties(value);
+
+    child->SetAttribute("type", "object");
+    child->SetAttribute("classname", ZSTR_VAL(class_name));
+    child->SetAttribute("children", properties->nNumOfElements > 0 ? "1" : "0");
+    child->SetAttribute("numchildren", properties->nNumOfElements);
+
+    std::vector<yasd::ZendPropertyInfo> summary_properties_info;
+
+    // TODO(codinghuang): may we have a better way to get private properties
+    void *property_info;
+    ZEND_HASH_FOREACH_STR_KEY_PTR(&Z_OBJCE_P(value)->properties_info, key, property_info) {
+        ZendPropertyInfo info;
+        info.property_name = key;
+        summary_properties_info.emplace_back(info);
+    }
+    ZEND_HASH_FOREACH_END();
+
+    int i = 0;
+    ZEND_HASH_FOREACH_KEY_VAL_IND(properties, num, key, val) {
+        tinyxml2::XMLElement *property = child->InsertNewChildElement("property");
+        std::string fullname;
+        std::string key_str;
+
+        ZendPropertyInfo info = summary_properties_info[i];
+        key = info.property_name;
+
+        key_str = ZSTR_VAL(key);
+        property->SetAttribute("name", key_str.c_str());
+        fullname = name + "->" + key_str;
+
+        property->SetAttribute("fullname", fullname.c_str());
+        property->SetAttribute("type", zend_zval_type_name(val));
+        level++;
+        init_xml_property_node(property, key_str, val, level, true);
+        if (level > YASD_G(depth)) {
+            child->DeleteChild(property);
+        }
+        level--;
+        i++;
+    }
+    ZEND_HASH_FOREACH_END();
+}
+
+int RemoteDebugger::parse_feature_set_cmd() {
+    // https://xdebug.org/docs/dbgp#feature-set
+
+    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+
+    std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
+
+    tinyxml2::XMLElement *root;
+
+    root = doc->NewElement("response");
+    doc->LinkEndChild(root);
+    init_response_xml_root_node(root, "feature_set");
+    root->SetAttribute("feature", exploded_cmd[4].c_str());
+    root->SetAttribute("success", 0);
+
+    send_doc(doc.get());
+
+    return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
+}
+
+int RemoteDebugger::parse_stdout_cmd() {
+    // https://xdebug.org/docs/dbgp#stdout-stderr
+
+    std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
+
+    tinyxml2::XMLElement *root;
+
+    root = doc->NewElement("response");
+    doc->LinkEndChild(root);
+    init_response_xml_root_node(root, "stdout");
+    root->SetAttribute("success", 0);
+
+    send_doc(doc.get());
+
+    return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
+}
+
+int RemoteDebugger::parse_status_cmd() {
+    // https://xdebug.org/docs/dbgp#status
+
+    std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
+
+    tinyxml2::XMLElement *root;
+
+    root = doc->NewElement("response");
+    doc->LinkEndChild(root);
+    init_response_xml_root_node(root, "status");
+    root->SetAttribute("status", "starting");
+    root->SetAttribute("reason", "ok");
+
+    send_doc(doc.get());
+
+    return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
+}
+
+int RemoteDebugger::parse_eval_cmd() {
+    // https://xdebug.org/docs/dbgp#eval
+
+    zval ret_zval;
+    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+
+    if (exploded_cmd[3] != "--") {
+        return yasd::DebuggerModeBase::FAILED;
+    }
+
+    std::string eval_str = exploded_cmd[4];
+
+    eval_str = base64_decode(eval_str);
+
+    yasd::Util::eval(const_cast<char *>(eval_str.c_str()), &ret_zval, const_cast<char *>("yasd://debug-eval"));
+
+    std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
+
+    tinyxml2::XMLElement *root;
+    tinyxml2::XMLElement *child;
+
+    root = doc->NewElement("response");
+    doc->LinkEndChild(root);
+    init_response_xml_root_node(root, "eval");
+
+    child = root->InsertNewChildElement("property");
+    init_xml_property_node(child, "", &ret_zval);
+
+    send_doc(doc.get());
+
+    return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
 }
 
 int RemoteDebugger::parse_breakpoint_list_cmd() {
@@ -562,6 +720,60 @@ int RemoteDebugger::parse_context_get_cmd() {
     return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
 }
 
+int RemoteDebugger::parse_property_get_cmd() {
+    // https://xdebug.org/docs/dbgp#property-get-property-set-property-value
+
+    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+    std::string name;
+    zval *zobj;
+    zval *property;
+
+    if (exploded_cmd[0] != "property_get") {
+        return yasd::DebuggerModeBase::FAILED;
+    }
+
+    std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
+    tinyxml2::XMLElement *root;
+    tinyxml2::XMLElement *child;
+
+    root = doc->NewElement("response");
+    doc->LinkEndChild(root);
+    init_response_xml_root_node(root, "property_get");
+
+    name = yasd::Util::get_option_value(exploded_cmd, "-n");
+
+    // vscode has double quotes, but PhpStorm does not
+    if (name.front() == '"') {
+        name.erase(0, 1);
+    }
+
+    if (name.back() == '"') {
+        name.pop_back();
+    }
+
+    // auto exploded_name = yasd::Util::explode(name, "->");
+
+    // if (Z_TYPE(EG(current_execute_data)->This) == IS_OBJECT) {
+    //     zobj = &EG(current_execute_data)->This;
+    // } else {
+    //     zobj = yasd::Util::find_variable(exploded_name[0]);
+    // }
+
+    property = yasd::Util::fetch_zval_by_fullname(name);
+
+    // for (auto iter = exploded_name.begin() + 1; iter != exploded_name.end(); iter++) {
+    //     property = yasd_zend_read_property(Z_OBJCE_P(zobj), zobj, iter->c_str(), iter->length(), 1);
+    //     zobj = property;
+    // }
+
+    child = root->InsertNewChildElement("property");
+    init_xml_property_node(child, name, property);
+
+    send_doc(doc.get());
+
+    return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
+}
+
 int RemoteDebugger::parse_stop_cmd() {
     // there is no good way to shut down the server,
     // so let the debugger and the process separate first
@@ -582,11 +794,16 @@ int RemoteDebugger::parse_stop_cmd() {
 }
 
 void RemoteDebugger::register_cmd_handler() {
+    handlers.emplace_back(std::make_pair("feature_set", std::bind(&RemoteDebugger::parse_feature_set_cmd, this)));
+    handlers.emplace_back(std::make_pair("stdout", std::bind(&RemoteDebugger::parse_stdout_cmd, this)));
+    handlers.emplace_back(std::make_pair("status", std::bind(&RemoteDebugger::parse_status_cmd, this)));
+    handlers.emplace_back(std::make_pair("eval", std::bind(&RemoteDebugger::parse_eval_cmd, this)));
     handlers.emplace_back(
         std::make_pair("breakpoint_list", std::bind(&RemoteDebugger::parse_breakpoint_list_cmd, this)));
     handlers.emplace_back(std::make_pair("breakpoint_set", std::bind(&RemoteDebugger::parse_breakpoint_set_cmd, this)));
     handlers.emplace_back(std::make_pair("run", std::bind(&RemoteDebugger::parse_run_cmd, this)));
     handlers.emplace_back(std::make_pair("stack_get", std::bind(&RemoteDebugger::parse_stack_get_cmd, this)));
+    handlers.emplace_back(std::make_pair("property_get", std::bind(&RemoteDebugger::parse_property_get_cmd, this)));
     handlers.emplace_back(std::make_pair("context_names", std::bind(&RemoteDebugger::parse_context_names_cmd, this)));
     handlers.emplace_back(std::make_pair("context_get", std::bind(&RemoteDebugger::parse_context_get_cmd, this)));
     handlers.emplace_back(std::make_pair("step_over", std::bind(&RemoteDebugger::parse_step_over_cmd, this)));
