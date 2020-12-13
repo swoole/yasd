@@ -471,12 +471,22 @@ zval *Util::fetch_zval_by_fullname(std::string fullname) {
     const char *keyword = ptr, *keyword_end = nullptr;
     const char *end = fullname.c_str() + fullname.length() - 1;
     zval *retval_ptr = nullptr;
-    zval *zobj;
 
     zend_array *symbol_table = zend_rebuild_symbol_table();
 
     // aa->bb->cc
     // aa[bb][cc]
+
+    auto fetch_next_zval = [](zval *retval_ptr, zend_array *symbol_table, std::string name) -> zval * {
+        if (!retval_ptr) {
+            retval_ptr = find_variable(symbol_table, name);
+        } else if (Z_TYPE_P(retval_ptr) == IS_ARRAY) {
+            retval_ptr = find_variable(Z_ARRVAL_P(retval_ptr), name);
+        } else {
+            retval_ptr = yasd_zend_read_property(Z_OBJCE_P(retval_ptr), retval_ptr, name.c_str(), name.length(), 1);
+        }
+        return retval_ptr;
+    };
 
     do {
         switch (state) {
@@ -488,15 +498,7 @@ zval *Util::fetch_zval_by_fullname(std::string fullname) {
                 keyword_end = ptr;
                 if (keyword) {
                     std::string name(keyword, keyword_end - keyword);
-
-                    if (!retval_ptr) {
-                        retval_ptr = find_variable(symbol_table, name);
-                    } else if (Z_TYPE_P(retval_ptr) == IS_ARRAY) {
-                        retval_ptr = find_variable(Z_ARRVAL_P(retval_ptr), name);
-                    } else {
-                        retval_ptr =
-                            yasd_zend_read_property(Z_OBJCE_P(retval_ptr), retval_ptr, name.c_str(), name.length(), 1);
-                    }
+                    retval_ptr = fetch_next_zval(retval_ptr, symbol_table, name);
                     keyword = nullptr;
                 }
                 state = 3;
@@ -504,15 +506,7 @@ zval *Util::fetch_zval_by_fullname(std::string fullname) {
                 keyword_end = ptr;
                 if (keyword) {
                     std::string name(keyword, keyword_end - keyword);
-
-                    if (!retval_ptr) {
-                        retval_ptr = find_variable(symbol_table, name);
-                    } else if (Z_TYPE_P(retval_ptr) == IS_ARRAY) {
-                        retval_ptr = find_variable(Z_ARRVAL_P(retval_ptr), name);
-                    } else {
-                        retval_ptr =
-                            yasd_zend_read_property(Z_OBJCE_P(retval_ptr), retval_ptr, name.c_str(), name.length(), 1);
-                    }
+                    retval_ptr = fetch_next_zval(retval_ptr, symbol_table, name);
                     keyword = nullptr;
                 }
                 state = 2;
@@ -544,15 +538,7 @@ zval *Util::fetch_zval_by_fullname(std::string fullname) {
                 keyword_end = ptr;
                 if (keyword) {
                     std::string name(keyword, keyword_end - keyword);
-
-                    if (!retval_ptr) {
-                        retval_ptr = find_variable(symbol_table, name);
-                    } else if (Z_TYPE_P(retval_ptr) == IS_ARRAY) {
-                        retval_ptr = find_variable(Z_ARRVAL_P(retval_ptr), name);
-                    } else {
-                        retval_ptr =
-                            yasd_zend_read_property(Z_OBJCE_P(retval_ptr), retval_ptr, name.c_str(), name.length(), 1);
-                    }
+                    retval_ptr = fetch_next_zval(retval_ptr, symbol_table, name);
                     keyword = nullptr;
                 }
                 state = 1;
@@ -568,14 +554,7 @@ zval *Util::fetch_zval_by_fullname(std::string fullname) {
         keyword_end = ptr;
         std::string name(keyword, keyword_end - keyword);
 
-        if (!retval_ptr) {
-            retval_ptr = find_variable(symbol_table, name);
-        } else if (Z_TYPE_P(retval_ptr) == IS_ARRAY) {
-            retval_ptr = find_variable(Z_ARRVAL_P(retval_ptr), name);
-        } else {
-            retval_ptr =
-                yasd_zend_read_property(Z_OBJCE_P(retval_ptr), retval_ptr, name.c_str(), name.length(), 1);
-        }
+        retval_ptr = fetch_next_zval(retval_ptr, symbol_table, name);
         keyword = nullptr;
     }
 
