@@ -70,12 +70,25 @@ PHP_INI_END()
 
 static void php_yasd_init_globals(zend_yasd_globals *yasd_globals) {}
 
+static void check_other_debugger() {
+    // We should not use the E_ERROR level, otherwise php --ini would throw fetal error
+    if (zend_hash_str_find_ptr(&module_registry, ZEND_STRL("sdebug"))) {
+        php_yasd_fatal_error(E_WARNING, "Please don't use the Sdebug and Yasd extensions at the same time!");
+    }
+
+    if (zend_hash_str_find_ptr(&module_registry, ZEND_STRL("xdebug"))) {
+        php_yasd_fatal_error(E_WARNING, "Please don't use the Xdebug and Yasd extensions at the same time!");
+    }
+}
+
 PHP_RINIT_FUNCTION(yasd) {
     // use php -e
     // CG(compiler_options) = CG(compiler_options) | ZEND_COMPILE_EXTENDED_STMT;
     if (!(CG(compiler_options) & ZEND_COMPILE_EXTENDED_INFO)) {
         return SUCCESS;
     }
+
+    check_other_debugger();
 
     yasd_rinit(module_number);
 

@@ -36,6 +36,9 @@ extern ZEND_DECLARE_MODULE_GLOBALS(yasd);
 
 #define YASD_G(v) ZEND_MODULE_GLOBALS_ACCESSOR(yasd, v)
 
+#define php_yasd_fatal_error(level, fmt_str, ...) \
+        php_error_docref(NULL, level, (const char *) (fmt_str), ##__VA_ARGS__)
+
 namespace yasd { namespace function {
 class ReturnValue {
   public:
