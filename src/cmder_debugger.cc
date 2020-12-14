@@ -22,6 +22,7 @@
 #include "include/global.h"
 #include "include/source_reader.h"
 #include "thirdparty/boost/algorithm/include/boost/algorithm/string.hpp"
+#include "thirdparty/boost/algorithm/include/boost/algorithm/string/trim.hpp"
 
 #include "main/php.h"
 #include "Zend/zend_builtin_functions.h"
@@ -90,6 +91,7 @@ std::string CmderDebugger::get_next_cmd() {
 
     std::cout << "> ";
     getline(std::cin, tmp);
+    boost::algorithm::trim(tmp);
     if (tmp == "") {
         return last_cmd;
     }
@@ -226,10 +228,6 @@ int CmderDebugger::parse_print_cmd() {
     std::vector<std::string> exploded_cmd;
 
     boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
-
-    for (int i = 0; i < exploded_cmd.size(); i++) {
-        std::cout << exploded_cmd[i] << std::endl;
-    }
 
     yasd::Util::print_var(exploded_cmd[1]);
     global->do_next = true;
@@ -374,9 +372,9 @@ void CmderDebugger::show_welcome_info() {
 }
 
 int CmderDebugger::execute_cmd() {
-    // yasd::Context *context = global->get_current_context();
+    std::vector<std::string> exploded_cmd;
 
-    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+    boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
 
     if (!global->is_running) {
         if (is_disable_cmd(exploded_cmd[0])) {
