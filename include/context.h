@@ -15,9 +15,6 @@
 */
 #pragma once
 
-#include "main/php.h"
-
-#include <map>
 #include <string>
 #include <vector>
 #include <set>

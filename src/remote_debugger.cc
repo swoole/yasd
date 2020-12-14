@@ -26,8 +26,6 @@
 
 #include "./php_yasd.h"
 
-#include "main/php.h"
-
 namespace yasd {
 
 void RemoteDebugger::init() {

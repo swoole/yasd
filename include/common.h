@@ -18,8 +18,13 @@
 
 #include "main/php.h"
 
-#define BEGIN_EXTERN_C() extern "C" {
-#define END_EXTERN_C() }
+#ifdef __cplusplus
+#define YASD_EXTERN_C_BEGIN extern "C" {
+#define YASD_EXTERN_C_END }
+#else
+#define YASD_EXTERN_C_BEGIN
+#define YASD_EXTERN_C_END
+#endif
 
 #define YASD_HASHTABLE_FOREACH_START(ht, _val)                                                                         \
     ZEND_HASH_FOREACH_VAL(ht, _val);                                                                                   \
