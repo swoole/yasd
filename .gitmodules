@@ -1,0 +1,60 @@
+[submodule "thirdparty/boost/tokenizer"]
+	path = thirdparty/boost/tokenizer
+	url = git@github.com:boostorg/tokenizer.git
+[submodule "thirdparty/boost/config"]
+	path = thirdparty/boost/config
+	url = git@github.com:boostorg/config.git
+[submodule "thirdparty/boost/assert"]
+	path = thirdparty/boost/assert
+	url = git@github.com:boostorg/assert.git
+[submodule "thirdparty/boost/type_traits"]
+	path = thirdparty/boost/type_traits
+	url = git@github.com:boostorg/type_traits.git
+[submodule "thirdparty/boost/detail"]
+	path = thirdparty/boost/detail
+	url = git@github.com:boostorg/detail.git
+[submodule "thirdparty/boost/mpl"]
+	path = thirdparty/boost/mpl
+	url = git@github.com:boostorg/mpl.git
+[submodule "thirdparty/boost/throw_exception"]
+	path = thirdparty/boost/throw_exception
+	url = git@github.com:boostorg/throw_exception.git
+[submodule "thirdparty/boost/preprocessor"]
+	path = thirdparty/boost/preprocessor
+	url = git@github.com:boostorg/preprocessor.git
+[submodule "thirdparty/boost/iterator"]
+	path = thirdparty/boost/iterator
+	url = git@github.com:boostorg/iterator.git
+[submodule "thirdparty/boost/static_assert"]
+	path = thirdparty/boost/static_assert
+	url = git@github.com:boostorg/static_assert.git
+[submodule "thirdparty/boost/core"]
+	path = thirdparty/boost/core
+	url = git@github.com:boostorg/core.git
+[submodule "thirdparty/boost/algorithm"]
+	path = thirdparty/boost/algorithm
+	url = git@github.com:boostorg/algorithm.git
+[submodule "thirdparty/boost/range"]
+	path = thirdparty/boost/range
+	url = git@github.com:boostorg/range.git
+[submodule "thirdparty/boost/concept_check"]
+	path = thirdparty/boost/concept_check
+	url = git@github.com:boostorg/concept_check.git
+[submodule "thirdparty/boost/utility"]
+	path = thirdparty/boost/utility
+	url = git@github.com:boostorg/utility.git
+[submodule "thirdparty/boost/function"]
+	path = thirdparty/boost/function
+	url = git@github.com:boostorg/function.git
+[submodule "thirdparty/boost/integer"]
+	path = thirdparty/boost/integer
+	url = git@github.com:boostorg/integer.git
+[submodule "thirdparty/boost/type_index"]
+	path = thirdparty/boost/type_index
+	url = git@github.com:boostorg/type_index.git
+[submodule "thirdparty/boost/container_hash"]
+	path = thirdparty/boost/container_hash
+	url = git@github.com:boostorg/container_hash.git
+[submodule "thirdparty/boost/bind"]
+	path = thirdparty/boost/bind
+	url = git@github.com:boostorg/bind.git
