@@ -34,7 +34,7 @@ ZEND_END_MODULE_GLOBALS(yasd)
 
 extern ZEND_DECLARE_MODULE_GLOBALS(yasd);
 
-#define YASD_G(v) (yasd_globals.v)
+#define YASD_G(v) ZEND_MODULE_GLOBALS_ACCESSOR(yasd, v)
 
 namespace yasd { namespace function {
 class ReturnValue {
