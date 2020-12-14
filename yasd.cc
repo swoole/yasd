@@ -19,7 +19,6 @@
 #endif
 
 #include <string>
-#include <vector>
 #include <map>
 
 #include <iostream>
@@ -31,12 +30,10 @@
 #include "ext/standard/info.h"
 #include "./php_yasd.h"
 
-#include "include/common.h"
 #include "include/util.h"
 #include "include/context.h"
 #include "include/global.h"
 #include "include/base.h"
-#include "include/source_reader.h"
 #include "include/redirect_file_to_cin.h"
 
 ZEND_DECLARE_MODULE_GLOBALS(yasd)

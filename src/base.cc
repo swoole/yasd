@@ -18,8 +18,6 @@
 #include "include/context.h"
 #include "include/global.h"
 
-#include "./php_yasd.h"
-
 #include <iostream>
 
 static void (*old_execute_ex)(zend_execute_data *execute_data);

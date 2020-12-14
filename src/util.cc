@@ -20,9 +20,9 @@
 #include "include/common.h"
 #include "include/global.h"
 
-BEGIN_EXTERN_C()
+YASD_EXTERN_C_BEGIN
 #include "ext/standard/php_var.h"
-END_EXTERN_C()
+YASD_EXTERN_C_END
 
 #include "./php_yasd.h"
 

@@ -24,13 +24,6 @@
 #include "thirdparty/boost/algorithm/include/boost/algorithm/string.hpp"
 #include "thirdparty/boost/algorithm/include/boost/algorithm/string/trim.hpp"
 
-#include "main/php.h"
-#include "Zend/zend_builtin_functions.h"
-
-BEGIN_EXTERN_C()
-#include "ext/standard/php_var.h"
-END_EXTERN_C()
-
 namespace yasd {
 
 CmderDebugger::CmderDebugger() {}
