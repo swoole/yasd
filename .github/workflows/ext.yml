@@ -28,5 +28,7 @@ jobs:
         pwd
         echo "`git log -20 --pretty --oneline`"
         echo "`git log -10 --stat --pretty --oneline`"
+    - name: Update submodule
+      run: git submodule init && git submodule update
     - name: Build extension
       run: phpize && ./configure && make clean && make -j$(sysctl -n hw.ncpu) && sudo make install
