@@ -119,27 +119,13 @@ zval *Util::find_variable(zend_array *symbol_table, std::string var_name) {
     return var;
 }
 
-void Util::print_var(std::string var_name) {
+void Util::print_var(std::string fullname) {
     zval *var;
-    zend_execute_data *execute_data = EG(current_execute_data);
 
-    // print $this
-    if (var_name == "this") {
-        php_var_dump(ZEND_THIS, 1);
-        return;
-    }
-
-    // print property
-    auto exploded_var_name = yasd::Util::explode(var_name, "->");
-    if (exploded_var_name.size() == 2) {
-        print_property(exploded_var_name[0], exploded_var_name[1]);
-        return;
-    }
-
-    var = find_variable(var_name);
+    var = yasd::Util::fetch_zval_by_fullname(fullname);
 
     if (!var) {
-        yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "not found variable $%s", var_name.c_str());
+        yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "not found variable $%s", fullname.c_str());
     } else {
         php_var_dump(var, 1);
     }
