@@ -9,6 +9,7 @@
 ### 安装
 
 ```bash
+git submodule update --init && \
 phpize --clean && \
 phpize && \
 ./configure && \

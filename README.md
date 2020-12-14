@@ -9,6 +9,7 @@ Yet Another Swoole Debugger.
 ### build
 
 ```bash
+git submodule update --init && \
 phpize --clean && \
 phpize && \
 ./configure && \
