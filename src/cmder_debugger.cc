@@ -13,12 +13,16 @@
   | Author: codinghuang  <codinghuang@qq.com>                            |
   +----------------------------------------------------------------------+
 */
+#include <iostream>
+
 #include "include/common.h"
 #include "include/context.h"
 #include "include/cmder_debugger.h"
 #include "include/util.h"
 #include "include/global.h"
 #include "include/source_reader.h"
+#include "thirdparty/boost/algorithm/include/boost/algorithm/string.hpp"
+#include "thirdparty/boost/algorithm/include/boost/algorithm/string/trim.hpp"
 
 #include "main/php.h"
 #include "Zend/zend_builtin_functions.h"
@@ -26,8 +30,6 @@
 BEGIN_EXTERN_C()
 #include "ext/standard/php_var.h"
 END_EXTERN_C()
-
-#include <iostream>
 
 namespace yasd {
 
@@ -89,6 +91,7 @@ std::string CmderDebugger::get_next_cmd() {
 
     std::cout << "> ";
     getline(std::cin, tmp);
+    boost::algorithm::trim(tmp);
     if (tmp == "") {
         return last_cmd;
     }
@@ -222,7 +225,9 @@ int CmderDebugger::parse_quit_cmd() {
 }
 
 int CmderDebugger::parse_print_cmd() {
-    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+    std::vector<std::string> exploded_cmd;
+
+    boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
 
     yasd::Util::print_var(exploded_cmd[1]);
     global->do_next = true;
@@ -367,9 +372,9 @@ void CmderDebugger::show_welcome_info() {
 }
 
 int CmderDebugger::execute_cmd() {
-    // yasd::Context *context = global->get_current_context();
+    std::vector<std::string> exploded_cmd;
 
-    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+    boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
 
     if (!global->is_running) {
         if (is_disable_cmd(exploded_cmd[0])) {
