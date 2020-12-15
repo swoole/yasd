@@ -225,8 +225,6 @@ void RemoteDebugger::init_user_defined_constant_variables_xml_child_node(tinyxml
         }
 
         child = root->InsertNewChildElement("property");
-        child->SetAttribute("name", ZSTR_VAL(val->name));
-        child->SetAttribute("fullname", ZSTR_VAL(val->name));
         child->SetAttribute("facet", "constant");
 
         yasd::PropertyElement property_element;
