@@ -62,6 +62,7 @@ class CmderDebugger: public DebuggerModeBase {
 
     void show_welcome_info();
     void show_breakpoint_hit_info();
+    void reload_cache_breakpoint();
 
     int get_listsize() {
         return listsize;

@@ -39,20 +39,4 @@ extern ZEND_DECLARE_MODULE_GLOBALS(yasd);
 #define php_yasd_fatal_error(level, fmt_str, ...) \
         php_error_docref(NULL, level, (const char *) (fmt_str), ##__VA_ARGS__)
 
-namespace yasd { namespace function {
-class ReturnValue {
-  public:
-    zval value;
-    ReturnValue() {
-        value = {};
-    }
-    ~ReturnValue() {
-        zval_dtor(&value);
-    }
-};
-
-ReturnValue call(const std::string &func_name, int argc, zval *argv);
-}
-}
-
 #endif /* PHP_YASD_H_ */

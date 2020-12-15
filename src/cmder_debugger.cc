@@ -34,7 +34,7 @@ void CmderDebugger::init() {
 
     show_welcome_info();
 
-    yasd::Util::reload_cache_breakpoint();
+    reload_cache_breakpoint();
     register_cmd_handler();
 
     do {
@@ -51,8 +51,9 @@ void CmderDebugger::handle_request(const char *filename, int lineno) {
     int status;
     std::string cmd;
     yasd::SourceReader reader(filename);
+    std::vector<std::string> exploded_cmd;
 
-    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+    boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
 
     if (get_full_name(exploded_cmd[0]) == "run" || get_full_name(exploded_cmd[0]) == "continue") {
         yasd::Util::printf_info(yasd::Color::YASD_ECHO_MAGENTA, "stop because of breakpoint ");
@@ -101,8 +102,9 @@ int CmderDebugger::parse_run_cmd() {
 int CmderDebugger::parse_breakpoint_cmd() {
     int lineno;
     std::string filename;
+    std::vector<std::string> exploded_cmd;
 
-    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+    boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
 
     // breakpoint in current file with lineno
     if (exploded_cmd.size() == 2) {
@@ -139,8 +141,9 @@ int CmderDebugger::parse_breakpoint_cmd() {
 int CmderDebugger::parse_delete_breakpoint_cmd() {
     int lineno;
     std::string filename;
+    std::vector<std::string> exploded_cmd;
 
-    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+    boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
 
     if (exploded_cmd.size() == 2) {
         filename = yasd::Util::get_executed_filename();
@@ -232,8 +235,9 @@ int CmderDebugger::parse_list_cmd() {
     int lineno = last_list_lineno;
     const char *filename = yasd::Util::get_executed_filename();
     yasd::SourceReader reader(filename);
+    std::vector<std::string> exploded_cmd;
 
-    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+    boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
 
     // list lineno or list -
     if (exploded_cmd.size() == 2) {
@@ -255,7 +259,9 @@ int CmderDebugger::parse_list_cmd() {
 }
 
 int CmderDebugger::parse_set_cmd() {
-    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+    std::vector<std::string> exploded_cmd;
+
+    boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
 
     if (exploded_cmd[1] == "listsize") {
         listsize = atoi(exploded_cmd[2].c_str());
@@ -267,8 +273,9 @@ int CmderDebugger::parse_watch_cmd() {
     zend_function *func = EG(current_execute_data)->func;
     std::string var_name;
     yasd::WatchPointElement element;
+    std::vector<std::string> exploded_cmd;
 
-    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+    boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
     if (exploded_cmd.size() < 2) {
         yasd::Util::printfln_info(yasd::Color::YASD_ECHO_RED, "you should set watch point");
         return RECV_CMD_AGAIN;
@@ -314,8 +321,9 @@ int CmderDebugger::parse_watch_cmd() {
 
 int CmderDebugger::parse_unwatch_cmd() {
     zend_function *func = EG(current_execute_data)->func;
+    std::vector<std::string> exploded_cmd;
 
-    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+    boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
     if (exploded_cmd.size() < 2) {
         yasd::Util::printfln_info(yasd::Color::YASD_ECHO_RED, "you should set watch point");
         return RECV_CMD_AGAIN;
@@ -362,6 +370,37 @@ std::string CmderDebugger::get_full_name(std::string sub_cmd) {
 void CmderDebugger::show_welcome_info() {
     yasd::Util::printfln_info(YASD_ECHO_GREEN, "[Welcome to yasd, the Swoole debugger]");
     yasd::Util::printfln_info(YASD_ECHO_GREEN, "[You can set breakpoint now]");
+}
+
+void CmderDebugger::reload_cache_breakpoint() {
+    std::string content;
+    std::fstream file(yasd::Util::get_breakpoint_cache_filename());
+    std::string filename;
+    int lineno;
+
+    while (getline(file, content)) {
+        std::vector<std::string> exploded_content;
+
+        boost::split(exploded_content, content, boost::is_any_of(":"), boost::token_compress_on);
+        if (exploded_content.size() != 2) {
+            continue;
+        }
+
+        filename = exploded_content[0];
+        lineno = atoi(exploded_content[1].c_str());
+
+        auto iter = global->breakpoints->find(filename);
+
+        yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "reload breakpoint at %s:%d", filename.c_str(), lineno);
+
+        if (iter != global->breakpoints->end()) {
+            iter->second.insert(lineno);
+        } else {
+            std::set<int> lineno_set;
+            lineno_set.insert(lineno);
+            global->breakpoints->insert(std::make_pair(filename, lineno_set));
+        }
+    }
 }
 
 int CmderDebugger::execute_cmd() {
