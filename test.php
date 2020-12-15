@@ -63,7 +63,8 @@ class Foo
         $this->foo2 = new Foo2();
     }
 }
-
+$b = true;
+$b = false;
 $i = 0;
 $j = 1;
 $j = 2;

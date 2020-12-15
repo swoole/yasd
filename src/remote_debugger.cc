@@ -173,14 +173,14 @@ void RemoteDebugger::init_local_variables_xml_child_node(tinyxml2::XMLElement *r
         child = root->InsertNewChildElement("property");
         zend_string *var_name = op_array->vars[i];
         std::string name = "$" + std::string(ZSTR_VAL(var_name));
-        std::string fullname = "$" + std::string(ZSTR_VAL(var_name));
-        child->SetAttribute("name", name.c_str());
-        child->SetAttribute("fullname", fullname.c_str());
+        std::string fullname = std::string(ZSTR_VAL(var_name));
 
         zval *var = yasd::Util::find_variable(ZSTR_VAL(var_name));
 
         if (!var) {
             child->SetAttribute("type", "uninitialized");
+            child->SetAttribute("name", name.c_str());
+            child->SetAttribute("fullname", fullname.c_str());
         } else {
             yasd::PropertyElement property_element;
             property_element.set_type(zend_zval_type_name(var))
