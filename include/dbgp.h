@@ -120,10 +120,22 @@ class MessageElement {
 
 class PropertyElement {
  public:
+    std::string type;
+    std::string name;
     std::string fullname;
     zval *value;
     int level = 0;
     bool encoding = false;
+
+    PropertyElement &set_type(std::string _type) {
+        type = _type;
+        return *this;
+    }
+
+    PropertyElement &set_name(std::string _name) {
+        name = _name;
+        return *this;
+    }
 
     PropertyElement &set_fullname(std::string _fullname) {
         fullname = _fullname;
@@ -152,13 +164,13 @@ class Dbgp {
     ~Dbgp() {}
 
     static std::string make_message(tinyxml2::XMLDocument *doc);
-    static void init_zend_array_element_xml_property_node(tinyxml2::XMLElement *child,
+    static void get_zend_array_child_property_doc(tinyxml2::XMLElement *child,
                                                           const PropertyElement &property_element);
-    static void init_zend_object_property_xml_property_node(tinyxml2::XMLElement *child,
+    static void get_zend_object_child_property_doc(tinyxml2::XMLElement *child,
                                                             const PropertyElement &property_element);
     static void get_init_event_doc(tinyxml2::XMLDocument *doc, const DbgpInitElement &init_element);
     static void get_response_doc(tinyxml2::XMLElement *root, const ResponseElement &response_element);
-    static void get_property_doc(tinyxml2::XMLElement *child, const PropertyElement &property_element);
+    static void get_property_doc(tinyxml2::XMLElement *root, const PropertyElement &property_element);
     static void get_message_doc(tinyxml2::XMLDocument *doc,
                                 const ResponseElement &response_element,
                                 const MessageElement &message_element);
