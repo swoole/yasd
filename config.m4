@@ -81,6 +81,7 @@ if test "$PHP_YASD" != "no"; then
         src/context.cc \
         src/global.cc \
         src/source_reader.cc \
+        src/dbgp.cc \
         src/debuger_mode_base.cc \
         src/cmder_debugger.cc \
         src/remote_debugger.cc \

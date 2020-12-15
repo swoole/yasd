@@ -22,6 +22,7 @@
 #include "include/common.h"
 #include "include/base64.h"
 #include "include/remote_debugger.h"
+#include "include/dbgp.h"
 #include "include/zend_property_info.h"
 
 #include "./php_yasd.h"
@@ -141,38 +142,20 @@ ssize_t RemoteDebugger::send_init_event_message() {
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
 
-    tinyxml2::XMLElement *root;
-    tinyxml2::XMLElement *child;
+    yasd::DbgpInitElement init_element;
 
-    root = doc->NewElement("init");
-    doc->LinkEndChild(root);
-    root->SetAttribute("xmlns", "urn:debugger_protocol_v1");
-    root->SetAttribute("xmlns:xdebug", "https://xdebug.org/dbgp/xdebug");
+    init_element.set_appid(std::to_string(getpid()))
+        .set_author("Codinghuang")
+        .set_copyright("Copyright (c) 2020-2021 by Codinghuang")
+        .set_debugger_name("Yasd")
+        .set_debugger_version("0.1.0")
+        .set_fileuri("file://" + std::string(global->entry_file))
+        .set_idekey("hantaohuang")
+        .set_language("PHP")
+        .set_language_version(PHP_VERSION)
+        .set_url("https://github.com/swoole/yasd");
 
-    child = doc->NewElement("engine");
-    root->InsertEndChild(child);
-    child->SetAttribute("version", "0.1.0");
-    child->InsertNewText("Yasd")->SetCData(true);
-
-    child = doc->NewElement("author");
-    root->InsertEndChild(child);
-    child->InsertNewText("Codinghuang")->SetCData(true);
-
-    child = doc->NewElement("url");
-    root->InsertEndChild(child);
-    child->InsertNewText("https://github.com/swoole/yasd")->SetCData(true);
-
-    child = doc->NewElement("copyright");
-    root->InsertEndChild(child);
-    child->InsertNewText("Copyright (c) 2020-2021 by Codinghuang")->SetCData(true);
-
-    std::string fileuri = "file://" + std::string(global->entry_file);
-    root->SetAttribute("fileuri", fileuri.c_str());
-    root->SetAttribute("language", "PHP");
-    root->SetAttribute("xdebug:language_version", PHP_VERSION);
-    root->SetAttribute("protocol_version", "1.0");
-    root->SetAttribute("appid", std::to_string(getpid()).c_str());
-    root->SetAttribute("idekey", "hantaohuang");
+    yasd::Dbgp::init_response(doc.get(), init_element);
 
     return send_doc(doc.get());
 }
