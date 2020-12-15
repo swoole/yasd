@@ -164,10 +164,10 @@ class Dbgp {
     ~Dbgp() {}
 
     static std::string make_message(tinyxml2::XMLDocument *doc);
-    static void get_zend_array_child_property_doc(tinyxml2::XMLElement *child,
-                                                          const PropertyElement &property_element);
+    static void get_zend_string_property_doc(tinyxml2::XMLElement *root, const PropertyElement &property_element);
+    static void get_zend_array_child_property_doc(tinyxml2::XMLElement *child, const PropertyElement &property_element);
     static void get_zend_object_child_property_doc(tinyxml2::XMLElement *child,
-                                                            const PropertyElement &property_element);
+                                                   const PropertyElement &property_element);
     static void get_init_event_doc(tinyxml2::XMLDocument *doc, const DbgpInitElement &init_element);
     static void get_response_doc(tinyxml2::XMLElement *root, const ResponseElement &response_element);
     static void get_property_doc(tinyxml2::XMLElement *root, const PropertyElement &property_element);

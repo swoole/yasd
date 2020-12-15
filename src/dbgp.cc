@@ -128,16 +128,7 @@ void Dbgp::get_property_doc(tinyxml2::XMLElement *root, const PropertyElement &p
         root->InsertNewText(std::to_string(Z_DVAL_P(property_element.value)).c_str())->SetCData(true);
         break;
     case IS_STRING:
-        if (property_element.encoding) {
-            root->SetAttribute("size", (uint64_t) Z_STRLEN_P(property_element.value));
-            root->SetAttribute("encoding", "base64");
-            root->InsertNewText(base64_encode((unsigned char *) Z_STRVAL_P(property_element.value),
-                                              Z_STRLEN_P(property_element.value))
-                                    .c_str())
-                ->SetCData(true);
-        } else {
-            root->InsertNewText(Z_STRVAL_P(property_element.value))->SetCData(true);
-        }
+        get_zend_string_property_doc(root, property_element);
         break;
     case IS_ARRAY:
         get_zend_array_child_property_doc(root, property_element);
@@ -151,6 +142,19 @@ void Dbgp::get_property_doc(tinyxml2::XMLElement *root, const PropertyElement &p
         break;
     default:
         break;
+    }
+}
+
+void Dbgp::get_zend_string_property_doc(tinyxml2::XMLElement *root, const PropertyElement &property_element) {
+    if (property_element.encoding) {
+        root->SetAttribute("size", (uint64_t) Z_STRLEN_P(property_element.value));
+        root->SetAttribute("encoding", "base64");
+        root->InsertNewText(
+                base64_encode((unsigned char *) Z_STRVAL_P(property_element.value), Z_STRLEN_P(property_element.value))
+                    .c_str())
+            ->SetCData(true);
+    } else {
+        root->InsertNewText(Z_STRVAL_P(property_element.value))->SetCData(true);
     }
 }
 
