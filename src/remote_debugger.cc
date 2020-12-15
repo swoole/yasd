@@ -189,12 +189,10 @@ void RemoteDebugger::init_local_variables_xml_child_node(tinyxml2::XMLElement *r
 
     if (Z_TYPE(EG(current_execute_data)->This) == IS_OBJECT) {
         child = root->InsertNewChildElement("property");
-        child->SetAttribute("name", "$this");
-        child->SetAttribute("fullname", "this");
 
         yasd::PropertyElement property_element;
         property_element.set_type(zend_zval_type_name(&EG(current_execute_data)->This))
-            .set_name("this")
+            .set_name("$this")
             .set_fullname("this")
             .set_value(&EG(current_execute_data)->This);
         yasd::Dbgp::get_property_doc(child, property_element);
