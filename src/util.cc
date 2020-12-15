@@ -69,28 +69,11 @@ HashTable *Util::get_defined_vars() {
 }
 
 zval *Util::find_variable(std::string var_name) {
-    zval *var;
     HashTable *defined_vars;
 
     defined_vars = get_defined_vars();
 
-    var = zend_hash_str_find(defined_vars, var_name.c_str(), var_name.length());
-
-    // not define variable
-    if (!var) {
-        return nullptr;
-    }
-
-    while (Z_TYPE_P(var) == IS_INDIRECT) {
-        var = Z_INDIRECT_P(var);
-    }
-
-    // the statement that defines the variable has not yet been executed
-    if (Z_TYPE_P(var) == IS_UNDEF) {
-        return nullptr;
-    }
-
-    return var;
+    return find_variable(defined_vars, var_name);
 }
 
 zval *Util::find_variable(zend_array *symbol_table, std::string var_name) {
