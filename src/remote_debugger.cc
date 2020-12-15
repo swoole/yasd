@@ -17,6 +17,7 @@
 #include <iostream>
 #include <memory>
 
+#include "./php_yasd.h"
 #include "include/global.h"
 #include "include/util.h"
 #include "include/common.h"
@@ -25,7 +26,7 @@
 #include "include/dbgp.h"
 #include "include/zend_property_info.h"
 
-#include "./php_yasd.h"
+#include "thirdparty/boost/algorithm/include/boost/algorithm/string.hpp"
 
 namespace yasd {
 
@@ -84,7 +85,9 @@ std::string RemoteDebugger::get_next_cmd() {
 }
 
 int RemoteDebugger::execute_cmd() {
-    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+    std::vector<std::string> exploded_cmd;
+
+    boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
 
     transaction_id = atoi(exploded_cmd[2].c_str());
 
@@ -106,8 +109,9 @@ void RemoteDebugger::handle_request(const char *filename, int lineno) {
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
     yasd::ResponseElement response_element;
     yasd::MessageElement message_element;
+    std::vector<std::string> exploded_cmd;
 
-    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+    boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
 
     response_element.set_cmd(exploded_cmd[0]).set_transaction_id(transaction_id);
     message_element.set_filename("file://" + std::string(filename)).set_lineno(lineno);
@@ -240,8 +244,9 @@ void RemoteDebugger::init_user_defined_constant_variables_xml_child_node(tinyxml
 
 int RemoteDebugger::parse_feature_set_cmd() {
     // https://xdebug.org/docs/dbgp#feature-set
+    std::vector<std::string> exploded_cmd;
 
-    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+    boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
     tinyxml2::XMLElement *root;
@@ -303,7 +308,9 @@ int RemoteDebugger::parse_eval_cmd() {
     // https://xdebug.org/docs/dbgp#eval
 
     zval ret_zval;
-    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+    std::vector<std::string> exploded_cmd;
+
+    boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
 
     if (exploded_cmd[3] != "--") {
         return yasd::DebuggerModeBase::FAILED;
@@ -339,7 +346,9 @@ int RemoteDebugger::parse_eval_cmd() {
 int RemoteDebugger::parse_breakpoint_list_cmd() {
     // https://xdebug.org/docs/dbgp#id7
 
-    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+    std::vector<std::string> exploded_cmd;
+
+    boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
     if (exploded_cmd[0] != "breakpoint_list") {
         return yasd::DebuggerModeBase::FAILED;
     }
@@ -364,7 +373,9 @@ int RemoteDebugger::parse_breakpoint_list_cmd() {
 int RemoteDebugger::parse_breakpoint_set_cmd() {
     // https://xdebug.org/docs/dbgp#id3
 
-    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+    std::vector<std::string> exploded_cmd;
+
+    boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
     if (exploded_cmd[0] != "breakpoint_set") {
         return yasd::DebuggerModeBase::FAILED;
     }
@@ -518,7 +529,9 @@ int RemoteDebugger::parse_context_names_cmd() {
 int RemoteDebugger::parse_context_get_cmd() {
     // https://xdebug.org/docs/dbgp#context-get
 
-    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+    std::vector<std::string> exploded_cmd;
+
+    boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
     int context_id;
     if (exploded_cmd[0] != "context_get") {
         return yasd::DebuggerModeBase::FAILED;
@@ -554,7 +567,9 @@ int RemoteDebugger::parse_context_get_cmd() {
 int RemoteDebugger::parse_property_get_cmd() {
     // https://xdebug.org/docs/dbgp#property-get-property-set-property-value
 
-    auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
+    std::vector<std::string> exploded_cmd;
+
+    boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
     std::string fullname;
     zval *property;
 

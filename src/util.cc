@@ -28,38 +28,6 @@ YASD_EXTERN_C_END
 
 namespace yasd {
 
-std::vector<std::string> Util::explode(const std::string &target, const std::string &delimiter) {
-    std::vector<std::string> arr;
-
-    int str_len = target.length();
-    int del_len = delimiter.length();
-
-    if (del_len == 0) {
-        return arr;
-    }
-
-    int i = 0;
-    int k = 0;
-
-    while (i < str_len) {
-        int j = 0;
-        while (i + j < str_len && j < del_len && target[i + j] == delimiter[j]) {
-            j++;
-        }
-
-        if (j == del_len) {
-            arr.emplace_back(target.substr(k, i - k));
-            i += del_len;
-            k = i;
-        } else {
-            i++;
-        }
-    }
-
-    arr.emplace_back(target.substr(k, i - k));
-    return arr;
-}
-
 HashTable *Util::get_defined_vars() {
     HashTable *symbol_table;
 
@@ -256,35 +224,6 @@ bool Util::is_match(std::string sub_str, std::string target_str) {
     }
 
     return true;
-}
-
-void Util::reload_cache_breakpoint() {
-    std::string content;
-    std::fstream file(yasd::Util::get_breakpoint_cache_filename());
-    std::string filename;
-    int lineno;
-
-    while (getline(file, content)) {
-        auto exploded_content = explode(content, ":");
-        if (exploded_content.size() != 2) {
-            continue;
-        }
-
-        filename = exploded_content[0];
-        lineno = atoi(exploded_content[1].c_str());
-
-        auto iter = global->breakpoints->find(filename);
-
-        yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "reload breakpoint at %s:%d", filename.c_str(), lineno);
-
-        if (iter != global->breakpoints->end()) {
-            iter->second.insert(lineno);
-        } else {
-            std::set<int> lineno_set;
-            lineno_set.insert(lineno);
-            global->breakpoints->insert(std::make_pair(filename, lineno_set));
-        }
-    }
 }
 
 void Util::clear_breakpoint_cache_file() {
