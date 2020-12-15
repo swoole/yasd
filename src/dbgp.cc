@@ -143,12 +143,10 @@ void Dbgp::get_property_doc(tinyxml2::XMLElement *child, const PropertyElement &
         }
         break;
     case IS_ARRAY:
-        init_zend_array_element_xml_property_node(
-            child, property_element.name, property_element.value, property_element.level, property_element.encoding);
+        init_zend_array_element_xml_property_node(child, property_element);
         break;
     case IS_OBJECT: {
-        init_zend_object_property_xml_property_node(
-            child, property_element.name, property_element.value, property_element.level, property_element.encoding);
+        init_zend_object_property_xml_property_node(child, property_element);
         break;
     }
     case IS_UNDEF:
@@ -159,12 +157,13 @@ void Dbgp::get_property_doc(tinyxml2::XMLElement *child, const PropertyElement &
     }
 }
 
-void Dbgp::init_zend_array_element_xml_property_node(
-    tinyxml2::XMLElement *child, std::string name, zval *value, int level, bool encoding) {
+void Dbgp::init_zend_array_element_xml_property_node(tinyxml2::XMLElement *child,
+                                                     const PropertyElement &property_element) {
     zend_ulong num;
     zend_string *key;
     zval *val;
-    zend_array *ht = Z_ARRVAL_P(value);
+    zend_array *ht = Z_ARRVAL_P(property_element.value);
+    int level = property_element.level;
 
     child->SetAttribute("type", "array");
     child->SetAttribute("children", ht->nNumOfElements > 0 ? "1" : "0");
@@ -174,25 +173,25 @@ void Dbgp::init_zend_array_element_xml_property_node(
     } else {
         ZEND_HASH_FOREACH_KEY_VAL_IND(ht, num, key, val) {
             tinyxml2::XMLElement *property = child->InsertNewChildElement("property");
-            std::string fullname;
+            std::string child_fullname;
             std::string key_str;
 
             if (key == nullptr) {  // num key
                 key_str = std::to_string(num);
                 property->SetAttribute("name", num);
-                fullname = name + "[" + std::to_string(num) + "]";
+                child_fullname = property_element.fullname + "[" + std::to_string(num) + "]";
             } else {  // string key
                 key_str = ZSTR_VAL(key);
                 property->SetAttribute("name", ZSTR_VAL(key));
-                fullname = name + "[" + ZSTR_VAL(key) + "]";
+                child_fullname = property_element.fullname + "[" + ZSTR_VAL(key) + "]";
             }
 
             property->SetAttribute("type", zend_zval_type_name(val));
-            property->SetAttribute("fullname", fullname.c_str());
+            property->SetAttribute("fullname", child_fullname.c_str());
             level++;
 
             yasd::PropertyElement property_element;
-            property_element.set_name(key_str).set_value(val).set_level(level).set_encoding(true);
+            property_element.set_fullname(child_fullname).set_value(val).set_level(level).set_encoding(true);
             get_property_doc(property, property_element);
 
             if (level > YASD_G(depth)) {
@@ -204,15 +203,16 @@ void Dbgp::init_zend_array_element_xml_property_node(
     }
 }
 
-void Dbgp::init_zend_object_property_xml_property_node(
-    tinyxml2::XMLElement *child, std::string name, zval *value, int level, bool encoding) {
+void Dbgp::init_zend_object_property_xml_property_node(tinyxml2::XMLElement *child,
+                                                       const PropertyElement &property_element) {
     zend_string *class_name;
     zend_array *properties;
-    class_name = Z_OBJCE_P(value)->name;
+    class_name = Z_OBJCE_P(property_element.value)->name;
     zend_ulong num;
     zend_string *key;
     zval *val;
-    properties = yasd::Util::get_properties(value);
+    properties = yasd::Util::get_properties(property_element.value);
+    int level = property_element.level;
 
     child->SetAttribute("type", "object");
     child->SetAttribute("classname", ZSTR_VAL(class_name));
@@ -223,7 +223,7 @@ void Dbgp::init_zend_object_property_xml_property_node(
 
     // TODO(codinghuang): may we have a better way to get private properties
     void *property_info;
-    ZEND_HASH_FOREACH_STR_KEY_PTR(&Z_OBJCE_P(value)->properties_info, key, property_info) {
+    ZEND_HASH_FOREACH_STR_KEY_PTR(&Z_OBJCE_P(property_element.value)->properties_info, key, property_info) {
         ZendPropertyInfo info;
         info.property_name = key;
         summary_properties_info.emplace_back(info);
@@ -233,22 +233,22 @@ void Dbgp::init_zend_object_property_xml_property_node(
     int i = 0;
     ZEND_HASH_FOREACH_KEY_VAL_IND(properties, num, key, val) {
         tinyxml2::XMLElement *property = child->InsertNewChildElement("property");
-        std::string fullname;
-        std::string key_str;
+        std::string child_fullname;
+        std::string child_name;
 
         ZendPropertyInfo info = summary_properties_info[i];
         key = info.property_name;
 
-        key_str = ZSTR_VAL(key);
-        property->SetAttribute("name", key_str.c_str());
-        fullname = name + "->" + key_str;
+        child_name = ZSTR_VAL(key);
+        property->SetAttribute("name", child_name.c_str());
+        child_fullname = property_element.fullname + "->" + child_name;
 
-        property->SetAttribute("fullname", fullname.c_str());
+        property->SetAttribute("fullname", child_fullname.c_str());
         property->SetAttribute("type", zend_zval_type_name(val));
         level++;
 
         yasd::PropertyElement property_element;
-        property_element.set_name(key_str).set_value(val).set_level(level).set_encoding(true);
+        property_element.set_fullname(child_fullname).set_value(val).set_level(level).set_encoding(true);
         get_property_doc(property, property_element);
 
         if (level > YASD_G(depth)) {

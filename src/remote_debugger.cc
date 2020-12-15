@@ -104,8 +104,6 @@ void RemoteDebugger::handle_request(const char *filename, int lineno) {
     int status;
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
-    tinyxml2::XMLElement *root;
-    tinyxml2::XMLElement *child;
     yasd::ResponseElement response_element;
     yasd::MessageElement message_element;
 
@@ -185,7 +183,7 @@ void RemoteDebugger::init_local_variables_xml_child_node(tinyxml2::XMLElement *r
             child->SetAttribute("type", "uninitialized");
         } else {
             yasd::PropertyElement property_element;
-            property_element.set_name(ZSTR_VAL(var_name)).set_value(var);
+            property_element.set_fullname(ZSTR_VAL(var_name)).set_value(var);
             yasd::Dbgp::get_property_doc(child, property_element);
         }
 
@@ -198,7 +196,7 @@ void RemoteDebugger::init_local_variables_xml_child_node(tinyxml2::XMLElement *r
         child->SetAttribute("fullname", "this");
 
         yasd::PropertyElement property_element;
-        property_element.set_name("this").set_value(&EG(current_execute_data)->This);
+        property_element.set_fullname("this").set_value(&EG(current_execute_data)->This);
         yasd::Dbgp::get_property_doc(child, property_element);
     }
 }
@@ -234,7 +232,7 @@ void RemoteDebugger::init_user_defined_constant_variables_xml_child_node(tinyxml
         child->SetAttribute("facet", "constant");
 
         yasd::PropertyElement property_element;
-        property_element.set_name(ZSTR_VAL(val->name)).set_value(zval_value);
+        property_element.set_fullname(ZSTR_VAL(val->name)).set_value(zval_value);
         yasd::Dbgp::get_property_doc(child, property_element);
     }
     ZEND_HASH_FOREACH_END();
@@ -331,7 +329,7 @@ int RemoteDebugger::parse_eval_cmd() {
     child = root->InsertNewChildElement("property");
 
     yasd::PropertyElement property_element;
-    property_element.set_name("").set_value(&ret_zval);
+    property_element.set_fullname("").set_value(&ret_zval);
     yasd::Dbgp::get_property_doc(child, property_element);
 
     send_doc(doc.get());
@@ -558,7 +556,7 @@ int RemoteDebugger::parse_property_get_cmd() {
     // https://xdebug.org/docs/dbgp#property-get-property-set-property-value
 
     auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
-    std::string name;
+    std::string fullname;
     zval *property;
 
     if (exploded_cmd[0] != "property_get") {
@@ -576,23 +574,23 @@ int RemoteDebugger::parse_property_get_cmd() {
     response_element.set_cmd("property_get").set_transaction_id(transaction_id);
     yasd::Dbgp::get_response_doc(root, response_element);
 
-    name = yasd::Util::get_option_value(exploded_cmd, "-n");
+    fullname = yasd::Util::get_option_value(exploded_cmd, "-n");
 
     // vscode has double quotes, but PhpStorm does not
-    if (name.front() == '"') {
-        name.erase(0, 1);
+    if (fullname.front() == '"') {
+        fullname.erase(0, 1);
     }
 
-    if (name.back() == '"') {
-        name.pop_back();
+    if (fullname.back() == '"') {
+        fullname.pop_back();
     }
 
-    property = yasd::Util::fetch_zval_by_fullname(name);
+    property = yasd::Util::fetch_zval_by_fullname(fullname);
 
     child = root->InsertNewChildElement("property");
 
     yasd::PropertyElement property_element;
-    property_element.set_name(name).set_value(property);
+    property_element.set_fullname(fullname).set_value(property);
     yasd::Dbgp::get_property_doc(child, property_element);
 
     send_doc(doc.get());
