@@ -86,11 +86,82 @@ class DbgpInitElement {
     }
 };
 
+class ResponseElement {
+ public:
+    std::string cmd;
+    int transaction_id;
+
+    ResponseElement &set_cmd(std::string _cmd) {
+        cmd = _cmd;
+        return *this;
+    }
+
+    ResponseElement &set_transaction_id(int _transaction_id) {
+        transaction_id = _transaction_id;
+        return *this;
+    }
+};
+
+class MessageElement {
+ public:
+    std::string filename;
+    int lineno;
+
+    MessageElement &set_filename(std::string _filename) {
+        filename = _filename;
+        return *this;
+    }
+
+    MessageElement &set_lineno(int _lineno) {
+        lineno = _lineno;
+        return *this;
+    }
+};
+
+class PropertyElement {
+ public:
+    std::string name;
+    zval *value;
+    int level = 0;
+    bool encoding = false;
+
+    PropertyElement &set_name(std::string _name) {
+        name = _name;
+        return *this;
+    }
+
+    PropertyElement &set_value(zval *_value) {
+        value = _value;
+        return *this;
+    }
+
+    PropertyElement &set_level(int _level) {
+        level = _level;
+        return *this;
+    }
+
+    PropertyElement &set_encoding(bool _encoding) {
+        encoding = _encoding;
+        return *this;
+    }
+};
+
 class Dbgp {
  public:
     Dbgp() {}
     ~Dbgp() {}
 
-    static void init_response(tinyxml2::XMLDocument *doc, const DbgpInitElement &init_element);
+    static std::string make_message(tinyxml2::XMLDocument *doc);
+    static void init_zend_array_element_xml_property_node(
+        tinyxml2::XMLElement *child, std::string name, zval *value, int level = 0, bool encoding = false);
+    static void init_zend_object_property_xml_property_node(
+        tinyxml2::XMLElement *child, std::string name, zval *value, int level = 0, bool encoding = false);
+    static void get_init_event_doc(tinyxml2::XMLDocument *doc, const DbgpInitElement &init_element);
+    static void get_response_doc(tinyxml2::XMLElement *root, const ResponseElement &response_element);
+    static void get_property_doc(tinyxml2::XMLElement *child,
+                                 const PropertyElement &property_element);
+    static void get_message_doc(tinyxml2::XMLDocument *doc,
+                                const ResponseElement &response_element,
+                                const MessageElement &message_element);
 };
 }  // namespace yasd

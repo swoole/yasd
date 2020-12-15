@@ -101,30 +101,20 @@ int RemoteDebugger::execute_cmd() {
 }
 
 void RemoteDebugger::handle_request(const char *filename, int lineno) {
-    // 316<?xml version="1.0" encoding="iso-8859-1"?>
-    // <response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="run"
-    // transaction_id="6" status="break" reason="ok"><xdebug:message
-    // filename="file:///Users/hantaohuang/codeDir/cppCode/yasd/test.php" lineno="31"></xdebug:message></response>
-
     int status;
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
     tinyxml2::XMLElement *root;
     tinyxml2::XMLElement *child;
+    yasd::ResponseElement response_element;
+    yasd::MessageElement message_element;
 
     auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
 
-    root = doc->NewElement("response");
-    doc->LinkEndChild(root);
-    init_response_xml_root_node(root, exploded_cmd[0]);
-    root->SetAttribute("status", "break");
-    root->SetAttribute("reason", "ok");
+    response_element.set_cmd(exploded_cmd[0]).set_transaction_id(transaction_id);
+    message_element.set_filename("file://" + std::string(filename)).set_lineno(lineno);
 
-    child = root->InsertNewChildElement("xdebug:message");
-    std::string filename_ = "file://" + std::string(filename);
-    child->SetAttribute("filename", filename_.c_str());
-    child->SetAttribute("lineno", lineno);
-
+    yasd::Dbgp::get_message_doc(doc.get(), response_element, message_element);
     send_doc(doc.get());
 
     do {
@@ -155,14 +145,14 @@ ssize_t RemoteDebugger::send_init_event_message() {
         .set_language_version(PHP_VERSION)
         .set_url("https://github.com/swoole/yasd");
 
-    yasd::Dbgp::init_response(doc.get(), init_element);
+    yasd::Dbgp::get_init_event_doc(doc.get(), init_element);
 
     return send_doc(doc.get());
 }
 
 ssize_t RemoteDebugger::send_doc(tinyxml2::XMLDocument *doc) {
     ssize_t ret;
-    std::string message = make_message(doc);
+    std::string message = yasd::Dbgp::make_message(doc);
 
     // std::cout << message << std::endl;
 
@@ -170,31 +160,6 @@ ssize_t RemoteDebugger::send_doc(tinyxml2::XMLDocument *doc) {
     // printf("send: %ld\n", ret);
 
     return ret;
-}
-
-std::string RemoteDebugger::make_message(tinyxml2::XMLDocument *doc) {
-    // https://xdebug.org/docs/dbgp#response
-
-    std::string message = "";
-    tinyxml2::XMLPrinter printer;
-
-    doc->Print(&printer);
-
-    int size = printer.CStrSize() - 1 + sizeof("<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n") - 1;
-    message = message + std::to_string(size);
-    message += '\0';
-    message += "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
-    message += printer.CStr();
-    message += '\0';
-
-    return message;
-}
-
-void RemoteDebugger::init_response_xml_root_node(tinyxml2::XMLElement *root, std::string cmd) {
-    root->SetAttribute("xmlns", "urn:debugger_protocol_v1");
-    root->SetAttribute("xmlns:xdebug", "https://xdebug.org/dbgp/xdebug");
-    root->SetAttribute("command", cmd.c_str());
-    root->SetAttribute("transaction_id", transaction_id);
 }
 
 void RemoteDebugger::init_local_variables_xml_child_node(tinyxml2::XMLElement *root) {
@@ -219,7 +184,9 @@ void RemoteDebugger::init_local_variables_xml_child_node(tinyxml2::XMLElement *r
         if (!var) {
             child->SetAttribute("type", "uninitialized");
         } else {
-            init_xml_property_node(child, ZSTR_VAL(var_name), var);
+            yasd::PropertyElement property_element;
+            property_element.set_name(ZSTR_VAL(var_name)).set_value(var);
+            yasd::Dbgp::get_property_doc(child, property_element);
         }
 
         i++;
@@ -229,7 +196,10 @@ void RemoteDebugger::init_local_variables_xml_child_node(tinyxml2::XMLElement *r
         child = root->InsertNewChildElement("property");
         child->SetAttribute("name", "$this");
         child->SetAttribute("fullname", "this");
-        init_xml_property_node(child, "this", &EG(current_execute_data)->This);
+
+        yasd::PropertyElement property_element;
+        property_element.set_name("this").set_value(&EG(current_execute_data)->This);
+        yasd::Dbgp::get_property_doc(child, property_element);
     }
 }
 
@@ -262,155 +232,13 @@ void RemoteDebugger::init_user_defined_constant_variables_xml_child_node(tinyxml
         child->SetAttribute("name", ZSTR_VAL(val->name));
         child->SetAttribute("fullname", ZSTR_VAL(val->name));
         child->SetAttribute("facet", "constant");
-        init_xml_property_node(child, ZSTR_VAL(val->name), zval_value);
+
+        yasd::PropertyElement property_element;
+        property_element.set_name(ZSTR_VAL(val->name)).set_value(zval_value);
+        yasd::Dbgp::get_property_doc(child, property_element);
     }
     ZEND_HASH_FOREACH_END();
     return;
-}
-
-void RemoteDebugger::init_xml_property_node(
-    tinyxml2::XMLElement *child, std::string name, zval *value, int level, bool encoding) {
-    if (level > YASD_G(depth)) {
-        return;
-    }
-
-    switch (Z_TYPE_P(value)) {
-    case IS_TRUE:
-        child->SetAttribute("type", "bool");
-        child->InsertNewText("1")->SetCData(true);
-        break;
-    case IS_FALSE:
-        child->SetAttribute("type", "bool");
-        child->InsertNewText("0")->SetCData(true);
-        break;
-    case IS_NULL:
-        child->SetAttribute("type", "null");
-        break;
-    case IS_LONG:
-        child->SetAttribute("type", "int");
-        child->InsertNewText(std::to_string(Z_LVAL_P(value)).c_str())->SetCData(true);
-        break;
-    case IS_DOUBLE:
-        child->SetAttribute("type", "float");
-        child->InsertNewText(std::to_string(Z_DVAL_P(value)).c_str())->SetCData(true);
-        break;
-    case IS_STRING:
-        child->SetAttribute("type", "string");
-        if (encoding) {
-            child->SetAttribute("size", (uint64_t) Z_STRLEN_P(value));
-            child->SetAttribute("encoding", "base64");
-            child->InsertNewText(base64_encode((unsigned char *) Z_STRVAL_P(value), Z_STRLEN_P(value)).c_str())
-                ->SetCData(true);
-        } else {
-            child->InsertNewText(Z_STRVAL_P(value))->SetCData(true);
-        }
-        break;
-    case IS_ARRAY:
-        init_zend_array_element_xml_property_node(child, name, value, level, encoding);
-        break;
-    case IS_OBJECT: {
-        init_zend_object_property_xml_property_node(child, name, value, level, encoding);
-        break;
-    }
-    case IS_UNDEF:
-        child->SetAttribute("type", "uninitialized");
-        break;
-    default:
-        break;
-    }
-}
-
-void RemoteDebugger::init_zend_array_element_xml_property_node(
-    tinyxml2::XMLElement *child, std::string name, zval *value, int level, bool encoding) {
-    zend_ulong num;
-    zend_string *key;
-    zval *val;
-    zend_array *ht = Z_ARRVAL_P(value);
-
-    child->SetAttribute("type", "array");
-    child->SetAttribute("children", ht->nNumOfElements > 0 ? "1" : "0");
-    child->SetAttribute("numchildren", ht->nNumOfElements);
-    if (yasd_zend_hash_is_recursive(ht)) {
-        child->SetAttribute("recursive", 1);
-    } else {
-        ZEND_HASH_FOREACH_KEY_VAL_IND(ht, num, key, val) {
-            tinyxml2::XMLElement *property = child->InsertNewChildElement("property");
-            std::string fullname;
-            std::string key_str;
-
-            if (key == nullptr) {  // num key
-                key_str = std::to_string(num);
-                property->SetAttribute("name", num);
-                fullname = name + "[" + std::to_string(num) + "]";
-            } else {  // string key
-                key_str = ZSTR_VAL(key);
-                property->SetAttribute("name", ZSTR_VAL(key));
-                fullname = name + "[" + ZSTR_VAL(key) + "]";
-            }
-
-            property->SetAttribute("type", zend_zval_type_name(val));
-            property->SetAttribute("fullname", fullname.c_str());
-            level++;
-            init_xml_property_node(property, key_str, val, level, true);
-            if (level > YASD_G(depth)) {
-                child->DeleteChild(property);
-            }
-            level--;
-        }
-        ZEND_HASH_FOREACH_END();
-    }
-}
-
-void RemoteDebugger::init_zend_object_property_xml_property_node(
-    tinyxml2::XMLElement *child, std::string name, zval *value, int level, bool encoding) {
-    zend_string *class_name;
-    zend_array *properties;
-    class_name = Z_OBJCE_P(value)->name;
-    zend_ulong num;
-    zend_string *key;
-    zval *val;
-    properties = yasd::Util::get_properties(value);
-
-    child->SetAttribute("type", "object");
-    child->SetAttribute("classname", ZSTR_VAL(class_name));
-    child->SetAttribute("children", properties->nNumOfElements > 0 ? "1" : "0");
-    child->SetAttribute("numchildren", properties->nNumOfElements);
-
-    std::vector<yasd::ZendPropertyInfo> summary_properties_info;
-
-    // TODO(codinghuang): may we have a better way to get private properties
-    void *property_info;
-    ZEND_HASH_FOREACH_STR_KEY_PTR(&Z_OBJCE_P(value)->properties_info, key, property_info) {
-        ZendPropertyInfo info;
-        info.property_name = key;
-        summary_properties_info.emplace_back(info);
-    }
-    ZEND_HASH_FOREACH_END();
-
-    int i = 0;
-    ZEND_HASH_FOREACH_KEY_VAL_IND(properties, num, key, val) {
-        tinyxml2::XMLElement *property = child->InsertNewChildElement("property");
-        std::string fullname;
-        std::string key_str;
-
-        ZendPropertyInfo info = summary_properties_info[i];
-        key = info.property_name;
-
-        key_str = ZSTR_VAL(key);
-        property->SetAttribute("name", key_str.c_str());
-        fullname = name + "->" + key_str;
-
-        property->SetAttribute("fullname", fullname.c_str());
-        property->SetAttribute("type", zend_zval_type_name(val));
-        level++;
-        init_xml_property_node(property, key_str, val, level, true);
-        if (level > YASD_G(depth)) {
-            child->DeleteChild(property);
-        }
-        level--;
-        i++;
-    }
-    ZEND_HASH_FOREACH_END();
 }
 
 int RemoteDebugger::parse_feature_set_cmd() {
@@ -419,12 +247,14 @@ int RemoteDebugger::parse_feature_set_cmd() {
     auto exploded_cmd = yasd::Util::explode(last_cmd, " ");
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
-
     tinyxml2::XMLElement *root;
+    yasd::ResponseElement response_element;
 
     root = doc->NewElement("response");
     doc->LinkEndChild(root);
-    init_response_xml_root_node(root, "feature_set");
+
+    response_element.set_cmd("feature_set").set_transaction_id(transaction_id);
+    yasd::Dbgp::get_response_doc(root, response_element);
     root->SetAttribute("feature", exploded_cmd[4].c_str());
     root->SetAttribute("success", 0);
 
@@ -437,12 +267,14 @@ int RemoteDebugger::parse_stdout_cmd() {
     // https://xdebug.org/docs/dbgp#stdout-stderr
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
-
     tinyxml2::XMLElement *root;
+    yasd::ResponseElement response_element;
 
     root = doc->NewElement("response");
     doc->LinkEndChild(root);
-    init_response_xml_root_node(root, "stdout");
+
+    response_element.set_cmd("stdout").set_transaction_id(transaction_id);
+    yasd::Dbgp::get_response_doc(root, response_element);
     root->SetAttribute("success", 0);
 
     send_doc(doc.get());
@@ -454,12 +286,14 @@ int RemoteDebugger::parse_status_cmd() {
     // https://xdebug.org/docs/dbgp#status
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
-
     tinyxml2::XMLElement *root;
+    yasd::ResponseElement response_element;
 
     root = doc->NewElement("response");
     doc->LinkEndChild(root);
-    init_response_xml_root_node(root, "status");
+
+    response_element.set_cmd("status").set_transaction_id(transaction_id);
+    yasd::Dbgp::get_response_doc(root, response_element);
     root->SetAttribute("status", "starting");
     root->SetAttribute("reason", "ok");
 
@@ -485,16 +319,20 @@ int RemoteDebugger::parse_eval_cmd() {
     yasd::Util::eval(const_cast<char *>(eval_str.c_str()), &ret_zval, const_cast<char *>("yasd://debug-eval"));
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
-
     tinyxml2::XMLElement *root;
     tinyxml2::XMLElement *child;
+    yasd::ResponseElement response_element;
 
     root = doc->NewElement("response");
     doc->LinkEndChild(root);
-    init_response_xml_root_node(root, "eval");
 
+    response_element.set_cmd("eval").set_transaction_id(transaction_id);
+    yasd::Dbgp::get_response_doc(root, response_element);
     child = root->InsertNewChildElement("property");
-    init_xml_property_node(child, "", &ret_zval);
+
+    yasd::PropertyElement property_element;
+    property_element.set_name("").set_value(&ret_zval);
+    yasd::Dbgp::get_property_doc(child, property_element);
 
     send_doc(doc.get());
 
@@ -513,12 +351,13 @@ int RemoteDebugger::parse_breakpoint_list_cmd() {
     }
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
-
     tinyxml2::XMLElement *root;
+    yasd::ResponseElement response_element;
 
     root = doc->NewElement("response");
     doc->LinkEndChild(root);
-    init_response_xml_root_node(root, "breakpoint_list");
+    response_element.set_cmd("breakpoint_list").set_transaction_id(transaction_id);
+    yasd::Dbgp::get_response_doc(root, response_element);
 
     send_doc(doc.get());
 
@@ -563,10 +402,13 @@ int RemoteDebugger::parse_breakpoint_set_cmd() {
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
     tinyxml2::XMLElement *root;
+    yasd::ResponseElement response_element;
 
     root = doc->NewElement("response");
     doc->LinkEndChild(root);
-    init_response_xml_root_node(root, "breakpoint_set");
+
+    response_element.set_cmd("breakpoint_set").set_transaction_id(transaction_id);
+    yasd::Dbgp::get_response_doc(root, response_element);
     root->SetAttribute("id", breakpoint_admin_add());
 
     send_doc(doc.get());
@@ -579,10 +421,13 @@ int RemoteDebugger::parse_breakpoint_set_exception_cmd() {
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
     tinyxml2::XMLElement *root;
+    yasd::ResponseElement response_element;
 
     root = doc->NewElement("response");
     doc->LinkEndChild(root);
-    init_response_xml_root_node(root, "breakpoint_set");
+
+    response_element.set_cmd("breakpoint_set").set_transaction_id(transaction_id);
+    yasd::Dbgp::get_response_doc(root, response_element);
     root->SetAttribute("id", breakpoint_admin_add());
 
     send_doc(doc.get());
@@ -604,10 +449,13 @@ int RemoteDebugger::parse_stack_get_cmd() {
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
     tinyxml2::XMLElement *root;
     tinyxml2::XMLElement *child;
+    yasd::ResponseElement response_element;
 
     root = doc->NewElement("response");
     doc->LinkEndChild(root);
-    init_response_xml_root_node(root, "stack_get");
+
+    response_element.set_cmd("stack_get").set_transaction_id(transaction_id);
+    yasd::Dbgp::get_response_doc(root, response_element);
     root->SetAttribute("id", breakpoint_admin_add());
 
     child = root->InsertNewChildElement("stack");
@@ -643,11 +491,14 @@ int RemoteDebugger::parse_context_names_cmd() {
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
     tinyxml2::XMLElement *root;
     tinyxml2::XMLElement *child;
+    yasd::ResponseElement response_element;
+
     int id = 0;
 
     root = doc->NewElement("response");
     doc->LinkEndChild(root);
-    init_response_xml_root_node(root, "context_names");
+    response_element.set_cmd("context_names").set_transaction_id(transaction_id);
+    yasd::Dbgp::get_response_doc(root, response_element);
     root->SetAttribute("id", breakpoint_admin_add());
 
     child = root->InsertNewChildElement("context");
@@ -679,10 +530,12 @@ int RemoteDebugger::parse_context_get_cmd() {
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
     tinyxml2::XMLElement *root;
+    yasd::ResponseElement response_element;
 
     root = doc->NewElement("response");
     doc->LinkEndChild(root);
-    init_response_xml_root_node(root, "context_get");
+    response_element.set_cmd("context_get").set_transaction_id(transaction_id);
+    yasd::Dbgp::get_response_doc(root, response_element);
     root->SetAttribute("context", 0);
 
     if (context_id == LOCALS) {
@@ -715,10 +568,13 @@ int RemoteDebugger::parse_property_get_cmd() {
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
     tinyxml2::XMLElement *root;
     tinyxml2::XMLElement *child;
+    yasd::ResponseElement response_element;
 
     root = doc->NewElement("response");
     doc->LinkEndChild(root);
-    init_response_xml_root_node(root, "property_get");
+
+    response_element.set_cmd("property_get").set_transaction_id(transaction_id);
+    yasd::Dbgp::get_response_doc(root, response_element);
 
     name = yasd::Util::get_option_value(exploded_cmd, "-n");
 
@@ -731,23 +587,13 @@ int RemoteDebugger::parse_property_get_cmd() {
         name.pop_back();
     }
 
-    // auto exploded_name = yasd::Util::explode(name, "->");
-
-    // if (Z_TYPE(EG(current_execute_data)->This) == IS_OBJECT) {
-    //     zobj = &EG(current_execute_data)->This;
-    // } else {
-    //     zobj = yasd::Util::find_variable(exploded_name[0]);
-    // }
-
     property = yasd::Util::fetch_zval_by_fullname(name);
 
-    // for (auto iter = exploded_name.begin() + 1; iter != exploded_name.end(); iter++) {
-    //     property = yasd_zend_read_property(Z_OBJCE_P(zobj), zobj, iter->c_str(), iter->length(), 1);
-    //     zobj = property;
-    // }
-
     child = root->InsertNewChildElement("property");
-    init_xml_property_node(child, name, property);
+
+    yasd::PropertyElement property_element;
+    property_element.set_name(name).set_value(property);
+    yasd::Dbgp::get_property_doc(child, property_element);
 
     send_doc(doc.get());
 
@@ -761,10 +607,12 @@ int RemoteDebugger::parse_stop_cmd() {
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
     tinyxml2::XMLElement *root;
+    yasd::ResponseElement response_element;
 
     root = doc->NewElement("response");
     doc->LinkEndChild(root);
-    init_response_xml_root_node(root, "stop");
+    response_element.set_cmd("stop").set_transaction_id(transaction_id);
+    yasd::Dbgp::get_response_doc(root, response_element);
     root->SetAttribute("status", "stopped");
     root->SetAttribute("reason", "ok");
 
