@@ -94,11 +94,6 @@ zval *Util::find_variable(zend_array *symbol_table, std::string var_name) {
         var = Z_INDIRECT_P(var);
     }
 
-    // the statement that defines the variable has not yet been executed
-    if (Z_TYPE_P(var) == IS_UNDEF) {
-        return nullptr;
-    }
-
     return var;
 }
 

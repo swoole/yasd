@@ -177,18 +177,12 @@ void RemoteDebugger::init_local_variables_xml_child_node(tinyxml2::XMLElement *r
 
         zval *var = yasd::Util::find_variable(ZSTR_VAL(var_name));
 
-        if (!var) {
-            child->SetAttribute("type", "uninitialized");
-            child->SetAttribute("name", name.c_str());
-            child->SetAttribute("fullname", fullname.c_str());
-        } else {
-            yasd::PropertyElement property_element;
-            property_element.set_type(zend_zval_type_name(var))
-                .set_name(name)
-                .set_fullname(ZSTR_VAL(var_name))
-                .set_value(var);
-            yasd::Dbgp::get_property_doc(child, property_element);
-        }
+        yasd::PropertyElement property_element;
+        property_element.set_type(zend_zval_type_name(var))
+            .set_name(name)
+            .set_fullname(ZSTR_VAL(var_name))
+            .set_value(var);
+        yasd::Dbgp::get_property_doc(child, property_element);
 
         i++;
     }
