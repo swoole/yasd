@@ -28,13 +28,9 @@ jobs:
         pwd
         echo "`git log -20 --pretty --oneline`"
         echo "`git log -10 --stat --pretty --oneline`"
-    - name: Install dependencies
-      if: startsWith(runner.os, 'macOS')
+    - if: startsWith(runner.os, 'Linux')
       run: |
         brew install boost
-      if: startsWith(runner.os, 'Linux')
-      run: |
-        apt-get install libboost-all-dev
     - name: Build extension
       run: |
         phpize
