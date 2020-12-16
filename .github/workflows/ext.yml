@@ -11,7 +11,6 @@ jobs:
         php: [7.2, 7.3, 7.4, 8.0, 8.1]
     steps:
     - uses: actions/checkout@v1
-      if: startsWith(runner.os, 'Linux')
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
@@ -29,6 +28,7 @@ jobs:
         echo "`git log -20 --pretty --oneline`"
         echo "`git log -10 --stat --pretty --oneline`"
     - name: Install dependencies
+      if: startsWith(runner.os, 'macOS')
       run: |
         brew install boost
     - name: Build extension
