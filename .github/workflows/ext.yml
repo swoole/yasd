@@ -30,7 +30,7 @@ jobs:
         echo "`git log -10 --stat --pretty --oneline`"
     - if: startsWith(runner.os, 'Linux')
       run: |
-        apt-get install libboost-all-dev
+        sudo apt-get install libboost-all-dev
     - if: startsWith(runner.os, 'macOS')
       run: |
         brew install boost
