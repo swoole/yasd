@@ -3,12 +3,11 @@ name: ext-yasd
 on: [push, pull_request]
 
 jobs:
-  build-yasd:
-    runs-on: ubuntu-latest
+  build-macos-latest:
+    runs-on: macos-latest
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, ubuntu-16.04, macos-latest]
         php: [7.2, 7.3, 7.4, 8.0, 8.1]
     steps:
     - uses: actions/checkout@v1
@@ -28,13 +27,8 @@ jobs:
         pwd
         echo "`git log -20 --pretty --oneline`"
         echo "`git log -10 --stat --pretty --oneline`"
-    - name: Install boost
-      uses: MarkusJx/install-boost@v1.0
-      id: install-boost
-      with:
-        # REQUIRED: Specify the required boost version
-        # A list of supported versions can be found here: 
-        # https://github.com/actions/boost-versions/blob/main/versions-manifest.json
-        boost_version: 1.73.0
+    - name: Install dependencies
+      run: |
+        brew install boost
     - name: Build extension
       run: phpize && ./configure && make clean && make -j$(sysctl -n hw.ncpu) && sudo make install
