@@ -23,6 +23,7 @@ jobs:
         uname -a
         ulimit -a
         php -v
+        php -m
         php --ini
         ls -al
         pwd
