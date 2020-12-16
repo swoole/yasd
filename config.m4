@@ -9,17 +9,11 @@ AC_DEFUN([YASD_CHECK_CXX_LIB], [
     LIBNAME=$1
     AC_MSG_CHECKING([for boost])
     AC_TRY_COMPILE(
-    [
-        #include $2
-    ],
-    [
-    ],
-    [
-        AC_MSG_RESULT(yes)
-    ],
-    [
-        AC_MSG_ERROR([lib $LIBNAME not found.  Try: install $LIBNAME library])
-    ])
+        [ #include $2 ],
+        [],
+        [ AC_MSG_RESULT(yes) ],
+        [ AC_MSG_ERROR([lib $LIBNAME not found.  Try: install $LIBNAME library]) ]
+    )
     AC_LANG_POP([C++])
 ])
 
