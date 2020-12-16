@@ -31,4 +31,10 @@ jobs:
       run: |
         brew install boost
     - name: Build extension
-      run: phpize && ./configure && make clean && make -j$(sysctl -n hw.ncpu) && sudo make install && php -d zend_extension=$PWD/modules/yasd.so --ri yasd
+      run: |
+        phpize
+        ./configure
+        make clean
+        make -j$(sysctl -n hw.ncpu)
+        sudo make install
+        php -d zend_extension=$PWD/modules/yasd.so --ri yasd
