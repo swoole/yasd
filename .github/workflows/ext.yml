@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build-yasd:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
@@ -16,6 +16,7 @@ jobs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: "${{ matrix.php }}"
+        coverage: none
     - name: Show machine information
       run: |
         date
@@ -23,12 +24,23 @@ jobs:
         uname -a
         ulimit -a
         php -v
+        php -m
         php --ini
         ls -al
         pwd
         echo "`git log -20 --pretty --oneline`"
         echo "`git log -10 --stat --pretty --oneline`"
-    - name: Update submodule
-      run: git submodule update --init
+    - if: startsWith(runner.os, 'Linux')
+      run: |
+        sudo apt-get install libboost-all-dev
+    - if: startsWith(runner.os, 'macOS')
+      run: |
+        brew install boost
     - name: Build extension
-      run: phpize && ./configure && make clean && make -j$(sysctl -n hw.ncpu) && sudo make install
+      run: |
+        phpize
+        ./configure
+        make clean
+        make -j$(sysctl -n hw.ncpu)
+        sudo make install
+        php -d zend_extension=$PWD/modules/yasd.so --ri yasd
