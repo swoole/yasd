@@ -16,6 +16,7 @@ jobs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: "${{ matrix.php }}"
+        coverage: none
     - name: Show machine information
       run: |
         date
@@ -42,4 +43,4 @@ jobs:
         make clean
         make -j$(sysctl -n hw.ncpu)
         sudo make install
-        # php -d zend_extension=$PWD/modules/yasd.so --ri yasd
+        php -d zend_extension=$PWD/modules/yasd.so --ri yasd
