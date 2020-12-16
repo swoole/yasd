@@ -8,8 +8,27 @@ Yet Another Swoole Debugger.
 
 ### build
 
+You'll need to install the Boost library first.
+
+macos:
+
 ```bash
-git submodule update --init && \
+brew install boost
+```
+
+ubuntu:
+
+```bash
+apt-get install libboost-all-dev
+```
+
+centos:
+
+```bash
+yum install boost boost-devel
+```
+
+```bash
 phpize --clean && \
 phpize && \
 ./configure && \

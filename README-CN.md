@@ -8,8 +8,27 @@
 
 ### 安装
 
+你需要先安装`boost`库.
+
+macos:
+
 ```bash
-git submodule update --init && \
+brew install boost
+```
+
+ubuntu:
+
+```bash
+apt-get install libboost-all-dev
+```
+
+centos:
+
+```bash
+yum install boost boost-devel
+```
+
+```bash
 phpize --clean && \
 phpize && \
 ./configure && \
