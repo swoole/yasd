@@ -4,7 +4,6 @@ on: [push, pull_request]
 
 jobs:
   build-yasd:
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
