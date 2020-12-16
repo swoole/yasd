@@ -96,28 +96,6 @@ if test "$PHP_YASD" != "no"; then
     # tinyxml2
     PHP_ADD_INCLUDE([$ext_builddir/thirdparty/tinyxml2])
 
-    # boost
-    PHP_ADD_INCLUDE($ext_builddir/thirdparty/boost/assert/include)
-    PHP_ADD_INCLUDE($ext_builddir/thirdparty/boost/config/include)
-    PHP_ADD_INCLUDE($ext_builddir/thirdparty/boost/detail/include)
-    PHP_ADD_INCLUDE($ext_builddir/thirdparty/boost/mpl/include)
-    PHP_ADD_INCLUDE($ext_builddir/thirdparty/boost/throw_exception/include)
-    PHP_ADD_INCLUDE($ext_builddir/thirdparty/boost/type_traits/include)
-    PHP_ADD_INCLUDE($ext_builddir/thirdparty/boost/tokenizer/include)
-    PHP_ADD_INCLUDE($ext_builddir/thirdparty/boost/preprocessor/include)
-    PHP_ADD_INCLUDE($ext_builddir/thirdparty/boost/iterator/include)
-    PHP_ADD_INCLUDE($ext_builddir/thirdparty/boost/static_assert/include)
-    PHP_ADD_INCLUDE($ext_builddir/thirdparty/boost/core/include)
-    PHP_ADD_INCLUDE($ext_builddir/thirdparty/boost/algorithm/include)
-    PHP_ADD_INCLUDE($ext_builddir/thirdparty/boost/range/include)
-    PHP_ADD_INCLUDE($ext_builddir/thirdparty/boost/concept_check/include)
-    PHP_ADD_INCLUDE($ext_builddir/thirdparty/boost/utility/include)
-    PHP_ADD_INCLUDE($ext_builddir/thirdparty/boost/function/include)
-    PHP_ADD_INCLUDE($ext_builddir/thirdparty/boost/integer/include)
-    PHP_ADD_INCLUDE($ext_builddir/thirdparty/boost/type_index/include)
-    PHP_ADD_INCLUDE($ext_builddir/thirdparty/boost/container_hash/include)
-    PHP_ADD_INCLUDE($ext_builddir/thirdparty/boost/bind/include)
-
     PHP_REQUIRE_CXX()
 
     CXXFLAGS="$CXXFLAGS -Wall -Wno-unused-function -Wno-deprecated -Wno-deprecated-declarations"
@@ -130,26 +108,4 @@ if test "$PHP_YASD" != "no"; then
 
     # tinyxml2
     PHP_ADD_BUILD_DIR($ext_builddir/thirdparty/tinyxml2)
-    
-    # boost
-    PHP_ADD_BUILD_DIR($ext_builddir/thirdparty/boost/assert/include)
-    PHP_ADD_BUILD_DIR($ext_builddir/thirdparty/boost/config/include)
-    PHP_ADD_BUILD_DIR($ext_builddir/thirdparty/boost/detail/include)
-    PHP_ADD_BUILD_DIR($ext_builddir/thirdparty/boost/mpl/include)
-    PHP_ADD_BUILD_DIR($ext_builddir/thirdparty/boost/throw_exception/include)
-    PHP_ADD_BUILD_DIR($ext_builddir/thirdparty/boost/type_traits/include)
-    PHP_ADD_BUILD_DIR($ext_builddir/thirdparty/boost/tokenizer/include)
-    PHP_ADD_BUILD_DIR($ext_builddir/thirdparty/boost/preprocessor/include)
-    PHP_ADD_BUILD_DIR($ext_builddir/thirdparty/boost/iterator/include)
-    PHP_ADD_BUILD_DIR($ext_builddir/thirdparty/boost/static_assert/include)
-    PHP_ADD_BUILD_DIR($ext_builddir/thirdparty/boost/core/include)
-    PHP_ADD_BUILD_DIR($ext_builddir/thirdparty/boost/algorithm/include)
-    PHP_ADD_BUILD_DIR($ext_builddir/thirdparty/boost/range/include)
-    PHP_ADD_BUILD_DIR($ext_builddir/thirdparty/boost/concept_check/include)
-    PHP_ADD_BUILD_DIR($ext_builddir/thirdparty/boost/utility/include)
-    PHP_ADD_BUILD_DIR($ext_builddir/thirdparty/boost/function/include)
-    PHP_ADD_BUILD_DIR($ext_builddir/thirdparty/boost/integer/include)
-    PHP_ADD_BUILD_DIR($ext_builddir/thirdparty/boost/type_index/include)
-    PHP_ADD_BUILD_DIR($ext_builddir/thirdparty/boost/container_hash/include)
-    PHP_ADD_BUILD_DIR($ext_builddir/thirdparty/boost/bind/include)
 fi

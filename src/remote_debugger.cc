@@ -26,7 +26,7 @@
 #include "include/dbgp.h"
 #include "include/zend_property_info.h"
 
-#include "thirdparty/boost/algorithm/include/boost/algorithm/string.hpp"
+#include <boost/algorithm/string.hpp>
 
 namespace yasd {
 

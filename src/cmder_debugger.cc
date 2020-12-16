@@ -15,14 +15,15 @@
 */
 #include <iostream>
 
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/trim.hpp>
+
 #include "include/common.h"
 #include "include/context.h"
 #include "include/cmder_debugger.h"
 #include "include/util.h"
 #include "include/global.h"
 #include "include/source_reader.h"
-#include "thirdparty/boost/algorithm/include/boost/algorithm/string.hpp"
-#include "thirdparty/boost/algorithm/include/boost/algorithm/string/trim.hpp"
 
 namespace yasd {
 
