@@ -4,6 +4,25 @@ PHP_ARG_ENABLE([yasd],
     [Enable yasd support])],
 [no])
 
+AC_DEFUN([YASD_CHECK_CXX_LIB], [
+    AC_LANG_PUSH([C++])
+    LIBNAME=$1
+    AC_MSG_CHECKING([for boost])
+    AC_TRY_COMPILE(
+    [
+        #include $2
+    ],
+    [
+    ],
+    [
+        AC_MSG_RESULT(yes)
+    ],
+    [
+        AC_MSG_ERROR([lib $LIBNAME not found.  Try: install $LIBNAME library])
+    ])
+    AC_LANG_POP([C++])
+])
+
 PHP_ARG_ENABLE(yasd-dev, whether to enable yasd developer build flags,
 [  --enable-yasd-dev       yasd: Enable developer flags],, no)
 
@@ -24,6 +43,8 @@ fi
 
 if test "$PHP_YASD" != "no"; then
     AC_DEFINE(HAVE_YASD, 1, [ Have yasd support ])
+
+    YASD_CHECK_CXX_LIB([boost], [<boost/algorithm/string/constants.hpp>])
 
     if test "$PHP_YASD_DEV" = "yes"; then
         AX_CHECK_COMPILE_FLAG(-Wbool-conversion,                _MAINTAINER_CFLAGS="$_MAINTAINER_CFLAGS -Wbool-conversion")
