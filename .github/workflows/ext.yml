@@ -30,6 +30,7 @@ jobs:
         echo "`git log -10 --stat --pretty --oneline`"
     - name: Install boost
       uses: MarkusJx/install-boost@v1.0
+      id: install-boost
       with:
         # REQUIRED: Specify the required boost version
         # A list of supported versions can be found here: 
