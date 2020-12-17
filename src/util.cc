@@ -354,7 +354,6 @@ zend_array *Util::get_properties(zval *zobj) {
     return nullptr;
 }
 
-// 
 std::string Util::get_property_name(zend_string *property_name) {
     const char *class_name, *_property_name;
     size_t _property_name_len;
