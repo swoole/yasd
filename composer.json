@@ -1,0 +1,16 @@
+{
+    "name": "codinghuang/yasd",
+    "type": "project",
+    "authors": [
+        {
+            "name": "codinghuang",
+            "email": "codinghuang@qq.com"
+        }
+    ],
+    "require": {
+    },
+    "require-dev": {
+        "swoole/ide-helper": "^4.5",
+        "friendsofphp/php-cs-fixer": "^2.17"
+    }
+}

@@ -32,7 +32,5 @@ mkinstalldirs
 
 # debug
 debug
-composer.json
-composer.lock
 vendor
 .breakpoints_file.*
