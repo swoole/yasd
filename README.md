@@ -10,19 +10,19 @@ Yet Another Swoole Debugger.
 
 You'll need to install the Boost library first.
 
-macos:
+macOS:
 
 ```bash
 brew install boost
 ```
 
-ubuntu:
+Ubuntu:
 
 ```bash
 apt-get install libboost-all-dev
 ```
 
-centos:
+CentOS:
 
 ```bash
 yum install boost boost-devel
@@ -40,7 +40,7 @@ make install
 set the ini file:
 
 ```ini
-zend_extension=yasd.so
+zend_extension=yasd
 ```
 
 see the extension info:
