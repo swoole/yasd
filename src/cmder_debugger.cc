@@ -375,7 +375,13 @@ void CmderDebugger::show_welcome_info() {
 
 void CmderDebugger::reload_cache_breakpoint() {
     std::string content;
-    std::fstream file(yasd::Util::get_breakpoint_cache_filename());
+    std::string cache_filename_path = yasd::Util::get_breakpoint_cache_filename();
+
+    if (cache_filename_path == "") {
+        return;
+    }
+
+    std::fstream file(cache_filename_path);
     std::string filename;
     int lineno;
 

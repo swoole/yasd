@@ -55,7 +55,7 @@ PHP_FUNCTION(redirectStdin) {
 
 // clang-format off
 PHP_INI_BEGIN()
-STD_PHP_INI_ENTRY("yasd.breakpoints_file", ".breakpoints_file.log", PHP_INI_ALL, OnUpdateString,
+STD_PHP_INI_ENTRY("yasd.breakpoints_file", "", PHP_INI_ALL, OnUpdateString,
         breakpoints_file, zend_yasd_globals, yasd_globals)
 STD_PHP_INI_ENTRY("yasd.debug_mode", "cmd", PHP_INI_ALL, OnUpdateString,
         debug_mode, zend_yasd_globals, yasd_globals)

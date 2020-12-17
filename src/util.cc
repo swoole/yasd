@@ -226,9 +226,15 @@ bool Util::is_match(std::string sub_str, std::string target_str) {
     return true;
 }
 
+// create file and clear file
 void Util::clear_breakpoint_cache_file() {
-    // create file and clear file
-    std::ofstream file(yasd::Util::get_breakpoint_cache_filename());
+    std::string cache_filename_path = yasd::Util::get_breakpoint_cache_filename();
+
+    if (cache_filename_path == "") {
+        return;
+    }
+
+    std::ofstream file(cache_filename_path);
     file.close();
 }
 
@@ -238,9 +244,13 @@ std::string Util::get_breakpoint_cache_filename() {
 
 void Util::cache_breakpoint(std::string filename, int lineno) {
     std::ofstream file;
-    std::string path = get_breakpoint_cache_filename();
+    std::string cache_filename_path = yasd::Util::get_breakpoint_cache_filename();
 
-    file.open(path, std::ios_base::app);
+    if (cache_filename_path == "") {
+        return;
+    }
+
+    file.open(cache_filename_path, std::ios_base::app);
     file << filename + ":" + std::to_string(lineno) + "\n";
     file.close();
 }
