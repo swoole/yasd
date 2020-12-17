@@ -66,6 +66,9 @@ class Util {
 
     static zend_array *get_properties(zval *zobj);
 
+    // get the property name of a common property, including public, protected, private
+    static std::string get_property_name(zend_string *property_name);
+
     static std::string get_option_value(const std::vector<std::string> &options, std::string option);
 
     static zval *fetch_zval_by_fullname(std::string fullname);

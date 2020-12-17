@@ -220,25 +220,13 @@ void Dbgp::get_zend_object_child_property_doc(tinyxml2::XMLElement *child, const
 
     std::vector<yasd::ZendPropertyInfo> summary_properties_info;
 
-    // TODO(codinghuang): may we have a better way to get private properties
-    void *property_info;
-    ZEND_HASH_FOREACH_STR_KEY_PTR(&Z_OBJCE_P(property_element.value)->properties_info, key, property_info) {
-        ZendPropertyInfo info;
-        info.property_name = key;
-        summary_properties_info.emplace_back(info);
-    }
-    ZEND_HASH_FOREACH_END();
-
     int i = 0;
     ZEND_HASH_FOREACH_KEY_VAL_IND(properties, num, key, val) {
         tinyxml2::XMLElement *property = child->InsertNewChildElement("property");
         std::string child_fullname;
         std::string child_name;
 
-        ZendPropertyInfo info = summary_properties_info[i];
-        key = info.property_name;
-
-        child_name = ZSTR_VAL(key);
+        child_name = yasd::Util::get_property_name(key);
         child_fullname = property_element.fullname + "->" + child_name;
 
         level++;
