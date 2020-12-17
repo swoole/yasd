@@ -354,6 +354,16 @@ zend_array *Util::get_properties(zval *zobj) {
     return nullptr;
 }
 
+// 
+std::string Util::get_property_name(zend_string *property_name) {
+    const char *class_name, *_property_name;
+    size_t _property_name_len;
+
+    zend_unmangle_property_name_ex(property_name, &class_name, &_property_name, &_property_name_len);
+
+    return std::string(_property_name, _property_name_len);
+}
+
 std::string Util::get_option_value(const std::vector<std::string> &options, std::string option) {
     auto iter = options.begin();
 
