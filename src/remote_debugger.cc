@@ -318,7 +318,11 @@ int RemoteDebugger::parse_eval_cmd() {
 
     std::string eval_str = exploded_cmd[4];
 
+    std::cout << "eval_str: " << eval_str << std::endl;
+
     eval_str = base64_decode(eval_str);
+
+    std::cout << "base64_decode eval_str: " << eval_str << std::endl;
 
     yasd::Util::eval(const_cast<char *>(eval_str.c_str()), &ret_zval, const_cast<char *>("yasd://debug-eval"));
 
