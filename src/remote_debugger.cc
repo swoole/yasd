@@ -72,15 +72,15 @@ std::string RemoteDebugger::get_next_cmd() {
     do {
         ret = recv(sock, &c, 1, 0);
         if (ret == 0) {
-            // printf("connection closed\n");
+            printf("connection closed\n");
             exit(255);
         }
     } while ((c != '\0') && (*p = c) && p++);
 
-    // printf("recv: %ld\n", ret);
+    printf("recv: %ld\n", ret);
     std::string tmp(buffer, buffer + (p - buffer));
     last_cmd = tmp;
-    // printf("last_cmd: %s\n", last_cmd.c_str());
+    printf("last_cmd: %s\n", last_cmd.c_str());
     return last_cmd;
 }
 
@@ -94,11 +94,11 @@ int RemoteDebugger::execute_cmd() {
     auto handler = find_cmd_handler(exploded_cmd[0]);
 
     if (!handler) {
-        // printf("not found handler\n");
+        printf("not found handler\n");
         return FAILED;
     }
 
-    // printf("found handler\n");
+    printf("found handler\n");
 
     return handler();
 }
@@ -156,10 +156,10 @@ ssize_t RemoteDebugger::send_doc(tinyxml2::XMLDocument *doc) {
     ssize_t ret;
     std::string message = yasd::Dbgp::make_message(doc);
 
-    // std::cout << message << std::endl;
+    std::cout << message << std::endl;
 
     ret = send(sock, message.c_str(), message.length(), 0);
-    // printf("send: %ld\n", ret);
+    printf("send: %ld\n", ret);
 
     return ret;
 }
