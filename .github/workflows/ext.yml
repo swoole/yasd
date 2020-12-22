@@ -47,5 +47,6 @@ jobs:
     
     - name: Run tests
       run: |
+        composer install
         cd tests
         ./start.sh
