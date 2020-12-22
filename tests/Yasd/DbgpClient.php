@@ -148,13 +148,11 @@ class DbgpClient
 
         $extension_dir = BASE_PATH . DIRECTORY_SEPARATOR . 'modules';
 
-        $cmd = "php -e -d yasd.remote_port={$this->port}";
-        if (!extension_loaded('yasd')) {
-            $cmd .= " -d zend_extension={$extension_dir}/yasd.so";
+        $cmd = "php -e -d yasd.remote_port={$this->port} -d yasd.debug_mode=remote";
+        if (getenv('ENABLE_YASD')) {
+            $cmd .= " " . getenv('ENABLE_YASD');
         }
         $cmd .= " {$this->testFile}";
-
-        var_dump($cmd);
 
         $socket = stream_socket_server("tcp://0.0.0.0:{$this->port}", $errno, $errstr);
 

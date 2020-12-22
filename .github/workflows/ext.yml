@@ -48,6 +48,6 @@ jobs:
     - name: Run tests
       run: |
         composer install
+        export ENABLE_YASD="-d zend_extension=$PWD/modules/yasd.so"
         cd tests
-        export TEST_PHP_ARGS=-d zend_extension=$PWD/modules/yasd.so
         ./start.sh
