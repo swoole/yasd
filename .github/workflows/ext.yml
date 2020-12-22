@@ -30,6 +30,9 @@ jobs:
         pwd
         echo "`git log -20 --pretty --oneline`"
         echo "`git log -10 --stat --pretty --oneline`"
+    - name: Install swoole
+      run: |
+        pecl install swoole
     - if: startsWith(runner.os, 'Linux')
       name: Install dependencies on Linux
       run: |
