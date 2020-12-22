@@ -166,7 +166,7 @@ ssize_t RemoteDebugger::send_init_event_message() {
         .set_author("Codinghuang")
         .set_copyright("Copyright (c) 2020-2021 by Codinghuang")
         .set_debugger_name("Yasd")
-        .set_debugger_version("0.1.0")
+        .set_debugger_version(PHP_YASD_VERSION)
         .set_fileuri("file://" + std::string(global->entry_file))
         .set_idekey("hantaohuang")
         .set_language("PHP")
