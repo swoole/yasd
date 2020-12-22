@@ -108,6 +108,16 @@ PHP_MINIT_FUNCTION(yasd) {
     return SUCCESS;
 }
 
+ZEND_MODULE_POST_ZEND_DEACTIVATE_D(yasd) {
+    if (!(CG(compiler_options) & ZEND_COMPILE_EXTENDED_INFO)) {
+        return SUCCESS;
+    }
+
+    global->debugger->handle_stop();
+
+    return SUCCESS;
+}
+
 PHP_MSHUTDOWN_FUNCTION(yasd) {
     delete global;
 
@@ -200,7 +210,9 @@ zend_module_entry yasd_module_entry = {
     NULL,             /* PHP_RSHUTDOWN - Request shutdown */
     PHP_MINFO(yasd),  /* PHP_MINFO - Module info */
     PHP_YASD_VERSION, /* Version */
-    STANDARD_MODULE_PROPERTIES
+    NO_MODULE_GLOBALS,
+    ZEND_MODULE_POST_ZEND_DEACTIVATE_N(yasd),
+    STANDARD_MODULE_PROPERTIES_EX
 };
 
 zend_extension_version_info extension_version_info = {

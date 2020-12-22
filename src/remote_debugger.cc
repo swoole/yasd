@@ -129,6 +129,32 @@ void RemoteDebugger::handle_request(const char *filename, int lineno) {
     } while (status != yasd::DebuggerModeBase::status::NEXT_OPLINE);
 }
 
+void RemoteDebugger::handle_stop() {
+    int status;
+    std::vector<std::string> exploded_cmd;
+
+    std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
+    tinyxml2::XMLElement *root;
+    yasd::ResponseElement response_element;
+
+    boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
+
+    root = doc->NewElement("response");
+    doc->LinkEndChild(root);
+
+    response_element.set_cmd(exploded_cmd[0]).set_transaction_id(transaction_id);
+    yasd::Dbgp::get_response_doc(root, response_element);
+    root->SetAttribute("status", "stopping");
+    root->SetAttribute("reason", "ok");
+
+    send_doc(doc.get());
+
+    do {
+        get_next_cmd();
+        status = execute_cmd();
+    } while (status != yasd::DebuggerModeBase::status::NEXT_OPLINE);
+}
+
 ssize_t RemoteDebugger::send_init_event_message() {
     // https://xdebug.org/docs/dbgp#connection-initialization
 

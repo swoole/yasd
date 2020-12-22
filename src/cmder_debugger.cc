@@ -79,6 +79,8 @@ void CmderDebugger::handle_request(const char *filename, int lineno) {
     } while (status != yasd::DebuggerModeBase::status::NEXT_OPLINE);
 }
 
+void CmderDebugger::handle_stop() {}
+
 CmderDebugger::~CmderDebugger() {}
 
 std::string CmderDebugger::get_next_cmd() {
