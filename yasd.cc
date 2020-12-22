@@ -115,6 +115,8 @@ PHP_MINIT_FUNCTION(yasd) {
     ZEND_INIT_MODULE_GLOBALS(yasd, php_yasd_init_globals, nullptr);
     REGISTER_INI_ENTRIES();
 
+    // yasd_rinit(module_number);
+
     return SUCCESS;
 }
 

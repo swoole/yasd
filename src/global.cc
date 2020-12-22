@@ -69,10 +69,14 @@ Context *Global::get_current_context() {
 
     if (iter != global->contexts->end()) {
         context = iter->second;
+
+        // printf("get context: %p, strace: %p, cid: %lld\n", context, context->strace, cid);
     } else {
         context = new yasd::Context();
         context->cid = cid;
         global->contexts->insert(std::make_pair(cid, context));
+
+        // printf("create context: %p, strace: %p, cid: %lld\n", context, context->strace, cid);
     }
 
     return context;

@@ -42,7 +42,7 @@ class Context {
     int64_t level = 0;
     int64_t next_level = 0;
 
-    std::vector<StackFrame *> *strace;
+    std::vector<StackFrame *> *strace = nullptr;
 
     Context();
     ~Context();
