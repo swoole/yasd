@@ -85,8 +85,6 @@ void clear_watch_point(zend_execute_data *execute_data) {
 }
 
 void yasd_execute_ex(zend_execute_data *execute_data) {
-    zend_op_array *op_array = &(execute_data->func->op_array);
-
     if (skip_swoole_library(execute_data) || skip_eval(execute_data)) {
         return;
     }
