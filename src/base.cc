@@ -63,6 +63,20 @@ void clear_watch_point(zend_execute_data *execute_data) {
 }
 
 void yasd_execute_ex(zend_execute_data *execute_data) {
+    zend_op_array *op_array = &(execute_data->func->op_array);
+
+    if (op_array && op_array->filename &&
+        strncmp("@swoole-src/library", ZSTR_VAL(op_array->filename), sizeof("@swoole-src/library") - 1) == 0) {
+        old_execute_ex(execute_data);
+        return;
+    }
+
+    if (op_array && op_array->filename &&
+        strncmp("xdebug://debug-eval", ZSTR_VAL(op_array->filename), sizeof("xdebug://debug-eval") - 1) == 0) {
+        old_execute_ex(execute_data);
+        return;
+    }
+
     yasd::Context *context = global->get_current_context();
 
     context->level++;
