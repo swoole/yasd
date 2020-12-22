@@ -120,6 +120,8 @@ class DbgpClient
 
         $socket = stream_socket_server('tcp://0.0.0.0:9000', $errno, $errstr);
 
+        var_dump($this->testFile);
+
         $process = proc_open("php -e {$this->testFile}", $descriptorspec, $pipes, $cwd);
 
         $conn = stream_socket_accept($socket, 20);
