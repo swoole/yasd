@@ -118,7 +118,7 @@ class DbgpClient
 
         $cwd = __DIR__;
 
-        $socket = @stream_socket_server('tcp://0.0.0.0:9000', $errno, $errstr);
+        $socket = stream_socket_server('tcp://0.0.0.0:9000', $errno, $errstr);
 
         $process = proc_open("php -e {$this->testFile}", $descriptorspec, $pipes, $cwd);
 
