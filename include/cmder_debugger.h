@@ -39,6 +39,7 @@ class CmderDebugger: public DebuggerModeBase {
 
     void init();
     void handle_request(const char *filename, int lineno);
+    void handle_stop();
 
     int parse_run_cmd();
     int parse_breakpoint_cmd();

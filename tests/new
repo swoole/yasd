@@ -1,0 +1,115 @@
+#!/usr/bin/env php
+<?php
+define('YASD_COLOR_RED', 1);
+define('YASD_COLOR_GREEN', 2);
+define('YASD_COLOR_YELLOW', 3);
+define('YASD_COLOR_BLUE', 4);
+define('YASD_COLOR_MAGENTA', 5);
+define('YASD_COLOR_CYAN', 6);
+define('YASD_COLOR_WHITE', 7);
+
+function yasd_color(string $content, int $color): string
+{
+    return "\033[3{$color}m{$content}\033[0m";
+}
+
+function fgetsin(string $tip = '', bool $accept_empty = true): string
+{
+    do {
+        if ($tip) {
+            echo "$tip: ";
+        }
+        $in = trim(fgets(STDIN));
+    } while (!$accept_empty && $in === '');
+
+    return $in;
+}
+
+function yes(string $content = ''): bool
+{
+    echo $content;
+    return fgetsin() === 'y';
+}
+
+if (empty($argv[1])) {
+    error_filename:
+    exit(
+        yasd_color("Please enter the correct file name or path! e.g.:", YASD_COLOR_RED) .
+        yasd_color("\n\"./new ./yasd\"\n", YASD_COLOR_MAGENTA)
+    );
+}
+
+$filename = $argv[1];
+if (!pathinfo($filename, PATHINFO_EXTENSION)) {
+    $path = ['dirname' => $filename];
+} else {
+    $path = pathinfo($filename);
+}
+$path['dirname'] = trim($path['dirname'], './'); // i know arg2 is a list but it's no problem
+
+$replacement = [];
+$tip = yasd_color("[Test name]: ", YASD_COLOR_BLUE);
+$path['filename'] = fgetsin($tip, false);// use test name to be filename
+$tip = yasd_color("[Test intro]: ", YASD_COLOR_BLUE);
+$replacement['test_intro'] = fgetsin($tip, false);
+$this_dir_name = explode('/', $path['dirname']);
+$replacement['test_name'] = end($this_dir_name); // use dir name to be test name
+
+$filename = "{$path['dirname']}/{$path['filename']}.phpt";
+
+//if dir not exist, create it
+if (!is_dir(__DIR__ . "/{$path['dirname']}")) {
+    echo yasd_color(
+        "The dir [{$path['dirname']}] is not exist, if you want to create it? [y/n]: ",
+        YASD_COLOR_YELLOW
+    );
+    if (yes()) {
+        mkdir($path['dirname'], 0755, true);
+    } else {
+        exit(yasd_color('Can\'t generate the test file in nonexistent dir!', YASD_COLOR_RED));
+    }
+} elseif (file_exists($filename)) {
+    echo yasd_color(
+        "The file [{$path['filename']}] is exist, if you want to overwrite it? [y/n]: ",
+        YASD_COLOR_YELLOW
+    );
+    if (!yes()) {
+        exit(yasd_color('You should rename your test filename.', YASD_COLOR_RED));
+    }
+}
+
+//calc dir deep
+$deep = 0;
+$temp = $filename;
+while (($temp = dirname($temp)) !== '.') {
+    $deep++;
+}
+if ($deep < 1) {
+    goto error_filename;
+}
+
+$template = file_get_contents(__DIR__ . '/template');
+$replacement['dir_deep'] = str_repeat('/..', $deep);
+foreach ($replacement as $key => $value) {
+    $template = str_replace("{{{$key}}}", $value, $template);
+}
+
+if (file_put_contents($filename, $template)) {
+    echo yasd_color("Generate the test file successfully!\n", YASD_COLOR_GREEN) .
+        "[" . __DIR__ . "/$filename]";
+    @shell_exec('/usr/bin/env git add ' . __DIR__ . "/$filename");
+    if (\stripos(PHP_OS, 'Darwin') !== false) {
+        //MacOS
+        $pstorm = '/usr/local/bin/pstorm';
+        if (file_exists($pstorm) || (
+                file_exists('/Applications/PhpStorm.app') &&
+                file_put_contents($pstorm, file_get_contents(__DIR__ . '/include/macos/phpstorm.py')) &&
+                chmod($pstorm, 0744)
+            )
+        ) {
+            @shell_exec("/usr/local/bin/phpstorm {$filename}");
+        }
+    }
+} else {
+    exit("\nGenerate the test file failed!");
+}

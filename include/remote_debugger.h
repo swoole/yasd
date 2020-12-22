@@ -53,6 +53,8 @@ class RemoteDebugger : public DebuggerModeBase {
 
     void init();
     void handle_request(const char *filename, int lineno);
+    void handle_stop();
+
     ssize_t send_doc(tinyxml2::XMLDocument *doc);
 
     ssize_t send_init_event_message();

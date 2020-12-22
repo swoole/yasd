@@ -36,5 +36,6 @@ class DebuggerModeBase {
 
     virtual void init() = 0;
     virtual void handle_request(const char *filename, int lineno) = 0;
+    virtual void handle_stop() = 0;
 };
 }  // namespace yasd
