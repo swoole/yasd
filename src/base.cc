@@ -22,6 +22,28 @@
 
 static void (*old_execute_ex)(zend_execute_data *execute_data);
 
+bool skip_swoole_library(zend_execute_data *execute_data) {
+    zend_op_array *op_array = &(execute_data->func->op_array);
+
+    if (op_array && op_array->filename &&
+        strncmp("@swoole-src/library", ZSTR_VAL(op_array->filename), sizeof("@swoole-src/library") - 1) == 0) {
+        old_execute_ex(execute_data);
+        return true;
+    }
+    return false;
+}
+
+bool skip_eval(zend_execute_data *execute_data) {
+    zend_op_array *op_array = &(execute_data->func->op_array);
+
+    if (op_array && op_array->filename &&
+        strncmp("xdebug://debug-eval", ZSTR_VAL(op_array->filename), sizeof("xdebug://debug-eval") - 1) == 0) {
+        old_execute_ex(execute_data);
+        return true;
+    }
+    return false;
+}
+
 yasd::StackFrame *save_prev_stack_frame(zend_execute_data *execute_data) {
     yasd::Context *context = global->get_current_context();
 
@@ -65,15 +87,7 @@ void clear_watch_point(zend_execute_data *execute_data) {
 void yasd_execute_ex(zend_execute_data *execute_data) {
     zend_op_array *op_array = &(execute_data->func->op_array);
 
-    if (op_array && op_array->filename &&
-        strncmp("@swoole-src/library", ZSTR_VAL(op_array->filename), sizeof("@swoole-src/library") - 1) == 0) {
-        old_execute_ex(execute_data);
-        return;
-    }
-
-    if (op_array && op_array->filename &&
-        strncmp("xdebug://debug-eval", ZSTR_VAL(op_array->filename), sizeof("xdebug://debug-eval") - 1) == 0) {
-        old_execute_ex(execute_data);
+    if (skip_swoole_library(execute_data) || skip_eval(execute_data)) {
         return;
     }
 
