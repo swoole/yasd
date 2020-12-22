@@ -1,6 +1,11 @@
 --TEST--
 Check if yasd is loaded
 --SKIPIF--
+<?php
+if (!extension_loaded('yasd')) {
+	echo 'skip, not install yasd extension';
+}
+?>
 --FILE--
 <?php
 

@@ -3,7 +3,7 @@
 --SKIPIF--
 <?php
 if (!extension_loaded('yasd')) {
-	echo 'skip';
+	echo 'skip, not install yasd extension';
 }
 ?>
 --FILE--
