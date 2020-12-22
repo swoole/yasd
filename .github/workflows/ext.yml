@@ -44,3 +44,8 @@ jobs:
         make -j$(sysctl -n hw.ncpu)
         sudo make install
         php -d zend_extension=$PWD/modules/yasd.so --ri yasd
+    
+    - name: Run tests
+      run: |
+        cd tests
+        ./start.sh
