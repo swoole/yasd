@@ -148,7 +148,7 @@ class DbgpClient
 
         $socket = stream_socket_server("tcp://0.0.0.0:{$this->port}", $errno, $errstr);
 
-        $process = proc_open("php -e -d yasd.remote_port={$this->port} {$this->testFile}", $descriptorspec, $pipes, $cwd);
+        $process = proc_open("php -e -d zend_extension={$cwd}/modules/yasd.so -d yasd.remote_port={$this->port} {$this->testFile}", $descriptorspec, $pipes, $cwd);
 
         $conn = stream_socket_accept($socket, 20);
 
