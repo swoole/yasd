@@ -122,7 +122,7 @@ class DbgpClient
 
         $process = proc_open("php -e {$this->testFile}", $descriptorspec, $pipes, $cwd);
 
-        $conn = @stream_socket_accept($socket, 20);
+        $conn = stream_socket_accept($socket, 20);
 
         // read init event message
         $this->doRead($conn);
