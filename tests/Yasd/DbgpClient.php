@@ -146,11 +146,19 @@ class DbgpClient
 
         $cwd = __DIR__;
 
+        $extension_dir = BASE_PATH . DIRECTORY_SEPARATOR . 'modules';
+
+        $cmd = "php -e -d yasd.remote_port={$this->port}";
+        if (!extension_loaded('yasd')) {
+            $cmd .= " -d zend_extension={$extension_dir}/yasd.so";
+        }
+        $cmd .= " {$this->testFile}";
+
         $socket = stream_socket_server("tcp://0.0.0.0:{$this->port}", $errno, $errstr);
 
-        $process = proc_open("php -e -d zend_extension={$cwd}/modules/yasd.so -d yasd.remote_port={$this->port} {$this->testFile}", $descriptorspec, $pipes, $cwd);
+        $process = proc_open($cmd, $descriptorspec, $pipes, $cwd);
 
-        $conn = stream_socket_accept($socket, 20);
+        $conn = stream_socket_accept($socket, 5);
 
         // read init event message
         $this->doRead($conn);
