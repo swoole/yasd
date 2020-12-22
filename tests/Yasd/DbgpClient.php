@@ -154,6 +154,8 @@ class DbgpClient
         }
         $cmd .= " {$this->testFile}";
 
+        var_dump($cmd);
+
         $socket = stream_socket_server("tcp://0.0.0.0:{$this->port}", $errno, $errstr);
 
         $process = proc_open($cmd, $descriptorspec, $pipes, $cwd);
