@@ -25,6 +25,34 @@ class DbgpClient
      */
     protected $transaction_id = 0;
 
+    protected $port;
+
+    public function __construct()
+    {
+        $this->init();
+    }
+
+    public function init()
+    {
+        $this->port = $this->getFreePort();
+    }
+
+    public function getFreePort(): int
+    {
+        $server = stream_socket_server('tcp://127.0.0.1:0');
+        if (! $server) {
+            $port = -1;
+        } else {
+            $name = stream_socket_get_name($server, false);
+            if (empty($name)) {
+                $port = -1;
+            } else {
+                $port = (parse_url($name)['port'] ?? -1) ?: -1;
+            }
+        }
+        return $port;
+    }
+
     public function setTestFile(string $testFile): DbgpClient
     {
         $this->testFile = $testFile;
@@ -118,11 +146,9 @@ class DbgpClient
 
         $cwd = __DIR__;
 
-        $socket = stream_socket_server('tcp://0.0.0.0:9000', $errno, $errstr);
+        $socket = stream_socket_server("tcp://0.0.0.0:{$this->port}", $errno, $errstr);
 
-        var_dump($this->testFile);
-
-        $process = proc_open("php -e {$this->testFile}", $descriptorspec, $pipes, $cwd);
+        $process = proc_open("php -e -d yasd.remote_port={$this->port} {$this->testFile}", $descriptorspec, $pipes, $cwd);
 
         $conn = stream_socket_accept($socket, 20);
 
