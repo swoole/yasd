@@ -1,5 +1,5 @@
 --TEST--
-Check if yasd is loaded
+Check stop cmd
 --SKIPIF--
 --FILE--
 <?php
@@ -8,7 +8,7 @@ use Yasd\DbgpClient;
 
 require dirname(__DIR__, 1) . '/Include/bootstrap.php';
 
-$filename = realpath(dirname(__FILE__) . '/run.inc');
+$filename = realpath(dirname(__FILE__) . '/stop.inc');
 
 $commands = [
     'run',
