@@ -30,6 +30,14 @@
 
 namespace yasd {
 
+RemoteDebugger::RemoteDebugger() {
+    buffer = new yasd::Buffer(512);
+}
+
+RemoteDebugger::~RemoteDebugger() {
+    delete buffer;
+}
+
 void RemoteDebugger::init() {
     register_cmd_handler();
 
@@ -178,12 +186,11 @@ ssize_t RemoteDebugger::send_init_event_message() {
 
 ssize_t RemoteDebugger::send_doc(tinyxml2::XMLDocument *doc) {
     ssize_t ret;
-    std::string message = yasd::Dbgp::make_message(doc);
+    yasd::Dbgp::make_message(doc, buffer);
 
-    global->logger->set_level(yasd::LogLevel::DEBUG).put(yasd::LogLevel::DEBUG, message.c_str(), message.length());
+    global->logger->set_level(yasd::LogLevel::DEBUG).put(yasd::LogLevel::DEBUG, buffer->value(), buffer->get_length());
 
-    ret = send(sock, message.c_str(), message.length(), 0);
-    // printf("send: %ld\n", ret);
+    ret = send(sock, buffer->value(), buffer->get_length(), 0);
 
     return ret;
 }

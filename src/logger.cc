@@ -73,7 +73,9 @@ void Logger::put(int level, const char *content, size_t length) {
         break;
     }
 
-    n = snprintf(yasd_info_buf, YASD_MSG_SIZE, "%.*s\n", static_cast<int>(length), content);
+    memcpy(yasd_info_buf, content, length);
+    yasd_info_buf[length] = '\n';
+    n = length + 1;
 
     if (::write(log_fd, yasd_info_buf, n) < 0) {
         printf("write(log_fd=%d, size=%d) failed. Error: %s[%d].\nMessage: %.*s\n",
