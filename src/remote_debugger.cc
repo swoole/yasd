@@ -72,15 +72,13 @@ std::string RemoteDebugger::get_next_cmd() {
     do {
         ret = recv(sock, &c, 1, 0);
         if (ret == 0) {
-            // printf("connection closed\n");
             exit(255);
         }
     } while ((c != '\0') && (*p = c) && p++);
 
-    // printf("recv: %ld\n", ret);
     std::string tmp(buffer, buffer + (p - buffer));
     last_cmd = tmp;
-    // printf("last_cmd: %s\n", last_cmd.c_str());
+    global->logger->set_level(yasd::LogLevel::DEBUG).put(yasd::LogLevel::DEBUG, last_cmd.c_str(), last_cmd.length());
     return last_cmd;
 }
 
@@ -182,7 +180,7 @@ ssize_t RemoteDebugger::send_doc(tinyxml2::XMLDocument *doc) {
     ssize_t ret;
     std::string message = yasd::Dbgp::make_message(doc);
 
-    // std::cout << message << std::endl;
+    global->logger->set_level(yasd::LogLevel::DEBUG).put(yasd::LogLevel::DEBUG, message.c_str(), message.length());
 
     ret = send(sock, message.c_str(), message.length(), 0);
     // printf("send: %ld\n", ret);

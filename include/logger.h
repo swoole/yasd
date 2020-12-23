@@ -13,51 +13,34 @@
   | Author: codinghuang  <codinghuang@qq.com>                            |
   +----------------------------------------------------------------------+
 */
+
 #pragma once
 
-#include "include/context.h"
-#include "include/logger.h"
-#include "include/redirect_file_to_cin.h"
-#include "include/watch_point.h"
-#include "include/debuger_mode_base.h"
-
-#include <map>
+#include <unistd.h>
+#include <string>
 
 namespace yasd {
-class Global {
-  public:
-    yasd::RedirectFileToCin *redirector = nullptr;
-    bool is_running = false;
-    bool do_step = false;
-    bool do_next = false;
-    bool do_finish = false;
-
-    bool is_detach = false;
-
-    // because cid does not repeat, next_cid can be global
-    int64_t next_cid = 0;
-
-    int breakpoint_count = 0;
-
-    DebuggerModeBase *debugger = nullptr;
-
-    char *entry_file = nullptr;
-
-    std::map<int, Context *> *contexts;
-
-    // filename, [lineno]
-    std::map<BREAKPOINT> *breakpoints;
-
-    yasd::WatchPoint watchPoints;
-
-    yasd::Logger *logger = nullptr;
-
-    Global();
-    ~Global();
-
-    Context *get_current_context();
+enum LogLevel {
+    DEBUG = 0,
+    TRACE,
+    INFO,
+    NOTICE,
+    WARNING,
+    ERROR,
+    NONE,
 };
-}  // namespace yasd
+class Logger {
+ private:
+    int log_fd = STDOUT_FILENO;
+    std::string log_file = "";
+    int log_level = INFO;
 
-extern yasd::Global *global;
-extern zend_function *get_cid_function;
+ public:
+    explicit Logger(const char *_logfile = nullptr);
+    ~Logger();
+
+    Logger &set_level(int level);
+    void put(int level, const char *content, size_t length);
+};
+
+}  // namespace yasd
