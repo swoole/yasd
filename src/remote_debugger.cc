@@ -114,7 +114,7 @@ void RemoteDebugger::handle_request(const char *filename, int lineno) {
     boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
 
     response_element.set_cmd(exploded_cmd[0]).set_transaction_id(transaction_id);
-    message_element.set_filename("file://" + std::string(filename)).set_lineno(lineno);
+    message_element.set_filename(filename).set_lineno(lineno);
 
     yasd::Dbgp::get_message_doc(doc.get(), response_element, message_element);
     send_doc(doc.get());
