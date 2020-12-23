@@ -438,8 +438,13 @@ int RemoteDebugger::parse_breakpoint_set_cmd() {
     auto iter = global->breakpoints->find(filename);
 
     if (iter != global->breakpoints->end()) {
+        std::string tmp = "old file: " + filename + ", lineno: " + std::to_string(lineno);
+        global->logger->put(yasd::LogLevel::DEBUG, tmp.c_str(), tmp.length());
         iter->second.insert(lineno);
     } else {
+        std::string tmp = "new file: " + filename + ", lineno: " + std::to_string(lineno);
+        global->logger->put(yasd::LogLevel::DEBUG, tmp.c_str(), tmp.length());
+
         std::set<int> lineno_set;
         lineno_set.insert(lineno);
         global->breakpoints->insert(std::make_pair(filename, lineno_set));
