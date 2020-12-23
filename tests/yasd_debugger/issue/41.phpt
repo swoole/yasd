@@ -1,5 +1,5 @@
 --TEST--
-Check stop cmd
+issue 41
 --SKIPIF--
 --FILE--
 <?php

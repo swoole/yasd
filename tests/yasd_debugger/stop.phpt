@@ -1,5 +1,5 @@
 --TEST--
-Check stop cmd
+check stop cmd
 --SKIPIF--
 --FILE--
 <?php
