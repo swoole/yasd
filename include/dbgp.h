@@ -17,6 +17,7 @@
 
 #include <string>
 
+#include "include/buffer.h"
 #include "thirdparty/tinyxml2/tinyxml2.h"
 
 namespace yasd {
@@ -163,7 +164,7 @@ class Dbgp {
     Dbgp() {}
     ~Dbgp() {}
 
-    static std::string make_message(tinyxml2::XMLDocument *doc);
+    static void make_message(tinyxml2::XMLDocument *doc, yasd::Buffer *buffer);
     static void get_zend_string_property_doc(tinyxml2::XMLElement *root, const PropertyElement &property_element);
     static void get_zend_array_child_property_doc(tinyxml2::XMLElement *child, const PropertyElement &property_element);
     static void get_zend_object_child_property_doc(tinyxml2::XMLElement *child,

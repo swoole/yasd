@@ -30,6 +30,14 @@
 
 namespace yasd {
 
+RemoteDebugger::RemoteDebugger() {
+    buffer = new yasd::Buffer(512);
+}
+
+RemoteDebugger::~RemoteDebugger() {
+    delete buffer;
+}
+
 void RemoteDebugger::init() {
     register_cmd_handler();
 
@@ -72,15 +80,15 @@ std::string RemoteDebugger::get_next_cmd() {
     do {
         ret = recv(sock, &c, 1, 0);
         if (ret == 0) {
-            // printf("connection closed\n");
             exit(255);
         }
     } while ((c != '\0') && (*p = c) && p++);
 
-    // printf("recv: %ld\n", ret);
     std::string tmp(buffer, buffer + (p - buffer));
     last_cmd = tmp;
-    // printf("last_cmd: %s\n", last_cmd.c_str());
+    if (global->logger) {
+        global->logger->put(yasd::LogLevel::DEBUG, last_cmd.c_str(), last_cmd.length());
+    }
     return last_cmd;
 }
 
@@ -180,12 +188,13 @@ ssize_t RemoteDebugger::send_init_event_message() {
 
 ssize_t RemoteDebugger::send_doc(tinyxml2::XMLDocument *doc) {
     ssize_t ret;
-    std::string message = yasd::Dbgp::make_message(doc);
+    yasd::Dbgp::make_message(doc, buffer);
 
-    // std::cout << message << std::endl;
+    if (global->logger) {
+        global->logger->put(yasd::LogLevel::DEBUG, buffer->value(), buffer->get_length());
+    }
 
-    ret = send(sock, message.c_str(), message.length(), 0);
-    // printf("send: %ld\n", ret);
+    ret = send(sock, buffer->value(), buffer->get_length(), 0);
 
     return ret;
 }

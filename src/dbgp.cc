@@ -78,22 +78,21 @@ void Dbgp::get_message_doc(tinyxml2::XMLDocument *doc,
     child->SetAttribute("lineno", message_element.lineno);
 }
 
-std::string Dbgp::make_message(tinyxml2::XMLDocument *doc) {
+void Dbgp::make_message(tinyxml2::XMLDocument *doc, yasd::Buffer *buffer) {
     // https://xdebug.org/docs/dbgp#response
 
-    std::string message = "";
+    buffer->clear();
+
     tinyxml2::XMLPrinter printer;
 
     doc->Print(&printer);
 
     int size = printer.CStrSize() - 1 + sizeof("<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n") - 1;
-    message = message + std::to_string(size);
-    message += '\0';
-    message += "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
-    message += printer.CStr();
-    message += '\0';
-
-    return message;
+    buffer->append(std::to_string(size));
+    buffer->append("\0", 1);
+    buffer->append("<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n");
+    buffer->append(printer.CStr());
+    buffer->append("\0", 1);
 }
 
 void Dbgp::get_response_doc(tinyxml2::XMLElement *root, const ResponseElement &response_element) {

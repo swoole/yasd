@@ -16,6 +16,7 @@
 #pragma once
 
 #include "include/context.h"
+#include "include/logger.h"
 #include "include/redirect_file_to_cin.h"
 #include "include/watch_point.h"
 #include "include/debuger_mode_base.h"
@@ -48,6 +49,8 @@ class Global {
     std::map<BREAKPOINT> *breakpoints;
 
     yasd::WatchPoint watchPoints;
+
+    yasd::Logger *logger = nullptr;
 
     Global();
     ~Global();

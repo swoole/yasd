@@ -32,5 +32,6 @@ mkinstalldirs
 
 # debug
 debug
+debug.log
 vendor
 .breakpoints_file.*
