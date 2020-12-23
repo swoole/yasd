@@ -30,7 +30,7 @@ ZEND_BEGIN_MODULE_GLOBALS(yasd)
     char *remote_host;
     uint16_t remote_port;
     uint16_t depth;
-    uint16_t log_level;
+    int log_level;
 ZEND_END_MODULE_GLOBALS(yasd)
 
 extern ZEND_DECLARE_MODULE_GLOBALS(yasd);
