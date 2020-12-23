@@ -14,30 +14,33 @@
   +----------------------------------------------------------------------+
 */
 
-#ifndef PHP_YASD_H_
-#define PHP_YASD_H_
+#pragma once
 
-#include "main/php.h"
+#include <unistd.h>
+#include <string>
 
-extern zend_module_entry yasd_module_entry;
-#define phpext_yasd_ptr &yasd_module_entry
+namespace yasd {
+enum LogLevel {
+    DEBUG = 0,
+    TRACE,
+    INFO,
+    NOTICE,
+    WARNING,
+    ERROR,
+    NONE,
+};
+class Logger {
+ private:
+    int log_fd = STDOUT_FILENO;
+    std::string log_file = "";
+    int log_level = INFO;
 
-#define PHP_YASD_VERSION "0.2.7-alpha"
+ public:
+    explicit Logger(const char *_logfile = nullptr);
+    ~Logger();
 
-ZEND_BEGIN_MODULE_GLOBALS(yasd)
-    char *breakpoints_file;
-    char *debug_mode;
-    char *remote_host;
-    uint16_t remote_port;
-    uint16_t depth;
-    int log_level;
-ZEND_END_MODULE_GLOBALS(yasd)
+    Logger &set_level(int level);
+    void put(int level, const char *content, size_t length);
+};
 
-extern ZEND_DECLARE_MODULE_GLOBALS(yasd);
-
-#define YASD_G(v) ZEND_MODULE_GLOBALS_ACCESSOR(yasd, v)
-
-#define php_yasd_fatal_error(level, fmt_str, ...) \
-        php_error_docref(NULL, level, (const char *) (fmt_str), ##__VA_ARGS__)
-
-#endif /* PHP_YASD_H_ */
+}  // namespace yasd

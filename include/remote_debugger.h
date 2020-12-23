@@ -25,11 +25,12 @@
 #include <utility>
 
 #include "include/debuger_mode_base.h"
+#include "include/buffer.h"
 #include "thirdparty/tinyxml2/tinyxml2.h"
 
 namespace yasd {
 class RemoteDebugger : public DebuggerModeBase {
-  private:
+ private:
     enum ContextID {
         LOCALS,
         SUPER_GLOBALS,
@@ -40,6 +41,8 @@ class RemoteDebugger : public DebuggerModeBase {
     int transaction_id = 0;
     std::vector<std::pair<std::string, std::function<int()>>> handlers;
 
+    yasd::Buffer *buffer = nullptr;
+
     std::string get_next_cmd();
     int execute_cmd();
 
@@ -47,9 +50,9 @@ class RemoteDebugger : public DebuggerModeBase {
     void init_superglobal_variables_xml_child_node(tinyxml2::XMLElement *root);
     void init_user_defined_constant_variables_xml_child_node(tinyxml2::XMLElement *root);
 
-  public:
-    RemoteDebugger() {}
-    ~RemoteDebugger() {}
+ public:
+    RemoteDebugger();
+    ~RemoteDebugger();
 
     void init();
     void handle_request(const char *filename, int lineno);

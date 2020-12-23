@@ -93,6 +93,8 @@ if test "$PHP_YASD" != "no"; then
         src/common.cc \
         src/util.cc \
         src/base.cc \
+        src/buffer.cc \
+        src/logger.cc \
         src/context.cc \
         src/global.cc \
         src/source_reader.cc \

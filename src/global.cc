@@ -39,6 +39,11 @@ int64_t get_cid() {
 
 namespace yasd {
 Global::Global() {
+    if (YASD_G(log_level) >= 0) {
+        logger = new yasd::Logger("debug.log");
+        logger->set_level(YASD_G(log_level));
+    }
+
     breakpoints = new std::map<BREAKPOINT>();
     contexts = new std::map<int, Context *>();
 
@@ -59,6 +64,7 @@ Global::~Global() {
     contexts = nullptr;
     delete breakpoints;
     breakpoints = nullptr;
+    delete logger;
 }
 
 Context *Global::get_current_context() {
