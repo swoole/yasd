@@ -148,8 +148,6 @@ class DbgpClient
 
         $extension_dir = BASE_PATH . DIRECTORY_SEPARATOR . 'modules';
 
-        $this->port = 9000;
-
         $cmd = "php -e -d yasd.remote_port={$this->port} -d yasd.debug_mode=remote {$this->testFile}";
 
         $socket = stream_socket_server("tcp://0.0.0.0:{$this->port}", $errno, $errstr);
