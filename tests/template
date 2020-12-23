@@ -8,5 +8,20 @@ if (!extension_loaded('yasd')) {
 ?>
 --FILE--
 <?php
+
+use Yasd\DbgpClient;
+
+require dirname(__DIR__, {{dir_deep}}) . '/Include/bootstrap.php';
+
+$basename = basename(__FILE__, '.php');
+$filename = realpath(dirname(__FILE__) . "/{$basename}.inc");
+
+$commands = [
+    'run',
+    'stop',
+];
+
+$client = (new DbgpClient())->setCommands($commands)->setTestFile($filename)->start();
+
 ?>
 --EXPECTF--
