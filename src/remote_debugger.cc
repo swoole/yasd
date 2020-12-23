@@ -86,7 +86,7 @@ std::string RemoteDebugger::get_next_cmd() {
 
     std::string tmp(buffer, buffer + (p - buffer));
     last_cmd = tmp;
-    global->logger->set_level(yasd::LogLevel::DEBUG).put(yasd::LogLevel::DEBUG, last_cmd.c_str(), last_cmd.length());
+    global->logger->put(yasd::LogLevel::DEBUG, last_cmd.c_str(), last_cmd.length());
     return last_cmd;
 }
 
@@ -188,7 +188,7 @@ ssize_t RemoteDebugger::send_doc(tinyxml2::XMLDocument *doc) {
     ssize_t ret;
     yasd::Dbgp::make_message(doc, buffer);
 
-    global->logger->set_level(yasd::LogLevel::DEBUG).put(yasd::LogLevel::DEBUG, buffer->value(), buffer->get_length());
+    global->logger->put(yasd::LogLevel::DEBUG, buffer->value(), buffer->get_length());
 
     ret = send(sock, buffer->value(), buffer->get_length(), 0);
 

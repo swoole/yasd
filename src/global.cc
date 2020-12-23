@@ -40,6 +40,7 @@ int64_t get_cid() {
 namespace yasd {
 Global::Global() {
     logger = new yasd::Logger("tmp.log");
+    logger->set_level(YASD_G(log_level));
     breakpoints = new std::map<BREAKPOINT>();
     contexts = new std::map<int, Context *>();
 
