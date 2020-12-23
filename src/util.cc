@@ -275,6 +275,10 @@ bool Util::is_variable_greater(zval *op1, zval *op2) {
 }
 
 bool Util::is_hit_watch_point() {
+    if (!EG(current_execute_data)) {
+        return false;
+    }
+
     zend_function *func = EG(current_execute_data)->func;
 
     auto var_watchpoint = global->watchPoints.var_watchpoint.find(func);
