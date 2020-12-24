@@ -75,7 +75,7 @@ if test "$PHP_YASD" != "no"; then
         CXXFLAGS="-g -O0 -Wall $CXXFLAGS"
     fi
 
-    PHP_ADD_LIBRARY(stdc++fs)
+    PHP_ADD_LIBRARY(boost_filesystem, 1, YASD_SHARED_LIBADD)
 
     AS_CASE([$host_os],
       [darwin*], [YASD_OS="MAC"],
@@ -120,9 +120,9 @@ if test "$PHP_YASD" != "no"; then
     CXXFLAGS="$CXXFLAGS -Wall -Wno-unused-function -Wno-deprecated -Wno-deprecated-declarations"
 
     if test "$YASD_OS" = "CYGWIN" || test "$YASD_OS" = "MINGW"; then
-        CXXFLAGS="$CXXFLAGS -std=gnu++17"
+        CXXFLAGS="$CXXFLAGS -std=gnu++11"
     else
-        CXXFLAGS="$CXXFLAGS -std=c++17"
+        CXXFLAGS="$CXXFLAGS -std=c++11"
     fi
 
     # tinyxml2
