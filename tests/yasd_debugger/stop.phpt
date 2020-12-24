@@ -1,5 +1,5 @@
 --TEST--
-check stop cmd
+yasd_debugger: stop
 --SKIPIF--
 --FILE--
 <?php
