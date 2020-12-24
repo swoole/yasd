@@ -121,6 +121,8 @@ void Dbgp::get_property_doc(tinyxml2::XMLElement *root, const PropertyElement &p
     case IS_NULL:
         break;
     case IS_LONG:
+        // because the zend_zval_type_name function of PHP7.2 return 'integer'
+        root->SetAttribute("type", "int");
         root->InsertNewText(std::to_string(Z_LVAL_P(property_element.value)).c_str())->SetCData(true);
         break;
     case IS_DOUBLE:
