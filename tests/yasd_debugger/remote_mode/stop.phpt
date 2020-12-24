@@ -1,12 +1,12 @@
 --TEST--
-Check stop cmd
+remote_mode: stop
 --SKIPIF--
 --FILE--
 <?php
 
 use Yasd\DbgpClient;
 
-require dirname(__DIR__, 1) . '/Include/bootstrap.php';
+require dirname(__DIR__, 2) . '/Include/bootstrap.php';
 
 $filename = realpath(dirname(__FILE__) . '/stop.inc');
 

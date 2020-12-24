@@ -56,6 +56,7 @@ $this_dir_name = explode('/', $path['dirname']);
 $replacement['test_name'] = end($this_dir_name); // use dir name to be test name
 
 $filename = "{$path['dirname']}/{$path['filename']}.phpt";
+$incFilename = "{$path['dirname']}/{$path['filename']}.inc";
 
 //if dir not exist, create it
 if (!is_dir(__DIR__ . "/{$path['dirname']}")) {
@@ -89,12 +90,13 @@ if ($deep < 1) {
 }
 
 $template = file_get_contents(__DIR__ . '/template');
-$replacement['dir_deep'] = str_repeat('/..', $deep);
+$incTemplate = file_get_contents(__DIR__ . '/inc_template');
+$replacement['dir_deep'] = $deep;
 foreach ($replacement as $key => $value) {
     $template = str_replace("{{{$key}}}", $value, $template);
 }
 
-if (file_put_contents($filename, $template)) {
+if (file_put_contents($filename, $template) && file_put_contents($incFilename, $incTemplate)) {
     echo yasd_color("Generate the test file successfully!\n", YASD_COLOR_GREEN) .
         "[" . __DIR__ . "/$filename]";
     @shell_exec('/usr/bin/env git add ' . __DIR__ . "/$filename");
