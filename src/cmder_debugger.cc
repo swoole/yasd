@@ -13,7 +13,9 @@
   | Author: codinghuang  <codinghuang@qq.com>                            |
   +----------------------------------------------------------------------+
 */
+#include <libgen.h>
 #include <iostream>
+#include <filesystem>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim.hpp>
@@ -382,6 +384,9 @@ void CmderDebugger::reload_cache_breakpoint() {
     if (cache_filename_path == "") {
         return;
     }
+
+    char *dir_name = dirname(const_cast<char *>(cache_filename_path.c_str()));
+    std::filesystem::create_directories(dir_name);
 
     std::fstream file(cache_filename_path);
     std::string filename;
