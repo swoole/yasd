@@ -118,9 +118,9 @@ if test "$PHP_YASD" != "no"; then
     CXXFLAGS="$CXXFLAGS -Wall -Wno-unused-function -Wno-deprecated -Wno-deprecated-declarations"
 
     if test "$YASD_OS" = "CYGWIN" || test "$YASD_OS" = "MINGW"; then
-        CXXFLAGS="$CXXFLAGS -std=gnu++11"
+        CXXFLAGS="$CXXFLAGS -std=gnu++17"
     else
-        CXXFLAGS="$CXXFLAGS -std=c++11"
+        CXXFLAGS="$CXXFLAGS -std=c++17"
     fi
 
     # tinyxml2
