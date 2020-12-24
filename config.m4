@@ -75,6 +75,8 @@ if test "$PHP_YASD" != "no"; then
         CXXFLAGS="-g -O0 -Wall $CXXFLAGS"
     fi
 
+    PHP_ADD_LIBRARY(stdc++fs)
+
     AS_CASE([$host_os],
       [darwin*], [YASD_OS="MAC"],
       [cygwin*], [YASD_OS="CYGWIN"],
