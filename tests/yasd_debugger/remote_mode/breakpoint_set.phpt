@@ -1,12 +1,12 @@
 --TEST--
-yasd_debugger: breakpoint_set
+remote_mode: breakpoint_set
 --SKIPIF--
 --FILE--
 <?php
 
 use Yasd\DbgpClient;
 
-require dirname(__DIR__, 1) . '/Include/bootstrap.php';
+require dirname(__DIR__, 2) . '/Include/bootstrap.php';
 
 $basename = basename(__FILE__, '.php');
 $filename = realpath(dirname(__FILE__) . "/{$basename}.inc");
