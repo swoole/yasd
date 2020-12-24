@@ -1,11 +1,6 @@
 --TEST--
 {{test_name}}: {{test_intro}}
 --SKIPIF--
-<?php
-if (!extension_loaded('yasd')) {
-	echo 'skip not install yasd extension';
-}
-?>
 --FILE--
 <?php
 
