@@ -1,5 +1,5 @@
 --TEST--
-breakpoint_set cmd
+yasd_debugger: breakpoint_set
 --SKIPIF--
 --FILE--
 <?php

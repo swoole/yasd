@@ -1,5 +1,5 @@
 --TEST--
-issue 41
+issue: 41
 --SKIPIF--
 --FILE--
 <?php
