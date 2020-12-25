@@ -110,8 +110,7 @@ PHP_RSHUTDOWN_FUNCTION(yasd) {
 
     global->debugger->handle_stop();
 
-    delete global;
-    global = nullptr;
+    yasd_rshutdown(module_number);
 
     return SUCCESS;
 }

@@ -18,6 +18,7 @@
 #include "main/php.h"
 
 void yasd_rinit(int module_number);
+void yasd_rshutdown(int module_number);
 void yasd_minit(int module_number);
 void replace_execute_ex();
 void resume_execute_ex();

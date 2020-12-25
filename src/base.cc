@@ -128,6 +128,11 @@ void yasd_rinit(int module_number) {
     global = new yasd::Global();
 }
 
+void yasd_rshutdown(int module_number) {
+    delete global;
+    global = nullptr;
+}
+
 void yasd_minit(int module_number) {
     replace_execute_ex();
 }
