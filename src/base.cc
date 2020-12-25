@@ -130,8 +130,20 @@ void register_get_cid_function() {
     }
 }
 
+void disable_opcache_optimizer() {
+    zend_string *key = zend_string_init(ZEND_STRL("opcache.optimization_level"), 1);
+    zend_string *value = zend_string_init(ZEND_STRL("0"), 1);
+
+    zend_alter_ini_entry(key, value, ZEND_INI_SYSTEM, ZEND_INI_STAGE_STARTUP);
+
+    zend_string_release(key);
+    zend_string_release(value);
+}
+
 void yasd_rinit(int module_number) {
     global = new yasd::Global();
+
+    disable_opcache_optimizer();
 }
 
 void yasd_rshutdown(int module_number) {

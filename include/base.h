@@ -24,3 +24,4 @@ void replace_execute_ex();
 void resume_execute_ex();
 void yasd_execute_ex(zend_execute_data *execute_data);
 void register_get_cid_function();
+void disable_opcache_optimizer();
