@@ -243,9 +243,7 @@ void RemoteDebugger::init_superglobal_variables_xml_child_node(tinyxml2::XMLElem
     zend_string *key;
     zval *val;
 
-    zend_array *defined_vars = yasd::Util::get_defined_vars();
-
-    ZEND_HASH_FOREACH_STR_KEY_VAL(defined_vars, key, val) {
+    ZEND_HASH_FOREACH_STR_KEY_VAL(&EG(symbol_table), key, val) {
         std::string key_str = std::string(ZSTR_VAL(key));
 
         // filter local variable
@@ -257,10 +255,8 @@ void RemoteDebugger::init_superglobal_variables_xml_child_node(tinyxml2::XMLElem
         std::string name = "$" + key_str;
         std::string fullname = key_str;
 
-        zval *var = yasd::Util::find_variable(key_str);
-
         yasd::PropertyElement property_element;
-        property_element.set_type(zend_zval_type_name(var)).set_name(name).set_fullname(key_str).set_value(var);
+        property_element.set_type(zend_zval_type_name(val)).set_name(name).set_fullname(key_str).set_value(val);
         yasd::Dbgp::get_property_doc(child, property_element);
     }
     ZEND_HASH_FOREACH_END();
