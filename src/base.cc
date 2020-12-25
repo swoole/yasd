@@ -141,6 +141,11 @@ void yasd_rshutdown(int module_number) {
 
 void yasd_minit(int module_number) {
     replace_execute_ex();
+
+    // it seems that -e does not work in PHP-FPM mode. so we need to add ZEND_COMPILE_EXTENDED_INFO ourselves.
+    if (strcmp("cgi-fcgi", sapi_module.name) == 0) {
+        CG(compiler_options) |= ZEND_COMPILE_EXTENDED_INFO;
+    }
 }
 
 void replace_execute_ex() {
