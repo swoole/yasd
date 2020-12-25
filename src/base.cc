@@ -113,8 +113,8 @@ void yasd_execute_ex(zend_execute_data *execute_data) {
 }
 
 void register_get_cid_function() {
-    if (zend_hash_str_find_ptr(&module_registry, ZEND_STRL("swoole")) &&
-        (strcmp("cli", sapi_module.name) == 0 || strcmp("phpdbg", sapi_module.name) == 0)) {
+    // if not install swoole or not cli, we will not register get_cid_function. so get_cid will always return 0
+    if (zend_hash_str_find_ptr(&module_registry, ZEND_STRL("swoole")) && (strcmp("cli", sapi_module.name) == 0)) {
         zend_string *classname = zend_string_init(ZEND_STRL("Swoole\\Coroutine"), 0);
         zend_class_entry *class_handle = zend_lookup_class(classname);
         zend_string_release(classname);
