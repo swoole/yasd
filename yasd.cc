@@ -94,8 +94,6 @@ PHP_RINIT_FUNCTION(yasd) {
 
     yasd_rinit(module_number);
 
-    // global->entry_file = SG(request_info).path_translated;
-
     register_get_cid_function();
 
     return SUCCESS;
