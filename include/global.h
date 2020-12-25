@@ -32,6 +32,8 @@ class Global {
     bool do_next = false;
     bool do_finish = false;
 
+    bool first_entry = true;
+
     bool is_detach = false;
 
     // because cid does not repeat, next_cid can be global
@@ -40,8 +42,6 @@ class Global {
     int breakpoint_count = 0;
 
     DebuggerModeBase *debugger = nullptr;
-
-    char *entry_file = nullptr;
 
     std::map<int, Context *> *contexts;
 

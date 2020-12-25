@@ -90,14 +90,19 @@ void clear_watch_point(zend_execute_data *execute_data) {
 }
 
 void yasd_execute_ex(zend_execute_data *execute_data) {
-    if (skip_swoole_library(execute_data) || skip_eval(execute_data)) {
-        return;
-    }
-
     // if not set -e, we will not initialize global
     if (!(CG(compiler_options) & ZEND_COMPILE_EXTENDED_INFO)) {
         old_execute_ex(execute_data);
         return;
+    }
+
+    if (skip_swoole_library(execute_data) || skip_eval(execute_data)) {
+        return;
+    }
+
+    if (UNEXPECTED(global->first_entry)) {
+        global->debugger->init();
+        global->first_entry = false;
     }
 
     yasd::Context *context = global->get_current_context();
