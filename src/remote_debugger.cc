@@ -161,6 +161,8 @@ void RemoteDebugger::handle_stop() {
         get_next_cmd();
         status = execute_cmd();
     } while (status != yasd::DebuggerModeBase::status::NEXT_OPLINE);
+
+    close(sock);
 }
 
 ssize_t RemoteDebugger::send_init_event_message() {
@@ -676,7 +678,7 @@ int RemoteDebugger::parse_property_get_cmd() {
 int RemoteDebugger::parse_stop_cmd() {
     // there is no good way to shut down the server,
     // so let the debugger and the process separate first
-    global->is_detach = true;
+    // global->is_detach = true;
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
     tinyxml2::XMLElement *root;

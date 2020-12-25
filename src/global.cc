@@ -21,7 +21,7 @@
 
 #include "./php_yasd.h"
 
-yasd::Global *global;
+yasd::Global *global = nullptr;
 
 zend_function *get_cid_function = nullptr;
 

@@ -14,11 +14,16 @@
   +----------------------------------------------------------------------+
 */
 
+#include <iostream>
+
 #include "include/util.h"
 #include "include/context.h"
 #include "include/global.h"
+#include "include/base.h"
 
-#include <iostream>
+#include "main/SAPI.h"
+
+extern sapi_module_struct sapi_module;
 
 static void (*old_execute_ex)(zend_execute_data *execute_data);
 
@@ -89,6 +94,11 @@ void yasd_execute_ex(zend_execute_data *execute_data) {
         return;
     }
 
+    if (!global) {
+        old_execute_ex(execute_data);
+        return;
+    }
+
     yasd::Context *context = global->get_current_context();
 
     context->level++;
@@ -103,7 +113,8 @@ void yasd_execute_ex(zend_execute_data *execute_data) {
 }
 
 void register_get_cid_function() {
-    if (zend_hash_str_find_ptr(&module_registry, ZEND_STRL("swoole"))) {
+    if (zend_hash_str_find_ptr(&module_registry, ZEND_STRL("swoole")) &&
+        (strcmp("cli", sapi_module.name) == 0 || strcmp("phpdbg", sapi_module.name) == 0)) {
         zend_string *classname = zend_string_init(ZEND_STRL("Swoole\\Coroutine"), 0);
         zend_class_entry *class_handle = zend_lookup_class(classname);
         zend_string_release(classname);
@@ -114,8 +125,19 @@ void register_get_cid_function() {
 }
 
 void yasd_rinit(int module_number) {
+    global = new yasd::Global();
+}
+
+void yasd_minit(int module_number) {
+    replace_execute_ex();
+}
+
+void replace_execute_ex() {
     old_execute_ex = zend_execute_ex;
     zend_execute_ex = yasd_execute_ex;
+}
 
-    global = new yasd::Global();
+void resume_execute_ex() {
+    zend_execute_ex = old_execute_ex;
+    old_execute_ex = nullptr;
 }
