@@ -240,11 +240,10 @@ void RemoteDebugger::init_local_variables_xml_child_node(tinyxml2::XMLElement *r
 
 void RemoteDebugger::init_superglobal_variables_xml_child_node(tinyxml2::XMLElement *root) {
     tinyxml2::XMLElement *child;
-
-    zend_array *defined_vars = yasd::Util::get_defined_vars();
-
     zend_string *key;
     zval *val;
+
+    zend_array *defined_vars = yasd::Util::get_defined_vars();
 
     ZEND_HASH_FOREACH_STR_KEY_VAL(defined_vars, key, val) {
         std::string key_str = std::string(ZSTR_VAL(key));
