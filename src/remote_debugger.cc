@@ -239,8 +239,32 @@ void RemoteDebugger::init_local_variables_xml_child_node(tinyxml2::XMLElement *r
 }
 
 void RemoteDebugger::init_superglobal_variables_xml_child_node(tinyxml2::XMLElement *root) {
-    // because our debugger favours Swoole, we do not support superglobal_variables
-    return;
+    tinyxml2::XMLElement *child;
+
+    zend_array *defined_vars = yasd::Util::get_defined_vars();
+
+    zend_string *key;
+    zval *val;
+
+    ZEND_HASH_FOREACH_STR_KEY_VAL(defined_vars, key, val) {
+        std::string key_str = std::string(ZSTR_VAL(key));
+
+        // filter local variable
+        if (Z_TYPE_P(val) == IS_INDIRECT || key_str == "argc" || key_str == "argv") {
+            continue;
+        }
+
+        child = root->InsertNewChildElement("property");
+        std::string name = "$" + key_str;
+        std::string fullname = key_str;
+
+        zval *var = yasd::Util::find_variable(key_str);
+
+        yasd::PropertyElement property_element;
+        property_element.set_type(zend_zval_type_name(var)).set_name(name).set_fullname(key_str).set_value(var);
+        yasd::Dbgp::get_property_doc(child, property_element);
+    }
+    ZEND_HASH_FOREACH_END();
 }
 
 void RemoteDebugger::init_user_defined_constant_variables_xml_child_node(tinyxml2::XMLElement *root) {
