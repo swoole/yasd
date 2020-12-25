@@ -94,7 +94,8 @@ void yasd_execute_ex(zend_execute_data *execute_data) {
         return;
     }
 
-    if (!global) {
+    // if not set -e, we will not initialize global
+    if (!(CG(compiler_options) & ZEND_COMPILE_EXTENDED_INFO)) {
         old_execute_ex(execute_data);
         return;
     }
