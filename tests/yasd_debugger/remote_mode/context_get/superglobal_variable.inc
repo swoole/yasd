@@ -1,9 +1,8 @@
 <?php
 
-$a = 1;
-$b = 3;
-$k = [];
+function foo() {
+    echo 'foo';
+}
 
-$k = [1, 2, 3];
-echo $a;
+foo();
 ?>
