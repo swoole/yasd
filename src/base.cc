@@ -14,11 +14,16 @@
   +----------------------------------------------------------------------+
 */
 
+#include <iostream>
+
 #include "include/util.h"
 #include "include/context.h"
 #include "include/global.h"
+#include "include/base.h"
 
-#include <iostream>
+#include "main/SAPI.h"
+
+extern sapi_module_struct sapi_module;
 
 static void (*old_execute_ex)(zend_execute_data *execute_data);
 
@@ -85,8 +90,19 @@ void clear_watch_point(zend_execute_data *execute_data) {
 }
 
 void yasd_execute_ex(zend_execute_data *execute_data) {
+    // if not set -e, we will not initialize global
+    if (!(CG(compiler_options) & ZEND_COMPILE_EXTENDED_INFO)) {
+        old_execute_ex(execute_data);
+        return;
+    }
+
     if (skip_swoole_library(execute_data) || skip_eval(execute_data)) {
         return;
+    }
+
+    if (UNEXPECTED(global->first_entry)) {
+        global->debugger->init();
+        global->first_entry = false;
     }
 
     yasd::Context *context = global->get_current_context();
@@ -103,7 +119,8 @@ void yasd_execute_ex(zend_execute_data *execute_data) {
 }
 
 void register_get_cid_function() {
-    if (zend_hash_str_find_ptr(&module_registry, ZEND_STRL("swoole"))) {
+    // if not install swoole or not cli, we will not register get_cid_function. so get_cid will always return 0
+    if (zend_hash_str_find_ptr(&module_registry, ZEND_STRL("swoole")) && (strcmp("cli", sapi_module.name) == 0)) {
         zend_string *classname = zend_string_init(ZEND_STRL("Swoole\\Coroutine"), 0);
         zend_class_entry *class_handle = zend_lookup_class(classname);
         zend_string_release(classname);
@@ -113,9 +130,42 @@ void register_get_cid_function() {
     }
 }
 
+void disable_opcache_optimizer() {
+    zend_string *key = zend_string_init(ZEND_STRL("opcache.optimization_level"), 1);
+    zend_string *value = zend_string_init(ZEND_STRL("0"), 1);
+
+    zend_alter_ini_entry(key, value, ZEND_INI_SYSTEM, ZEND_INI_STAGE_STARTUP);
+
+    zend_string_release(key);
+    zend_string_release(value);
+}
+
 void yasd_rinit(int module_number) {
+    global = new yasd::Global();
+
+    disable_opcache_optimizer();
+}
+
+void yasd_rshutdown(int module_number) {
+    delete global;
+    global = nullptr;
+}
+
+void yasd_minit(int module_number) {
+    replace_execute_ex();
+
+    // it seems that -e does not work in PHP-FPM mode. so we need to add ZEND_COMPILE_EXTENDED_INFO ourselves.
+    if (strcmp("cgi-fcgi", sapi_module.name) == 0 || strcmp("fpm-fcgi", sapi_module.name) == 0) {
+        CG(compiler_options) |= ZEND_COMPILE_EXTENDED_INFO;
+    }
+}
+
+void replace_execute_ex() {
     old_execute_ex = zend_execute_ex;
     zend_execute_ex = yasd_execute_ex;
+}
 
-    global = new yasd::Global();
+void resume_execute_ex() {
+    zend_execute_ex = old_execute_ex;
+    old_execute_ex = nullptr;
 }

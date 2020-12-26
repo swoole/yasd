@@ -115,9 +115,6 @@ int CmderDebugger::parse_breakpoint_cmd() {
     // breakpoint in current file with lineno
     if (exploded_cmd.size() == 2) {
         filename = yasd::Util::get_executed_filename();
-        if (filename == "") {
-            filename = global->entry_file;
-        }
         lineno = atoi(exploded_cmd[1].c_str());
     } else if (exploded_cmd.size() == 3) {
         filename = exploded_cmd[1];
@@ -153,9 +150,6 @@ int CmderDebugger::parse_delete_breakpoint_cmd() {
 
     if (exploded_cmd.size() == 2) {
         filename = yasd::Util::get_executed_filename();
-        if (filename == "") {
-            filename = global->entry_file;
-        }
         lineno = atoi(exploded_cmd[1].c_str());
     } else if (exploded_cmd.size() == 3) {
         filename = exploded_cmd[1];

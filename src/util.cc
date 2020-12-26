@@ -148,10 +148,6 @@ const char *Util::get_executed_filename() {
 
     filename = zend_get_executed_filename_ex();
 
-    if (UNEXPECTED(filename == nullptr)) {
-        return global->entry_file;
-    }
-
     return ZSTR_VAL(filename);
 }
 

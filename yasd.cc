@@ -94,11 +94,7 @@ PHP_RINIT_FUNCTION(yasd) {
 
     yasd_rinit(module_number);
 
-    global->entry_file = SG(request_info).path_translated;
-
     register_get_cid_function();
-
-    global->debugger->init();
 
     return SUCCESS;
 }
@@ -110,6 +106,8 @@ PHP_RSHUTDOWN_FUNCTION(yasd) {
 
     global->debugger->handle_stop();
 
+    yasd_rshutdown(module_number);
+
     return SUCCESS;
 }
 
@@ -117,24 +115,13 @@ PHP_MINIT_FUNCTION(yasd) {
     ZEND_INIT_MODULE_GLOBALS(yasd, php_yasd_init_globals, nullptr);
     REGISTER_INI_ENTRIES();
 
-    // yasd_rinit(module_number);
+    yasd_minit(module_number);
 
     return SUCCESS;
 }
 
-// ZEND_MODULE_POST_ZEND_DEACTIVATE_D(yasd) {
-//     if (!(CG(compiler_options) & ZEND_COMPILE_EXTENDED_INFO)) {
-//         return SUCCESS;
-//     }
-
-//     global->debugger->handle_stop();
-
-//     return SUCCESS;
-// }
-
 PHP_MSHUTDOWN_FUNCTION(yasd) {
-    delete global;
-
+    resume_execute_ex();
     return SUCCESS;
 }
 
