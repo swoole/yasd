@@ -211,13 +211,19 @@ void Dbgp::get_zend_object_child_property_doc(tinyxml2::XMLElement *child, const
     zend_ulong num;
     zend_string *key;
     zval *val;
+
+    // TODO(codinghuang): it seems that properties will be nullptr
     properties = yasd::Util::get_properties(property_element.value);
     int level = property_element.level;
 
     child->SetAttribute("type", "object");
     child->SetAttribute("classname", ZSTR_VAL(class_name));
-    child->SetAttribute("children", properties->nNumOfElements > 0 ? "1" : "0");
-    child->SetAttribute("numchildren", properties->nNumOfElements);
+    child->SetAttribute("children", (properties && properties->nNumOfElements > 0) ? "1" : "0");
+    child->SetAttribute("numchildren", properties ? properties->nNumOfElements : 0);
+
+    if (UNEXPECTED(!properties)) {
+        return;
+    }
 
     std::vector<yasd::ZendPropertyInfo> summary_properties_info;
 
