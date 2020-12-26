@@ -31,6 +31,8 @@ class Foo2
 {
     public $a;
 
+    public $b;
+
     private $foo3;
 
     /**
@@ -71,6 +73,10 @@ $j = 2;
 $k = [];
 
 $k = ['a' => ['b' => [1, 2, 3]]];
+$k = [
+    ['hello'],
+    ['world'],
+];
 
 while (true) {
     if ($i++ == 5) {

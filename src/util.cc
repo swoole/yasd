@@ -44,6 +44,23 @@ zval *Util::find_variable(std::string var_name) {
     return find_variable(defined_vars, var_name);
 }
 
+zval *Util::find_variable(zend_array *symbol_table, zend_ulong index) {
+    zval *var;
+
+    var = zend_hash_index_find(symbol_table, index);
+
+    // not define variable
+    if (!var) {
+        return nullptr;
+    }
+
+    while (Z_TYPE_P(var) == IS_INDIRECT) {
+        var = Z_INDIRECT_P(var);
+    }
+
+    return var;
+}
+
 zval *Util::find_variable(zend_array *symbol_table, std::string var_name) {
     zval *var;
 
@@ -387,65 +404,84 @@ std::string Util::get_option_value(const std::vector<std::string> &options, std:
 
 // TODO(codinghuang): maybe we can use re2c and yacc later
 zval *Util::fetch_zval_by_fullname(std::string fullname) {
-    std::string name;
     int state = 0;
     const char *ptr = fullname.c_str();
-    const char *keyword = ptr, *keyword_end = nullptr;
     const char *end = fullname.c_str() + fullname.length() - 1;
-    zval *retval_ptr = nullptr;
 
     zend_array *symbol_table = zend_rebuild_symbol_table();
 
     // aa->bb->cc
     // aa[bb][cc]
+    // k[0]
 
-    auto fetch_next_zval = [](zval *retval_ptr, zend_array *symbol_table, std::string name) -> zval * {
-        if (!retval_ptr) {
-            retval_ptr = find_variable(symbol_table, name);
-        } else if (Z_TYPE_P(retval_ptr) == IS_ARRAY) {
-            retval_ptr = find_variable(Z_ARRVAL_P(retval_ptr), name);
+    struct NextZvalInfo {
+        enum NextZvalType {
+            ARRAY_INDEX_ASSOC,
+            ARRAY_INDEX_NUM,
+        };
+
+        std::string name;
+        NextZvalType type;
+        const char *keyword;
+        const char *keyword_end = nullptr;
+        zval *retval_ptr = nullptr;
+    };
+
+    NextZvalInfo next_zval_info;
+    next_zval_info.keyword = ptr;
+
+    auto fetch_next_zval = [](zend_array *symbol_table, NextZvalInfo *next_zval_info) {
+        std::string name(next_zval_info->keyword, next_zval_info->keyword_end - next_zval_info->keyword);
+        if (!next_zval_info->retval_ptr) {
+            next_zval_info->retval_ptr = find_variable(symbol_table, name);
+        } else if (Z_TYPE_P(next_zval_info->retval_ptr) == IS_ARRAY) {
+            if (next_zval_info->type == NextZvalInfo::NextZvalType::ARRAY_INDEX_NUM) {
+                next_zval_info->retval_ptr =
+                    find_variable(Z_ARRVAL_P(next_zval_info->retval_ptr), strtoull(name.c_str(), NULL, 10));
+            } else {
+                next_zval_info->retval_ptr = find_variable(Z_ARRVAL_P(next_zval_info->retval_ptr), name);
+            }
         } else {
-            retval_ptr = yasd_zend_read_property(Z_OBJCE_P(retval_ptr), retval_ptr, name.c_str(), name.length(), 1);
+            next_zval_info->retval_ptr = yasd_zend_read_property(
+                Z_OBJCE_P(next_zval_info->retval_ptr), next_zval_info->retval_ptr, name.c_str(), name.length(), 1);
         }
-        return retval_ptr;
+        next_zval_info->keyword = nullptr;
     };
 
     do {
         switch (state) {
         case 0:
-            keyword = ptr;
+            next_zval_info.keyword = ptr;
             state = 1;
         case 1:
             if (*ptr == '[') {
-                keyword_end = ptr;
-                if (keyword) {
-                    std::string name(keyword, keyword_end - keyword);
-                    retval_ptr = fetch_next_zval(retval_ptr, symbol_table, name);
-                    keyword = nullptr;
+                next_zval_info.keyword_end = ptr;
+                if (next_zval_info.keyword) {
+                    fetch_next_zval(symbol_table, &next_zval_info);
                 }
                 state = 3;
             } else if (*ptr == '-') {
-                keyword_end = ptr;
-                if (keyword) {
-                    std::string name(keyword, keyword_end - keyword);
-                    retval_ptr = fetch_next_zval(retval_ptr, symbol_table, name);
-                    keyword = nullptr;
+                next_zval_info.keyword_end = ptr;
+                if (next_zval_info.keyword) {
+                    fetch_next_zval(symbol_table, &next_zval_info);
                 }
                 state = 2;
             }
             break;
         case 2:
             assert(*ptr == '>');
-            keyword = ptr + 1;
+            next_zval_info.keyword = ptr + 1;
             state = 1;
             break;
         case 3:
             if ((*ptr >= 'a' && *ptr <= 'z') || (*ptr >= 'A' && *ptr <= 'Z')) {
                 state = 6;
-                keyword = ptr;
+                next_zval_info.keyword = ptr;
+                next_zval_info.type = NextZvalInfo::NextZvalType::ARRAY_INDEX_ASSOC;
             } else if (*ptr >= '0' && *ptr <= '9') {
                 state = 6;
-                keyword = ptr;
+                next_zval_info.keyword = ptr;
+                next_zval_info.type = NextZvalInfo::NextZvalType::ARRAY_INDEX_NUM;
             }
             break;
         case 4:
@@ -457,11 +493,9 @@ zval *Util::fetch_zval_by_fullname(std::string fullname) {
             break;
         case 6:
             if (*ptr == ']') {
-                keyword_end = ptr;
-                if (keyword) {
-                    std::string name(keyword, keyword_end - keyword);
-                    retval_ptr = fetch_next_zval(retval_ptr, symbol_table, name);
-                    keyword = nullptr;
+                next_zval_info.keyword_end = ptr;
+                if (next_zval_info.keyword) {
+                    fetch_next_zval(symbol_table, &next_zval_info);
                 }
                 state = 1;
             }
@@ -472,15 +506,13 @@ zval *Util::fetch_zval_by_fullname(std::string fullname) {
         ptr++;
     } while (ptr <= end);
 
-    if (keyword) {
-        keyword_end = ptr;
-        std::string name(keyword, keyword_end - keyword);
+    if (next_zval_info.keyword) {
+        next_zval_info.keyword_end = ptr;
 
-        retval_ptr = fetch_next_zval(retval_ptr, symbol_table, name);
-        keyword = nullptr;
+        fetch_next_zval(symbol_table, &next_zval_info);
     }
 
-    return retval_ptr;
+    return next_zval_info.retval_ptr;
 }
 
 }  // namespace yasd

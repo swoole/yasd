@@ -29,6 +29,7 @@ class Util {
   public:
     static HashTable *get_defined_vars();
     static zval *find_variable(std::string var_name);
+    static zval *find_variable(zend_array *symbol_table, zend_ulong index);
     static zval *find_variable(zend_array *symbol_table, std::string var_name);
     static void print_var(std::string fullname);
     static void print_property(std::string obj_name, std::string property_name);
