@@ -395,7 +395,7 @@ int RemoteDebugger::parse_eval_cmd() {
     child = root->InsertNewChildElement("property");
 
     yasd::PropertyElement property_element = {};
-    property_element.set_type(zend_zval_type_name(&ret_zval)).set_value(&ret_zval);
+    property_element.set_type(zend_zval_type_name(&ret_zval)).set_value(&ret_zval).set_encoding(true);
     yasd::Dbgp::get_property_doc(child, property_element);
 
     send_doc(doc.get());
