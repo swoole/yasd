@@ -117,9 +117,11 @@ void Dbgp::get_property_doc(tinyxml2::XMLElement *root, const PropertyElement &p
 
     switch (Z_TYPE_P(property_element.value)) {
     case IS_TRUE:
+        root->SetAttribute("type", "bool");
         root->InsertNewText("1")->SetCData(true);
         break;
     case IS_FALSE:
+        root->SetAttribute("type", "bool");
         root->InsertNewText("0")->SetCData(true);
         break;
     case IS_NULL:
