@@ -31,6 +31,13 @@ ZEND_BEGIN_MODULE_GLOBALS(yasd)
     uint16_t remote_port;
     uint16_t depth;
     int log_level;
+
+    // compatible with phpstorm
+    int coverage_enable;
+    int profiler_enable;
+    int remote_autostart;
+    int remote_connect_back;
+    char *remote_mode;
 ZEND_END_MODULE_GLOBALS(yasd)
 
 extern ZEND_DECLARE_MODULE_GLOBALS(yasd);
