@@ -108,8 +108,12 @@ void Dbgp::get_property_doc(tinyxml2::XMLElement *root, const PropertyElement &p
     }
 
     root->SetAttribute("type", property_element.type.c_str());
-    root->SetAttribute("name", property_element.name.c_str());
-    root->SetAttribute("fullname", property_element.fullname.c_str());
+    if (property_element.name != "") {
+        root->SetAttribute("name", property_element.name.c_str());
+    }
+    if (property_element.fullname != "") {
+        root->SetAttribute("fullname", property_element.fullname.c_str());
+    }
 
     switch (Z_TYPE_P(property_element.value)) {
     case IS_TRUE:
