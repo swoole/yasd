@@ -67,6 +67,18 @@ STD_PHP_INI_ENTRY("yasd.depth", "1", PHP_INI_ALL, OnUpdateLong,
         depth, zend_yasd_globals, yasd_globals)
 STD_PHP_INI_ENTRY("yasd.log_level", "-1", PHP_INI_ALL, OnUpdateLong,
         log_level, zend_yasd_globals, yasd_globals)
+
+// compatible with phpstorm
+STD_PHP_INI_ENTRY("xdebug.coverage_enable", "1", PHP_INI_ALL, OnUpdateLong,
+        coverage_enable, zend_yasd_globals, yasd_globals)
+STD_PHP_INI_ENTRY("xdebug.profiler_enable", "1", PHP_INI_ALL, OnUpdateLong,
+        profiler_enable, zend_yasd_globals, yasd_globals)
+STD_PHP_INI_ENTRY("xdebug.remote_autostart", "1", PHP_INI_ALL, OnUpdateLong,
+        remote_autostart, zend_yasd_globals, yasd_globals)
+STD_PHP_INI_ENTRY("xdebug.remote_connect_back", "0", PHP_INI_ALL, OnUpdateLong,
+        remote_autostart, zend_yasd_globals, yasd_globals)
+STD_PHP_INI_ENTRY("xdebug.remote_mode", "req", PHP_INI_ALL, OnUpdateString,
+        remote_mode, zend_yasd_globals, yasd_globals)
 PHP_INI_END()
 // clang-format on
 

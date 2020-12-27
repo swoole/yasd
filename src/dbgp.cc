@@ -108,14 +108,22 @@ void Dbgp::get_property_doc(tinyxml2::XMLElement *root, const PropertyElement &p
     }
 
     root->SetAttribute("type", property_element.type.c_str());
-    root->SetAttribute("name", property_element.name.c_str());
-    root->SetAttribute("fullname", property_element.fullname.c_str());
+    if (property_element.name != "") {
+        root->SetAttribute("name", property_element.name.c_str());
+    }
+    if (property_element.fullname != "") {
+        root->SetAttribute("fullname", property_element.fullname.c_str());
+    }
 
     switch (Z_TYPE_P(property_element.value)) {
     case IS_TRUE:
+        // zend_zval_type_name may return boolean, so we should convert to bool
+        root->SetAttribute("type", "bool");
         root->InsertNewText("1")->SetCData(true);
         break;
     case IS_FALSE:
+        // zend_zval_type_name may return boolean, so we should convert to bool
+        root->SetAttribute("type", "bool");
         root->InsertNewText("0")->SetCData(true);
         break;
     case IS_NULL:
@@ -147,8 +155,8 @@ void Dbgp::get_property_doc(tinyxml2::XMLElement *root, const PropertyElement &p
 }
 
 void Dbgp::get_zend_string_property_doc(tinyxml2::XMLElement *root, const PropertyElement &property_element) {
+    root->SetAttribute("size", (uint64_t) Z_STRLEN_P(property_element.value));
     if (property_element.encoding) {
-        root->SetAttribute("size", (uint64_t) Z_STRLEN_P(property_element.value));
         root->SetAttribute("encoding", "base64");
         root->InsertNewText(
                 base64_encode((unsigned char *) Z_STRVAL_P(property_element.value), Z_STRLEN_P(property_element.value))
