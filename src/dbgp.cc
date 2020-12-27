@@ -147,8 +147,8 @@ void Dbgp::get_property_doc(tinyxml2::XMLElement *root, const PropertyElement &p
 }
 
 void Dbgp::get_zend_string_property_doc(tinyxml2::XMLElement *root, const PropertyElement &property_element) {
+    root->SetAttribute("size", (uint64_t) Z_STRLEN_P(property_element.value));
     if (property_element.encoding) {
-        root->SetAttribute("size", (uint64_t) Z_STRLEN_P(property_element.value));
         root->SetAttribute("encoding", "base64");
         root->InsertNewText(
                 base64_encode((unsigned char *) Z_STRVAL_P(property_element.value), Z_STRLEN_P(property_element.value))

@@ -26,7 +26,7 @@ $client = (new DbgpClient())->setCommands($commands)->setTestFile($filename)->st
 
 -> eval -i 1 -- KHN0cmluZykoaW5pX2dldCgneGRlYnVnLmNvdmVyYWdlX2VuYWJsZScpLic7Jy5pbmlfZ2V0KCd4ZGVidWcucHJvZmlsZXJfZW5hYmxlJykuJzsnLmluaV9nZXQoJ3hkZWJ1Zy5yZW1vdGVfYXV0b3N0YXJ0JykuJzsnLmluaV9nZXQoJ3hkZWJ1Zy5yZW1vdGVfY29ubmVjdF9iYWNrJykuJzsnLmluaV9nZXQoJ3hkZWJ1Zy5yZW1vdGVfbW9kZScpKQ==
 <?xml version="1.0" encoding="iso-8859-1"?>
-<response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="eval" transaction_id="1"><property type="string" name="" fullname=""><![CDATA[1;1;1;0;req]]></property></response>
+<response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="eval" transaction_id="1"><property type="string" name="" fullname="" size="11"><![CDATA[1;1;1;0;req]]></property></response>
 
 -> run -i 2
 <?xml version="1.0" encoding="iso-8859-1"?>
