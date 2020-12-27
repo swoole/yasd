@@ -381,7 +381,11 @@ void CmderDebugger::reload_cache_breakpoint() {
     }
 
     char *dir_name = dirname(const_cast<char *>(cache_filename_path.c_str()));
-    boost::filesystem::create_directories(dir_name);
+
+    // if path does not contain a '/', dirname() shall return a pointer to the string "."
+    if (*dir_name != '.') {  // it means dir_name is directory
+        boost::filesystem::create_directories(dir_name);
+    }
 
     std::fstream file(cache_filename_path);
     std::string filename;
