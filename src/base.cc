@@ -101,6 +101,7 @@ void yasd_execute_ex(zend_execute_data *execute_data) {
     }
 
     if (UNEXPECTED(global->first_entry)) {
+        ZVAL_ARR(&global->globals, &EG(symbol_table));
         global->debugger->init();
         global->first_entry = false;
     }

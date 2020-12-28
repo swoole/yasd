@@ -659,6 +659,10 @@ int RemoteDebugger::parse_property_get_cmd() {
         fullname.pop_back();
     }
 
+    if (fullname.front() == '$') {
+        fullname.erase(0, 1);
+    }
+
     property = yasd::Util::fetch_zval_by_fullname(fullname);
 
     child = root->InsertNewChildElement("property");

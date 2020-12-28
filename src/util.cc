@@ -433,9 +433,14 @@ zval *Util::fetch_zval_by_fullname(std::string fullname) {
     auto fetch_next_zval = [](NextZvalInfo *next_zval_info) {
         std::string name(next_zval_info->keyword, next_zval_info->keyword_end - next_zval_info->keyword);
 
-        if (next_zval_info->retval_ptr) {
+        if (!next_zval_info->retval_ptr && name == "GLOBALS") {
+            next_zval_info->symbol_table = &EG(symbol_table);
+            next_zval_info->retval_ptr = &global->globals;
+            return;
+        } else if (next_zval_info->retval_ptr) {
             next_zval_info->symbol_table = Z_ARRVAL_P(next_zval_info->retval_ptr);
         }
+
         if (!next_zval_info->retval_ptr) {
             next_zval_info->retval_ptr = find_variable(next_zval_info->symbol_table, name);
         } else if (Z_TYPE_P(next_zval_info->retval_ptr) == IS_ARRAY) {
