@@ -234,7 +234,6 @@ void Dbgp::get_zend_object_child_property_doc(tinyxml2::XMLElement *child, const
     child->SetAttribute("type", "object");
     child->SetAttribute("classname", ZSTR_VAL(class_name));
     child->SetAttribute("children", (properties && properties->nNumOfElements > 0) ? "1" : "0");
-    child->SetAttribute("numchildren", properties ? properties->nNumOfElements : 0);
 
     if (UNEXPECTED(!properties)) {
         return;
@@ -242,32 +241,39 @@ void Dbgp::get_zend_object_child_property_doc(tinyxml2::XMLElement *child, const
 
     std::vector<yasd::ZendPropertyInfo> summary_properties_info;
 
-    int i = 0;
-    ZEND_HASH_FOREACH_KEY_VAL_IND(properties, num, key, val) {
-        tinyxml2::XMLElement *property = child->InsertNewChildElement("property");
-        std::string child_fullname;
-        std::string child_name;
+    if (yasd_zend_hash_is_recursive(properties)) {
+        child->SetAttribute("recursive", 1);
+    } else {
+        child->SetAttribute("numchildren", properties ? properties->nNumOfElements : 0);
+        if (level < YASD_G(depth)) {
+            yasd_zend_hash_apply_protection_begin(properties);
+            ZEND_HASH_FOREACH_KEY_VAL_IND(properties, num, key, val) {
+                tinyxml2::XMLElement *property = child->InsertNewChildElement("property");
+                std::string child_fullname;
+                std::string child_name;
 
-        child_name = yasd::Util::get_property_name(key);
-        child_fullname = property_element.fullname + "->" + child_name;
+                child_name = yasd::Util::get_property_name(key);
+                child_fullname = property_element.fullname + "->" + child_name;
 
-        level++;
+                level++;
 
-        yasd::PropertyElement property_element;
-        property_element.set_type(zend_zval_type_name(val))
-            .set_name(child_name)
-            .set_fullname(child_fullname)
-            .set_value(val)
-            .set_level(level)
-            .set_encoding(true);
-        get_property_doc(property, &property_element);
+                yasd::PropertyElement property_element;
+                property_element.set_type(zend_zval_type_name(val))
+                    .set_name(child_name)
+                    .set_fullname(child_fullname)
+                    .set_value(val)
+                    .set_level(level)
+                    .set_encoding(true);
+                get_property_doc(property, &property_element);
 
-        if (level > YASD_G(depth)) {
-            child->DeleteChild(property);
+                if (level > YASD_G(depth)) {
+                    child->DeleteChild(property);
+                }
+                level--;
+            }
+            ZEND_HASH_FOREACH_END();
+            yasd_zend_hash_apply_protection_end(properties);
         }
-        level--;
-        i++;
     }
-    ZEND_HASH_FOREACH_END();
 }
 }  // namespace yasd
