@@ -249,7 +249,7 @@ void RemoteDebugger::init_superglobal_variables_xml_child_node(tinyxml2::XMLElem
         std::string key_str = std::string(ZSTR_VAL(key));
 
         // filter local variable
-        if (Z_TYPE_P(val) == IS_INDIRECT || key_str == "argc" || key_str == "argv" || key_str == "_SERVER") {
+        if (Z_TYPE_P(val) == IS_INDIRECT || key_str == "argc" || key_str == "argv") {
             continue;
         }
 

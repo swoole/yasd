@@ -103,10 +103,6 @@ void Dbgp::get_response_doc(tinyxml2::XMLElement *root, const ResponseElement &r
 }
 
 void Dbgp::get_property_doc(tinyxml2::XMLElement *root, PropertyElement *property_element) {
-    // if (property_element->level > YASD_G(depth)) {
-    //     return;
-    // }
-
     root->SetAttribute("type", property_element->type.c_str());
     if (property_element->name != "") {
         root->SetAttribute("name", property_element->name.c_str());
@@ -216,10 +212,6 @@ void Dbgp::get_zend_array_child_property_doc(tinyxml2::XMLElement *child, const 
                     .set_encoding(true);
                 get_property_doc(property, &property_element);
                 level--;
-
-                // if (level > YASD_G(depth)) {
-                //     child->DeleteChild(property);
-                // }
             }
             ZEND_HASH_FOREACH_END();
             yasd_zend_hash_apply_protection_end(ht);
