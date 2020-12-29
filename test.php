@@ -14,6 +14,14 @@ function test2() {
     echo 'test2' . PHP_EOL;
 }
 
+function test3() {
+    return [
+        ['hello'],
+        ['world'],
+        [new Foo(1)],
+    ];
+}
+
 class Foo3
 {
     public $a;
