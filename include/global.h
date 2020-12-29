@@ -26,6 +26,7 @@
 namespace yasd {
 class Global {
   public:
+    zval globals;
     yasd::RedirectFileToCin *redirector = nullptr;
     bool is_running = false;
     bool do_step = false;

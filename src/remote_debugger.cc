@@ -223,7 +223,7 @@ void RemoteDebugger::init_local_variables_xml_child_node(tinyxml2::XMLElement *r
             .set_name(name)
             .set_fullname(ZSTR_VAL(var_name))
             .set_value(var);
-        yasd::Dbgp::get_property_doc(child, property_element);
+        yasd::Dbgp::get_property_doc(child, &property_element);
 
         i++;
     }
@@ -236,7 +236,7 @@ void RemoteDebugger::init_local_variables_xml_child_node(tinyxml2::XMLElement *r
             .set_name("$this")
             .set_fullname("this")
             .set_value(&EG(current_execute_data)->This);
-        yasd::Dbgp::get_property_doc(child, property_element);
+        yasd::Dbgp::get_property_doc(child, &property_element);
     }
 }
 
@@ -255,11 +255,11 @@ void RemoteDebugger::init_superglobal_variables_xml_child_node(tinyxml2::XMLElem
 
         child = root->InsertNewChildElement("property");
         std::string name = "$" + key_str;
-        std::string fullname = key_str;
+        std::string fullname = "GLOBALS['" + key_str + "'";
 
         yasd::PropertyElement property_element;
         property_element.set_type(zend_zval_type_name(val)).set_name(name).set_fullname(key_str).set_value(val);
-        yasd::Dbgp::get_property_doc(child, property_element);
+        yasd::Dbgp::get_property_doc(child, &property_element);
     }
     ZEND_HASH_FOREACH_END();
 }
@@ -292,7 +292,7 @@ void RemoteDebugger::init_user_defined_constant_variables_xml_child_node(tinyxml
             .set_name(ZSTR_VAL(val->name))
             .set_fullname(ZSTR_VAL(val->name))
             .set_value(zval_value);
-        yasd::Dbgp::get_property_doc(child, property_element);
+        yasd::Dbgp::get_property_doc(child, &property_element);
     }
     ZEND_HASH_FOREACH_END();
     return;
@@ -396,7 +396,7 @@ int RemoteDebugger::parse_eval_cmd() {
 
     yasd::PropertyElement property_element = {};
     property_element.set_type(zend_zval_type_name(&ret_zval)).set_value(&ret_zval).set_encoding(true);
-    yasd::Dbgp::get_property_doc(child, property_element);
+    yasd::Dbgp::get_property_doc(child, &property_element);
 
     send_doc(doc.get());
 
@@ -659,6 +659,10 @@ int RemoteDebugger::parse_property_get_cmd() {
         fullname.pop_back();
     }
 
+    if (fullname.front() == '$') {
+        fullname.erase(0, 1);
+    }
+
     property = yasd::Util::fetch_zval_by_fullname(fullname);
 
     child = root->InsertNewChildElement("property");
@@ -668,7 +672,7 @@ int RemoteDebugger::parse_property_get_cmd() {
         .set_name(fullname)
         .set_fullname(fullname)
         .set_value(property);
-    yasd::Dbgp::get_property_doc(child, property_element);
+    yasd::Dbgp::get_property_doc(child, &property_element);
 
     send_doc(doc.get());
 

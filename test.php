@@ -14,6 +14,14 @@ function test2() {
     echo 'test2' . PHP_EOL;
 }
 
+function test3() {
+    return [
+        ['hello'],
+        ['world'],
+        [new Foo(1)],
+    ];
+}
+
 class Foo3
 {
     public $a;
@@ -42,6 +50,15 @@ class Foo2
      */
     private $resolvedEntries = [];
 
+    public function test()
+    {
+        return [
+            ['hello'],
+            ['world'],
+            [new Foo(1)],
+        ];
+    }
+
     public function __construct()
     {
         $this->a = "hello";
@@ -58,6 +75,15 @@ class Foo
     public $a;
 
     public $foo2;
+
+    public function test()
+    {
+        return [
+            ['hello'],
+            ['world'],
+            [new Foo(1)],
+        ];
+    }
 
     public function __construct($a)
     {
