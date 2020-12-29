@@ -191,15 +191,19 @@ void Dbgp::get_zend_array_child_property_doc(tinyxml2::XMLElement *child, const 
             yasd_zend_hash_apply_protection_begin(ht);
             ZEND_HASH_FOREACH_KEY_VAL_IND(ht, num, key, val) {
                 tinyxml2::XMLElement *property = child->InsertNewChildElement("property");
-                std::string child_name;
-                std::string child_fullname;
+                std::string child_name = "";
+                std::string child_fullname = "";
 
                 if (key == nullptr) {  // num key
                     child_name = std::to_string(num);
-                    child_fullname = property_element.fullname + "[" + child_name + "]";
+                    if (property_element.fullname != "") {
+                        child_fullname = property_element.fullname + "[" + child_name + "]";
+                    }
                 } else {  // string key
                     child_name = ZSTR_VAL(key);
-                    child_fullname = property_element.fullname + "['" + child_name + "']";
+                    if (property_element.fullname != "") {
+                        child_fullname = property_element.fullname + "['" + child_name + "']";
+                    }
                 }
 
                 level++;
