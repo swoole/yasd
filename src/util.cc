@@ -405,6 +405,7 @@ std::string Util::get_option_value(const std::vector<std::string> &options, std:
 // TODO(codinghuang): maybe we can use re2c and yacc later
 zval *Util::fetch_zval_by_fullname(std::string fullname) {
     int state = 0;
+    char quotechar = 0;
     const char *ptr = fullname.c_str();
     const char *end = fullname.c_str() + fullname.length() - 1;
 
@@ -483,9 +484,10 @@ zval *Util::fetch_zval_by_fullname(std::string fullname) {
             state = 1;
             break;
         case 3:
-            if ((*ptr >= 'a' && *ptr <= 'z') || (*ptr >= 'A' && *ptr <= 'Z')) {
-                state = 6;
-                next_zval_info.keyword = ptr;
+            if ((*ptr == '\'')) {
+                state = 4;
+                quotechar = *ptr;
+                next_zval_info.keyword = ptr + 1;
                 next_zval_info.type = NextZvalInfo::NextZvalType::ARRAY_INDEX_ASSOC;
             } else if (*ptr >= '0' && *ptr <= '9') {
                 state = 6;
@@ -494,6 +496,12 @@ zval *Util::fetch_zval_by_fullname(std::string fullname) {
             }
             break;
         case 4:
+            if (*ptr == quotechar) {
+                quotechar = 0;
+                state = 5;
+                next_zval_info.keyword_end = ptr;
+                fetch_next_zval(&next_zval_info);
+            }
             break;
         case 5:
             if (*ptr == ']') {

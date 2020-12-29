@@ -102,20 +102,28 @@ void Dbgp::get_response_doc(tinyxml2::XMLElement *root, const ResponseElement &r
     root->SetAttribute("transaction_id", response_element.transaction_id);
 }
 
-void Dbgp::get_property_doc(tinyxml2::XMLElement *root, const PropertyElement &property_element) {
-    if (property_element.level > YASD_G(depth)) {
-        return;
+void Dbgp::get_property_doc(tinyxml2::XMLElement *root, PropertyElement *property_element) {
+    // if (property_element->level > YASD_G(depth)) {
+    //     return;
+    // }
+
+    root->SetAttribute("type", property_element->type.c_str());
+    if (property_element->name != "") {
+        root->SetAttribute("name", property_element->name.c_str());
+    }
+    if (property_element->fullname != "") {
+        root->SetAttribute("fullname", property_element->fullname.c_str());
     }
 
-    root->SetAttribute("type", property_element.type.c_str());
-    if (property_element.name != "") {
-        root->SetAttribute("name", property_element.name.c_str());
-    }
-    if (property_element.fullname != "") {
-        root->SetAttribute("fullname", property_element.fullname.c_str());
+    while (Z_TYPE_P(property_element->value) == IS_INDIRECT) {
+        property_element->value = Z_INDIRECT_P(property_element->value);
     }
 
-    switch (Z_TYPE_P(property_element.value)) {
+    if (Z_TYPE_P(property_element->value) == IS_REFERENCE) {
+        property_element->value = &((property_element->value)->value.ref->val);
+    }
+
+    switch (Z_TYPE_P(property_element->value)) {
     case IS_TRUE:
         // zend_zval_type_name may return boolean, so we should convert to bool
         root->SetAttribute("type", "bool");
@@ -131,19 +139,19 @@ void Dbgp::get_property_doc(tinyxml2::XMLElement *root, const PropertyElement &p
     case IS_LONG:
         // because the zend_zval_type_name function of PHP7.2 return 'integer'
         root->SetAttribute("type", "int");
-        root->InsertNewText(std::to_string(Z_LVAL_P(property_element.value)).c_str())->SetCData(true);
+        root->InsertNewText(std::to_string(Z_LVAL_P(property_element->value)).c_str())->SetCData(true);
         break;
     case IS_DOUBLE:
-        root->InsertNewText(std::to_string(Z_DVAL_P(property_element.value)).c_str())->SetCData(true);
+        root->InsertNewText(std::to_string(Z_DVAL_P(property_element->value)).c_str())->SetCData(true);
         break;
     case IS_STRING:
-        get_zend_string_property_doc(root, property_element);
+        get_zend_string_property_doc(root, *property_element);
         break;
     case IS_ARRAY:
-        get_zend_array_child_property_doc(root, property_element);
+        get_zend_array_child_property_doc(root, *property_element);
         break;
     case IS_OBJECT: {
-        get_zend_object_child_property_doc(root, property_element);
+        get_zend_object_child_property_doc(root, *property_element);
         break;
     }
     case IS_UNDEF:
@@ -175,40 +183,43 @@ void Dbgp::get_zend_array_child_property_doc(tinyxml2::XMLElement *child, const 
     int level = property_element.level;
 
     child->SetAttribute("children", ht->nNumOfElements > 0 ? "1" : "0");
-    child->SetAttribute("numchildren", ht->nNumOfElements);
     if (yasd_zend_hash_is_recursive(ht)) {
         child->SetAttribute("recursive", 1);
     } else {
-        ZEND_HASH_FOREACH_KEY_VAL_IND(ht, num, key, val) {
-            tinyxml2::XMLElement *property = child->InsertNewChildElement("property");
-            std::string child_name;
-            std::string child_fullname;
+        child->SetAttribute("numchildren", ht->nNumOfElements);
+        if (level < YASD_G(depth)) {
+            yasd_zend_hash_apply_protection_begin(ht);
+            ZEND_HASH_FOREACH_KEY_VAL_IND(ht, num, key, val) {
+                tinyxml2::XMLElement *property = child->InsertNewChildElement("property");
+                std::string child_name;
+                std::string child_fullname;
 
-            if (key == nullptr) {  // num key
-                child_name = std::to_string(num);
-                child_fullname = property_element.fullname + "[" + child_name + "]";
-            } else {  // string key
-                child_name = ZSTR_VAL(key);
-                child_fullname = property_element.fullname + "[" + child_name + "]";
+                if (key == nullptr) {  // num key
+                    child_name = std::to_string(num);
+                    child_fullname = property_element.fullname + "[" + child_name + "]";
+                } else {  // string key
+                    child_name = ZSTR_VAL(key);
+                    child_fullname = property_element.fullname + "['" + child_name + "']";
+                }
+
+                level++;
+                yasd::PropertyElement property_element;
+                property_element.set_type(zend_zval_type_name(val))
+                    .set_name(child_name)
+                    .set_fullname(child_fullname)
+                    .set_value(val)
+                    .set_level(level)
+                    .set_encoding(true);
+                get_property_doc(property, &property_element);
+                level--;
+
+                // if (level > YASD_G(depth)) {
+                //     child->DeleteChild(property);
+                // }
             }
-
-            level++;
-
-            yasd::PropertyElement property_element;
-            property_element.set_type(zend_zval_type_name(val))
-                .set_name(child_name)
-                .set_fullname(child_fullname)
-                .set_value(val)
-                .set_level(level)
-                .set_encoding(true);
-            get_property_doc(property, property_element);
-
-            if (level > YASD_G(depth)) {
-                child->DeleteChild(property);
-            }
-            level--;
+            ZEND_HASH_FOREACH_END();
+            yasd_zend_hash_apply_protection_end(ht);
         }
-        ZEND_HASH_FOREACH_END();
     }
 }
 
@@ -253,7 +264,7 @@ void Dbgp::get_zend_object_child_property_doc(tinyxml2::XMLElement *child, const
             .set_value(val)
             .set_level(level)
             .set_encoding(true);
-        get_property_doc(property, property_element);
+        get_property_doc(property, &property_element);
 
         if (level > YASD_G(depth)) {
             child->DeleteChild(property);

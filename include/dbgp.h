@@ -171,7 +171,7 @@ class Dbgp {
                                                    const PropertyElement &property_element);
     static void get_init_event_doc(tinyxml2::XMLDocument *doc, const DbgpInitElement &init_element);
     static void get_response_doc(tinyxml2::XMLElement *root, const ResponseElement &response_element);
-    static void get_property_doc(tinyxml2::XMLElement *root, const PropertyElement &property_element);
+    static void get_property_doc(tinyxml2::XMLElement *root, PropertyElement *property_element);
     static void get_message_doc(tinyxml2::XMLDocument *doc,
                                 const ResponseElement &response_element,
                                 const MessageElement &message_element);
