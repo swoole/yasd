@@ -115,7 +115,7 @@ void Dbgp::get_property_doc(tinyxml2::XMLElement *root, PropertyElement *propert
         property_element->value = Z_INDIRECT_P(property_element->value);
     }
 
-    if (Z_TYPE_P(property_element->value) == IS_REFERENCE) {
+    if (Z_TYPE_P(property_element->value) == IS_REFERENCE) {  // $GLOBALS is IS_REFERENCE
         property_element->value = &((property_element->value)->value.ref->val);
     }
 
@@ -184,7 +184,7 @@ void Dbgp::get_zend_array_child_property_doc(tinyxml2::XMLElement *child, const 
     } else {
         child->SetAttribute("numchildren", ht->nNumOfElements);
         if (level < YASD_G(depth)) {
-            yasd_zend_hash_apply_protection_begin(ht);
+            yasd_zend_hash_apply_protection_begin(ht);  // set recursive for $GLOBALS['GLOBALS']
             ZEND_HASH_FOREACH_KEY_VAL_IND(ht, num, key, val) {
                 tinyxml2::XMLElement *property = child->InsertNewChildElement("property");
                 std::string child_name = "";
@@ -197,7 +197,7 @@ void Dbgp::get_zend_array_child_property_doc(tinyxml2::XMLElement *child, const 
                     }
                 } else {  // string key
                     child_name = ZSTR_VAL(key);
-                    if (property_element.fullname != "") {
+                    if (property_element.fullname != "") {  // eval don't need fullname in phpstorm
                         child_fullname = property_element.fullname + "['" + child_name + "']";
                     }
                 }
