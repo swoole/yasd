@@ -253,7 +253,9 @@ void Dbgp::get_zend_object_child_property_doc(tinyxml2::XMLElement *child, const
                 std::string child_name;
 
                 child_name = yasd::Util::get_property_name(key);
-                child_fullname = property_element.fullname + "->" + child_name;
+                if (property_element.fullname != "") {  // eval don't need fullname in phpstorm
+                    child_fullname = property_element.fullname + "->" + child_name;
+                }
 
                 level++;
 
