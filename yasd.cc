@@ -152,8 +152,8 @@ PHP_MINFO_FUNCTION(yasd) {
 }
 
 ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
-    if (UNEXPECTED(global->is_detach)) {
-        return;
+    if (UNEXPECTED(global->is_stop)) {
+        zend_bailout();
     }
 
     // zend_op_array *op_array = &frame->func->op_array;
