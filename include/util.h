@@ -26,7 +26,7 @@
 
 namespace yasd {
 class Util {
-  public:
+ public:
     static HashTable *get_defined_vars();
     static zval *find_variable(std::string var_name);
     static zval *find_variable(zend_array *symbol_table, zend_ulong index);
