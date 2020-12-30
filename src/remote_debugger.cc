@@ -650,7 +650,6 @@ int RemoteDebugger::parse_property_get_cmd() {
 
     fullname = yasd::Util::get_option_value(exploded_cmd, "-n");
 
-
     // vscode has double quotes, but PhpStorm does not
     if (fullname.front() == '"') {
         fullname.erase(0, 1);
