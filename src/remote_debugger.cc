@@ -659,6 +659,7 @@ int RemoteDebugger::parse_property_get_cmd() {
         fullname.pop_back();
     }
 
+    // phpstorm eval expression will use $GLOBALS
     if (fullname.front() == '$') {
         fullname.erase(0, 1);
     }

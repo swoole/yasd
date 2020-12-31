@@ -22,6 +22,7 @@
 
 YASD_EXTERN_C_BEGIN
 #include "ext/standard/php_var.h"
+#include "ext/standard/php_string.h"
 YASD_EXTERN_C_END
 
 #include "./php_yasd.h"
@@ -449,6 +450,10 @@ zval *Util::fetch_zval_by_fullname(std::string fullname) {
                 next_zval_info->retval_ptr =
                     find_variable(next_zval_info->symbol_table, strtoull(name.c_str(), NULL, 10));
             } else {
+                zend_string *tmp_name_zstr = zend_string_init(name.c_str(), name.length(), 0);
+                php_stripslashes(tmp_name_zstr);
+                name = std::string(ZSTR_VAL(tmp_name_zstr), ZSTR_LEN(tmp_name_zstr));
+                zend_string_release(tmp_name_zstr);
                 next_zval_info->retval_ptr = find_variable(next_zval_info->symbol_table, name);
             }
         } else {
@@ -484,7 +489,7 @@ zval *Util::fetch_zval_by_fullname(std::string fullname) {
             state = 1;
             break;
         case 3:
-            if ((*ptr == '\'')) {
+            if ((*ptr == '\'' || *ptr == '"')) {
                 state = 4;
                 quotechar = *ptr;
                 next_zval_info.keyword = ptr + 1;
@@ -496,7 +501,9 @@ zval *Util::fetch_zval_by_fullname(std::string fullname) {
             }
             break;
         case 4:
-            if (*ptr == quotechar) {
+            if (*ptr == '\\') {  // for example classname key array (Bar\\Foo::class)
+                state = 10;
+            } else if (*ptr == quotechar) {
                 quotechar = 0;
                 state = 5;
                 next_zval_info.keyword_end = ptr;
@@ -516,6 +523,9 @@ zval *Util::fetch_zval_by_fullname(std::string fullname) {
                 }
                 state = 1;
             }
+            break;
+        case 10: /* escaped character */
+            state = 4;
             break;
         default:
             break;
