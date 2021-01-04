@@ -75,7 +75,7 @@ void Logger::put(int level, const char *content, size_t length) {
 
     // TODO(codinghuang): seems there are "buffer overflow detected" problem
     if (length > YASD_MSG_SIZE) {
-        yasd::Util::printfln_info(yasd::Color::YASD_ECHO_RED, "length is greater than the YASD_MSG_SIZE");
+        yasd::Util::printfln_info(yasd::Color::YASD_ECHO_YELLOW, "[yasd] length is greater than the YASD_MSG_SIZE");
         length = YASD_MSG_SIZE;
     }
     memcpy(yasd_info_buf, content, length);
