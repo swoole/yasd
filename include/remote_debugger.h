@@ -68,7 +68,8 @@ class RemoteDebugger : public DebuggerModeBase {
     int parse_eval_cmd();
     int parse_breakpoint_list_cmd();
     int parse_breakpoint_set_cmd();
-    int parse_breakpoint_set_exception_cmd();
+    void parse_breakpoint_set_line_cmd(const std::vector<std::string> &exploded_cmd);
+    void parse_breakpoint_set_exception_cmd(const std::vector<std::string> &exploded_cmd);
     int parse_run_cmd();
     int parse_stack_get_cmd();
     int parse_context_names_cmd();

@@ -447,26 +447,9 @@ int RemoteDebugger::parse_breakpoint_set_cmd() {
         return yasd::DebuggerModeBase::FAILED;
     }
 
-    if (exploded_cmd[4] == "exception") {
-        return parse_breakpoint_set_exception_cmd();
+    if (exploded_cmd[4] == "line") {
+        parse_breakpoint_set_line_cmd(exploded_cmd);
     }
-
-    std::string file_url = exploded_cmd[6];
-    file_url.substr(7, file_url.length() - 7);
-    std::string filename = file_url.substr(7, file_url.length() - 7);
-    int lineno = atoi(exploded_cmd[8].c_str());
-
-    auto iter = global->breakpoints->find(filename);
-
-    if (iter != global->breakpoints->end()) {
-        iter->second.insert(lineno);
-    } else {
-        std::set<int> lineno_set;
-        lineno_set.insert(lineno);
-        global->breakpoints->insert(std::make_pair(filename, lineno_set));
-    }
-
-    // yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "set breakpoint at %s:%d", filename.c_str(), lineno);
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
     tinyxml2::XMLElement *root;
@@ -484,23 +467,29 @@ int RemoteDebugger::parse_breakpoint_set_cmd() {
     return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
 }
 
-int RemoteDebugger::parse_breakpoint_set_exception_cmd() {
+void RemoteDebugger::parse_breakpoint_set_line_cmd(const std::vector<std::string> &exploded_cmd) {
     // https://xdebug.org/docs/dbgp#id3
 
-    std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
-    tinyxml2::XMLElement *root;
-    yasd::ResponseElement response_element;
+    std::string file_url = exploded_cmd[6];
+    file_url.substr(7, file_url.length() - 7);
+    std::string filename = file_url.substr(7, file_url.length() - 7);
+    int lineno = atoi(exploded_cmd[8].c_str());
 
-    root = doc->NewElement("response");
-    doc->LinkEndChild(root);
+    auto iter = global->breakpoints->find(filename);
 
-    response_element.set_cmd("breakpoint_set").set_transaction_id(transaction_id);
-    yasd::Dbgp::get_response_doc(root, response_element);
-    root->SetAttribute("id", breakpoint_admin_add());
+    if (iter != global->breakpoints->end()) {
+        iter->second.insert(lineno);
+    } else {
+        std::set<int> lineno_set;
+        lineno_set.insert(lineno);
+        global->breakpoints->insert(std::make_pair(filename, lineno_set));
+    }
+}
 
-    send_doc(doc.get());
+void RemoteDebugger::parse_breakpoint_set_exception_cmd(const std::vector<std::string> &exploded_cmd) {
+    // https://xdebug.org/docs/dbgp#id3
 
-    return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
+    return;
 }
 
 int RemoteDebugger::parse_run_cmd() {
