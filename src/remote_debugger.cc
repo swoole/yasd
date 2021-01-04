@@ -463,10 +463,11 @@ int RemoteDebugger::parse_breakpoint_set_cmd() {
 void RemoteDebugger::parse_breakpoint_set_line_cmd(const std::vector<std::string> &exploded_cmd) {
     // https://xdebug.org/docs/dbgp#id3
 
-    std::string file_url = exploded_cmd[6];
-    file_url.substr(7, file_url.length() - 7);
+    std::string file_url = yasd::Util::get_option_value(exploded_cmd, "-f");
+    int lineno = atoi(yasd::Util::get_option_value(exploded_cmd, "-n").c_str());
+
+    file_url.substr(sizeof("file://") - 1, file_url.length() - (sizeof("file://") - 1));
     std::string filename = file_url.substr(7, file_url.length() - 7);
-    int lineno = atoi(exploded_cmd[8].c_str());
 
     auto iter = global->breakpoints->find(filename);
 
