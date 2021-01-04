@@ -439,15 +439,8 @@ int RemoteDebugger::parse_breakpoint_set_cmd() {
     if (exploded_cmd[0] != "breakpoint_set") {
         return yasd::DebuggerModeBase::FAILED;
     }
-    if (exploded_cmd[1] != "-i") {
-        return yasd::DebuggerModeBase::FAILED;
-    }
 
-    if (exploded_cmd[3] != "-t") {
-        return yasd::DebuggerModeBase::FAILED;
-    }
-
-    if (exploded_cmd[4] == "line") {
+    if (yasd::Util::get_option_value(exploded_cmd, "-t") == "line") {
         parse_breakpoint_set_line_cmd(exploded_cmd);
     }
 
