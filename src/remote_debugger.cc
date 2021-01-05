@@ -97,7 +97,7 @@ int RemoteDebugger::execute_cmd() {
 
     boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
 
-    transaction_id = atoi(exploded_cmd[2].c_str());
+    transaction_id = atoi(yasd::Util::get_option_value(exploded_cmd, "-i").c_str());
 
     auto handler = find_cmd_handler(exploded_cmd[0]);
 
