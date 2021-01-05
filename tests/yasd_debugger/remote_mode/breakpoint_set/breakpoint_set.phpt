@@ -6,7 +6,7 @@ remote_mode: breakpoint_set
 
 use Yasd\DbgpClient;
 
-require dirname(__DIR__, 2) . '/Include/bootstrap.php';
+require dirname(__DIR__, 3) . '/Include/bootstrap.php';
 
 $basename = basename(__FILE__, '.php');
 $filename = realpath(dirname(__FILE__) . "/{$basename}.inc");
