@@ -72,20 +72,23 @@ void RemoteDebugger::init() {
 
 std::string RemoteDebugger::get_next_cmd() {
     ssize_t ret;
-    char c;
     char buffer[4096];
     char *p = buffer;
 
     // The IDE may send multiple commands, so we need to determine the delimiter.
     do {
-        ret = recv(sock, &c, 1, 0);
+        ret = recv(sock, p, 1, 0);
         if (ret == 0) {
-            exit(255);
+            yasd::Util::printfln_info(yasd::Color::YASD_ECHO_YELLOW, "[yasd] recv command error, connection closed");
+            zend_bailout();
         }
-    } while ((c != '\0') && (*p = c) && p++);
+        if (ret < 0) {
+            yasd::Util::printfln_info(yasd::Color::YASD_ECHO_YELLOW, "[yasd] recv command error, %s", strerror(errno));
+            zend_bailout();
+        }
+    } while ((*p != '\0') && p++);
 
-    std::string tmp(buffer, buffer + (p - buffer));
-    last_cmd = tmp;
+    last_cmd = std::string(buffer, buffer + (p - buffer));
     if (global->logger) {
         global->logger->put(yasd::LogLevel::DEBUG, last_cmd.c_str(), last_cmd.length());
     }
