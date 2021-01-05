@@ -56,3 +56,10 @@ jobs:
         export PHP_INI_SCAN_DIR=$PWD/tests/extension_ini
         cd tests
         ./start.sh
+
+  build-alpine-latest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: build
+        run: cp .github/workflows/alpine.Dockerfile alpine.Dockerfile && docker build -t yasd . -f alpine.Dockerfile
