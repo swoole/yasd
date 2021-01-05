@@ -23,9 +23,12 @@
 
 #include <map>
 
+#define BREAKPOINT std::string, std::set<int>
+#define BREAKPOINT_CONDITION int, std::string
+
 namespace yasd {
 class Global {
-  public:
+ public:
     zval globals;
     yasd::RedirectFileToCin *redirector = nullptr;
     bool is_running = false;
@@ -48,6 +51,8 @@ class Global {
 
     // filename, [lineno]
     std::map<BREAKPOINT> *breakpoints;
+    // line, condition
+    std::map<BREAKPOINT_CONDITION> breakpoint_conditions;
 
     yasd::WatchPoint watchPoints;
 

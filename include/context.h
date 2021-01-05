@@ -19,8 +19,6 @@
 #include <vector>
 #include <set>
 
-#define BREAKPOINT std::string, std::set<int>
-
 namespace yasd {
 
 class StackFrame {

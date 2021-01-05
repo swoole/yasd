@@ -151,6 +151,45 @@ PHP_MINFO_FUNCTION(yasd) {
     DISPLAY_INI_ENTRIES();
 }
 
+bool is_hit_line_breakpoint(const char *filename, int lineno) {
+    auto map_iter = global->breakpoints->find(filename);
+
+    if (map_iter == global->breakpoints->end()) {
+        return false;
+    }
+
+    auto set_iter = map_iter->second.find(lineno);
+
+    if (set_iter == map_iter->second.end()) {
+        return false;
+    }
+
+    return true;
+}
+
+bool has_line_condition_breakpoint(int lineno) {
+    auto map_iter = global->breakpoint_conditions.find(lineno);
+
+    return map_iter != global->breakpoint_conditions.end();
+}
+
+bool is_hit_line_condition_breakpoint(int lineno) {
+    zval retval;
+    auto map_iter = global->breakpoint_conditions.find(lineno);
+
+    if (map_iter == global->breakpoint_conditions.end()) {
+        return false;
+    }
+
+    std::string condition = map_iter->second;
+
+    if (!yasd::Util::eval(const_cast<char *>(condition.c_str()), &retval, nullptr)) {
+        return false;
+    }
+
+    return Z_TYPE(retval) == IS_TRUE;
+}
+
 ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
     if (UNEXPECTED(global->is_stop)) {
         zend_bailout();
@@ -186,15 +225,11 @@ ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
     }
 
     if (!global->do_step && !global->do_next) {
-        auto map_iter = global->breakpoints->find(filename);
-
-        if (map_iter == global->breakpoints->end()) {
+        if (!is_hit_line_breakpoint(filename, lineno)) {
             return;
         }
 
-        auto set_iter = map_iter->second.find(lineno);
-
-        if (set_iter == map_iter->second.end()) {
+        if (has_line_condition_breakpoint(lineno) && !is_hit_line_condition_breakpoint(lineno)) {
             return;
         }
 
