@@ -72,20 +72,23 @@ void RemoteDebugger::init() {
 
 std::string RemoteDebugger::get_next_cmd() {
     ssize_t ret;
-    char c;
-    char buffer[4096];
+    char buffer[1024];
     char *p = buffer;
 
     // The IDE may send multiple commands, so we need to determine the delimiter.
     do {
-        ret = recv(sock, &c, 1, 0);
+        ret = recv(sock, p, 1, 0);
         if (ret == 0) {
-            exit(255);
+            yasd::Util::printfln_info(yasd::Color::YASD_ECHO_YELLOW, "[yasd] recv command error, connection closed");
+            zend_bailout();
         }
-    } while ((c != '\0') && (*p = c) && p++);
+        if (ret < 0) {
+            yasd::Util::printfln_info(yasd::Color::YASD_ECHO_YELLOW, "[yasd] recv command error, %s", strerror(errno));
+            zend_bailout();
+        }
+    } while ((*p != '\0') && p++);
 
-    std::string tmp(buffer, buffer + (p - buffer));
-    last_cmd = tmp;
+    last_cmd = std::string(buffer, buffer + (p - buffer));
     if (global->logger) {
         global->logger->put(yasd::LogLevel::DEBUG, last_cmd.c_str(), last_cmd.length());
     }
@@ -97,7 +100,7 @@ int RemoteDebugger::execute_cmd() {
 
     boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
 
-    transaction_id = atoi(exploded_cmd[2].c_str());
+    transaction_id = atoi(yasd::Util::get_option_value(exploded_cmd, "-i").c_str());
 
     auto handler = find_cmd_handler(exploded_cmd[0]);
 
@@ -308,12 +311,14 @@ int RemoteDebugger::parse_feature_set_cmd() {
     tinyxml2::XMLElement *root;
     yasd::ResponseElement response_element;
 
+    std::string feature = yasd::Util::get_option_value(exploded_cmd, "-n");
+
     root = doc->NewElement("response");
     doc->LinkEndChild(root);
 
     response_element.set_cmd("feature_set").set_transaction_id(transaction_id);
     yasd::Dbgp::get_response_doc(root, response_element);
-    root->SetAttribute("feature", exploded_cmd[4].c_str());
+    root->SetAttribute("feature", feature.c_str());
     root->SetAttribute("success", 0);
 
     send_doc(doc.get());
