@@ -433,6 +433,7 @@ int RemoteDebugger::parse_breakpoint_list_cmd() {
 int RemoteDebugger::parse_breakpoint_set_cmd() {
     // https://xdebug.org/docs/dbgp#id3
 
+    std::string breakpoint_type;
     std::vector<std::string> exploded_cmd;
 
     boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
@@ -440,8 +441,12 @@ int RemoteDebugger::parse_breakpoint_set_cmd() {
         return yasd::DebuggerModeBase::FAILED;
     }
 
-    if (yasd::Util::get_option_value(exploded_cmd, "-t") == "line") {
+    breakpoint_type = yasd::Util::get_option_value(exploded_cmd, "-t");
+
+    if (breakpoint_type == "line") {
         parse_breakpoint_set_line_cmd(exploded_cmd);
+    } else if (breakpoint_type == "conditional") {
+        parse_breakpoint_set_condition_line_cmd(exploded_cmd);
     }
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
@@ -477,6 +482,22 @@ void RemoteDebugger::parse_breakpoint_set_line_cmd(const std::vector<std::string
         std::set<int> lineno_set;
         lineno_set.insert(lineno);
         global->breakpoints->insert(std::make_pair(filename, lineno_set));
+    }
+}
+
+void RemoteDebugger::parse_breakpoint_set_condition_line_cmd(const std::vector<std::string> &exploded_cmd) {
+    int lineno = atoi(yasd::Util::get_option_value(exploded_cmd, "-n").c_str());
+    std::string condition = base64_decode(yasd::Util::get_option_value(exploded_cmd, "--"));
+
+    parse_breakpoint_set_line_cmd(exploded_cmd);
+
+    auto iter = global->breakpoint_conditions.find(lineno);
+
+    if (iter != global->breakpoint_conditions.end()) {
+        iter->second.insert(lineno, condition);
+    } else {
+        std::pair<BREAKPOINT_CONDITION> breakpoint_condition = std::make_pair(lineno, condition);
+        global->breakpoint_conditions.insert(breakpoint_condition);
     }
 }
 
