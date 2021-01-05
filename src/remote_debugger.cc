@@ -600,7 +600,7 @@ int RemoteDebugger::parse_context_get_cmd() {
     if (exploded_cmd[0] != "context_get") {
         return yasd::DebuggerModeBase::FAILED;
     }
-    context_id = atoi(exploded_cmd[6].c_str());
+    context_id = atoi(yasd::Util::get_option_value(exploded_cmd, "-c").c_str());
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
     tinyxml2::XMLElement *root;

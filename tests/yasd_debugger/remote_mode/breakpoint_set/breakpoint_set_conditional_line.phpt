@@ -16,7 +16,7 @@ $condition = base64_encode('$i == 3');
 $commands = [
     "breakpoint_set -t conditional -f file://{$filename} -n 6 -- {$condition}",
     'run',
-    'context_get',
+    'context_get -d 0 -c 0',
     'run',
     'stop',
 ];
@@ -36,7 +36,7 @@ $client = (new DbgpClient())->setCommands($commands)->setTestFile($filename)->st
 <?xml version="1.0" encoding="iso-8859-1"?>
 <response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="run" transaction_id="2" status="break" reason="ok"><xdebug:message filename="file://%s" lineno="6"/></response>
 
--> context_get -i 3
+-> context_get -i 3 -d 0 -c 0
 <?xml version="1.0" encoding="iso-8859-1"?>
 <response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="context_get" transaction_id="3" context="0"><property type="int" name="$i" fullname="i"><![CDATA[3]]></property></response>
 
