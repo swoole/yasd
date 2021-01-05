@@ -308,12 +308,14 @@ int RemoteDebugger::parse_feature_set_cmd() {
     tinyxml2::XMLElement *root;
     yasd::ResponseElement response_element;
 
+    std::string feature = yasd::Util::get_option_value(exploded_cmd, "-n");
+
     root = doc->NewElement("response");
     doc->LinkEndChild(root);
 
     response_element.set_cmd("feature_set").set_transaction_id(transaction_id);
     yasd::Dbgp::get_response_doc(root, response_element);
-    root->SetAttribute("feature", exploded_cmd[4].c_str());
+    root->SetAttribute("feature", feature.c_str());
     root->SetAttribute("success", 0);
 
     send_doc(doc.get());
