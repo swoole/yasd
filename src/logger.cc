@@ -16,6 +16,7 @@
 
 #include <sys/file.h>
 #include <errno.h>
+#include <fcntl.h>  // for O_APPEND in alpine
 #include "include/logger.h"
 #include "include/common.h"
 #include "include/util.h"
