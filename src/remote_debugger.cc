@@ -72,7 +72,7 @@ void RemoteDebugger::init() {
 
 std::string RemoteDebugger::get_next_cmd() {
     ssize_t ret;
-    char buffer[4096];
+    char buffer[1024];
     char *p = buffer;
 
     // The IDE may send multiple commands, so we need to determine the delimiter.
