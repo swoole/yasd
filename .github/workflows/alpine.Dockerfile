@@ -7,6 +7,7 @@ COPY . /opt/www
 WORKDIR /opt/www
 
 RUN set -ex \
+    && apk add boost-dev \
     && ln -sf /usr/bin/phpize7 /usr/local/bin/phpize \
     && ln -sf /usr/bin/php-config7 /usr/local/bin/php-config \
     && phpize \
