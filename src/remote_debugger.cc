@@ -35,6 +35,7 @@ RemoteDebugger::RemoteDebugger() {
 }
 
 RemoteDebugger::~RemoteDebugger() {
+    close(sock);
     delete buffer;
 }
 
@@ -141,6 +142,10 @@ void RemoteDebugger::handle_request(const char *filename, int lineno) {
 }
 
 void RemoteDebugger::handle_stop() {
+    if (!global->is_running) {
+        return;
+    }
+
     int status;
     std::vector<std::string> exploded_cmd;
 
@@ -160,12 +165,12 @@ void RemoteDebugger::handle_stop() {
 
     send_doc(doc.get());
 
+    need_bailout = false;
+
     do {
         get_next_cmd();
         status = execute_cmd();
     } while (status != yasd::DebuggerModeBase::status::NEXT_OPLINE);
-
-    close(sock);
 }
 
 ssize_t RemoteDebugger::send_init_event_message() {
@@ -705,7 +710,10 @@ int RemoteDebugger::parse_stop_cmd() {
 
     send_doc(doc.get());
 
-    zend_bailout();
+    if (need_bailout) {
+        _zend_bailout(__FILE__, __LINE__);
+    }
+
     return yasd::DebuggerModeBase::NEXT_OPLINE;
 }
 
