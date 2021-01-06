@@ -711,7 +711,7 @@ int RemoteDebugger::parse_stop_cmd() {
     send_doc(doc.get());
 
     if (need_bailout) {
-        _zend_bailout(__FILE__, __LINE__);
+        zend_bailout();
     }
 
     return yasd::DebuggerModeBase::NEXT_OPLINE;
