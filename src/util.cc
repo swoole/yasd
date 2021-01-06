@@ -361,7 +361,7 @@ bool Util::eval(char *str, zval *retval_ptr, char *string_name) {
     EG(error_reporting) = 0;
 
     int ret;
-    ret = zend_eval_string(str, retval_ptr, const_cast<char *>("xdebug://debug-eval"));
+    ret = zend_eval_string(str, retval_ptr, const_cast<char *>("yasd://debug-eval"));
     if (ret == FAILURE) {
         return false;
     }
