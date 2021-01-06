@@ -27,7 +27,7 @@ extern sapi_module_struct sapi_module;
 
 static void (*old_execute_ex)(zend_execute_data *execute_data);
 
-bool skip_swoole_library(zend_execute_data *execute_data) {
+bool skip_swoole_library_eval(zend_execute_data *execute_data) {
     zend_op_array *op_array = &(execute_data->func->op_array);
 
     if (op_array && op_array->filename &&
@@ -38,15 +38,33 @@ bool skip_swoole_library(zend_execute_data *execute_data) {
     return false;
 }
 
-bool skip_eval(zend_execute_data *execute_data) {
+bool skip_yasd_eval(zend_execute_data *execute_data) {
     zend_op_array *op_array = &(execute_data->func->op_array);
 
     if (op_array && op_array->filename &&
-        strncmp("xdebug://debug-eval", ZSTR_VAL(op_array->filename), sizeof("xdebug://debug-eval") - 1) == 0) {
+        strncmp("yasd://debug-eval", ZSTR_VAL(op_array->filename), sizeof("yasd://debug-eval") - 1) == 0) {
         old_execute_ex(execute_data);
         return true;
     }
     return false;
+}
+
+bool skip_protobuf_eval(zend_execute_data *execute_data) {
+    zend_op_array *op_array = &(execute_data->func->op_array);
+
+    if (op_array && op_array->filename &&
+        strncmp("autoload_register.php", ZSTR_VAL(op_array->filename), sizeof("autoload_register.php") - 1) == 0) {
+        old_execute_ex(execute_data);
+        return true;
+    }
+    return false;
+}
+
+bool skip_eval(zend_execute_data *execute_data) {
+    if (!skip_swoole_library_eval(execute_data) && !skip_yasd_eval(execute_data) && !skip_protobuf_eval(execute_data)) {
+        return false;
+    }
+    return true;
 }
 
 yasd::StackFrame *save_prev_stack_frame(zend_execute_data *execute_data) {
@@ -96,7 +114,7 @@ void yasd_execute_ex(zend_execute_data *execute_data) {
         return;
     }
 
-    if (skip_swoole_library(execute_data) || skip_eval(execute_data)) {
+    if (skip_eval(execute_data)) {
         return;
     }
 
