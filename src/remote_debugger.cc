@@ -141,6 +141,7 @@ void RemoteDebugger::handle_request(const char *filename, int lineno) {
     } while (status != yasd::DebuggerModeBase::status::NEXT_OPLINE);
 }
 
+// from rshutdown -> send stopping -> send stopped -> not zend_bailout -> exit
 void RemoteDebugger::handle_stop() {
     if (!global->is_running) {
         return;
@@ -694,6 +695,7 @@ int RemoteDebugger::parse_property_get_cmd() {
     return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
 }
 
+// send stopped -> zend_bailout -> to rshutdown -> exit
 int RemoteDebugger::parse_stop_cmd() {
     global->is_running = false;
 
