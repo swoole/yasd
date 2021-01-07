@@ -558,7 +558,7 @@ std::string Util::stripcslashes(std::string str) {
 std::string Util::addslashes(std::string str) {
     zend_string *tmp_zstr = zend_string_init(str.c_str(), str.length(), 0);
 
-# if PHP_VERSION_ID > 70200
+# if PHP_VERSION_ID >= 70300
     tmp_zstr = php_addslashes(tmp_zstr);
 # else
     tmp_zstr = php_addslashes(tmp_zstr, 0);
