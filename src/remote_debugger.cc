@@ -671,10 +671,7 @@ int RemoteDebugger::parse_property_get_cmd() {
 
     // vscode has double quotes, but PhpStorm does not
     if (fullname.front() == '"') {
-        zend_string *tmp_name_zstr = zend_string_init(fullname.c_str(), fullname.length(), 0);
-        php_stripcslashes(tmp_name_zstr);
-        fullname = std::string(ZSTR_VAL(tmp_name_zstr), ZSTR_LEN(tmp_name_zstr));
-        zend_string_release(tmp_name_zstr);
+        fullname = yasd::Util::stripcslashes(fullname);
         fullname.erase(0, 1);
     }
 

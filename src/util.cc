@@ -450,10 +450,7 @@ zval *Util::fetch_zval_by_fullname(std::string fullname) {
                 next_zval_info->retval_ptr =
                     find_variable(next_zval_info->symbol_table, strtoull(name.c_str(), NULL, 10));
             } else {
-                zend_string *tmp_name_zstr = zend_string_init(name.c_str(), name.length(), 0);
-                php_stripslashes(tmp_name_zstr);
-                name = std::string(ZSTR_VAL(tmp_name_zstr), ZSTR_LEN(tmp_name_zstr));
-                zend_string_release(tmp_name_zstr);
+                name = yasd::Util::stripslashes(name);
                 next_zval_info->retval_ptr = find_variable(next_zval_info->symbol_table, name);
             }
         } else {
@@ -540,6 +537,31 @@ zval *Util::fetch_zval_by_fullname(std::string fullname) {
     }
 
     return next_zval_info.retval_ptr;
+}
+
+std::string Util::stripslashes(std::string str) {
+    zend_string *tmp_zstr = zend_string_init(str.c_str(), str.length(), 0);
+    php_stripslashes(tmp_zstr);
+    str = std::string(ZSTR_VAL(tmp_zstr), ZSTR_LEN(tmp_zstr));
+    zend_string_release(tmp_zstr);
+    return str;
+}
+
+std::string Util::stripcslashes(std::string str) {
+    zend_string *tmp_zstr = zend_string_init(str.c_str(), str.length(), 0);
+    php_stripcslashes(tmp_zstr);
+    str = std::string(ZSTR_VAL(tmp_zstr), ZSTR_LEN(tmp_zstr));
+    zend_string_release(tmp_zstr);
+    return str;
+}
+
+std::string Util::addslashes(std::string str) {
+    zend_string *tmp_zstr = zend_string_init(str.c_str(), str.length(), 0);
+
+    tmp_zstr = php_addslashes(tmp_zstr);
+    str = std::string(ZSTR_VAL(tmp_zstr), ZSTR_LEN(tmp_zstr));
+    zend_string_release(tmp_zstr);
+    return str;
 }
 
 }  // namespace yasd

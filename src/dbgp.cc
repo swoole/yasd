@@ -202,12 +202,7 @@ void Dbgp::get_zend_array_child_property_doc(tinyxml2::XMLElement *child, const 
                     }
                 } else {  // string key
                     child_name = ZSTR_VAL(key);
-                    zend_string *i_string = zend_string_init(ZSTR_VAL(key), ZSTR_LEN(key), 0);
-                    zend_string *tmp_fullname_zstr;
-
-                    tmp_fullname_zstr = php_addslashes(i_string);
-                    slashe_child_name = std::string(ZSTR_VAL(tmp_fullname_zstr), ZSTR_LEN(tmp_fullname_zstr));
-                    zend_string_release(tmp_fullname_zstr);
+                    slashe_child_name = yasd::Util::addslashes(std::string(ZSTR_VAL(key), ZSTR_LEN(key)));
 
                     if (property_element.fullname != "") {  // eval don't need fullname in phpstorm
                         child_fullname = property_element.fullname + "[\"" + slashe_child_name + "\"]";
