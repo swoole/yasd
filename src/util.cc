@@ -22,6 +22,7 @@
 
 YASD_EXTERN_C_BEGIN
 #include "ext/standard/php_var.h"
+#include "ext/standard/php_string.h"
 YASD_EXTERN_C_END
 
 #include "./php_yasd.h"
@@ -449,6 +450,10 @@ zval *Util::fetch_zval_by_fullname(std::string fullname) {
                 next_zval_info->retval_ptr =
                     find_variable(next_zval_info->symbol_table, strtoull(name.c_str(), NULL, 10));
             } else {
+                zend_string *tmp_name_zstr = zend_string_init(name.c_str(), name.length(), 0);
+                php_stripslashes(tmp_name_zstr);
+                name = std::string(ZSTR_VAL(tmp_name_zstr), ZSTR_LEN(tmp_name_zstr));
+                zend_string_release(tmp_name_zstr);
                 next_zval_info->retval_ptr = find_variable(next_zval_info->symbol_table, name);
             }
         } else {
