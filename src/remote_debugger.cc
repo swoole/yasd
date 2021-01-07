@@ -26,6 +26,10 @@
 #include "include/dbgp.h"
 #include "include/zend_property_info.h"
 
+YASD_EXTERN_C_BEGIN
+#include "ext/standard/php_string.h"
+YASD_EXTERN_C_END
+
 #include <boost/algorithm/string.hpp>
 
 namespace yasd {
@@ -667,6 +671,7 @@ int RemoteDebugger::parse_property_get_cmd() {
 
     // vscode has double quotes, but PhpStorm does not
     if (fullname.front() == '"') {
+        fullname = yasd::Util::stripcslashes(fullname);
         fullname.erase(0, 1);
     }
 

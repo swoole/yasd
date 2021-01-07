@@ -21,6 +21,10 @@
 #include "include/util.h"
 #include "include/zend_property_info.h"
 
+YASD_EXTERN_C_BEGIN
+#include "ext/standard/php_string.h"
+YASD_EXTERN_C_END
+
 #include <memory>
 
 namespace yasd {
@@ -188,6 +192,7 @@ void Dbgp::get_zend_array_child_property_doc(tinyxml2::XMLElement *child, const 
             ZEND_HASH_FOREACH_KEY_VAL_IND(ht, num, key, val) {
                 tinyxml2::XMLElement *property = child->InsertNewChildElement("property");
                 std::string child_name = "";
+                std::string slashe_child_name = "";
                 std::string child_fullname = "";
 
                 if (key == nullptr) {  // num key
@@ -197,8 +202,10 @@ void Dbgp::get_zend_array_child_property_doc(tinyxml2::XMLElement *child, const 
                     }
                 } else {  // string key
                     child_name = ZSTR_VAL(key);
+                    slashe_child_name = yasd::Util::addslashes(std::string(ZSTR_VAL(key), ZSTR_LEN(key)));
+
                     if (property_element.fullname != "") {  // eval don't need fullname in phpstorm
-                        child_fullname = property_element.fullname + "['" + child_name + "']";
+                        child_fullname = property_element.fullname + "[\"" + slashe_child_name + "\"]";
                     }
                 }
 

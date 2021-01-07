@@ -73,5 +73,9 @@ class Util {
     static std::string get_option_value(const std::vector<std::string> &options, std::string option);
 
     static zval *fetch_zval_by_fullname(std::string fullname);
+
+    static std::string stripslashes(std::string str);
+    static std::string stripcslashes(std::string str);
+    static std::string addslashes(std::string str);
 };
 }  // namespace yasd
