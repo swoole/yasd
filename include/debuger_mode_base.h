@@ -19,7 +19,7 @@
 
 namespace yasd {
 class DebuggerModeBase {
-  public:
+ public:
     enum status {
         SUCCESS = 0,
         FAILED,

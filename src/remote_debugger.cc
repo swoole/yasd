@@ -35,6 +35,7 @@ RemoteDebugger::RemoteDebugger() {
 }
 
 RemoteDebugger::~RemoteDebugger() {
+    close(sock);
     delete buffer;
 }
 
@@ -57,8 +58,8 @@ void RemoteDebugger::init() {
     }
 
     if (connect(sock, (struct sockaddr *) &ide_address, sizeof(ide_address)) < 0) {
-        perror("Connection Failed");
-        exit(EXIT_FAILURE);
+        yasd::Util::printfln_info(yasd::Color::YASD_ECHO_YELLOW, "[yasd] %s", strerror(errno));
+        return;
     }
 
     send_init_event_message();
@@ -141,6 +142,10 @@ void RemoteDebugger::handle_request(const char *filename, int lineno) {
 }
 
 void RemoteDebugger::handle_stop() {
+    if (!global->is_running) {
+        return;
+    }
+
     int status;
     std::vector<std::string> exploded_cmd;
 
@@ -160,12 +165,12 @@ void RemoteDebugger::handle_stop() {
 
     send_doc(doc.get());
 
+    need_bailout = false;
+
     do {
         get_next_cmd();
         status = execute_cmd();
     } while (status != yasd::DebuggerModeBase::status::NEXT_OPLINE);
-
-    close(sock);
 }
 
 ssize_t RemoteDebugger::send_init_event_message() {
@@ -690,7 +695,7 @@ int RemoteDebugger::parse_property_get_cmd() {
 }
 
 int RemoteDebugger::parse_stop_cmd() {
-    global->is_stop = true;
+    global->is_running = false;
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
     tinyxml2::XMLElement *root;
@@ -704,6 +709,10 @@ int RemoteDebugger::parse_stop_cmd() {
     root->SetAttribute("reason", "ok");
 
     send_doc(doc.get());
+
+    if (need_bailout) {
+        zend_bailout();
+    }
 
     return yasd::DebuggerModeBase::NEXT_OPLINE;
 }

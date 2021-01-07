@@ -191,10 +191,6 @@ bool is_hit_line_condition_breakpoint(int lineno) {
 }
 
 ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
-    if (UNEXPECTED(global->is_stop)) {
-        zend_bailout();
-    }
-
     // zend_op_array *op_array = &frame->func->op_array;
     const zend_op *online = EG(current_execute_data)->opline;
     const char *filename;

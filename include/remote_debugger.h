@@ -40,6 +40,7 @@ class RemoteDebugger : public DebuggerModeBase {
     std::string last_cmd;
     int transaction_id = 0;
     std::vector<std::pair<std::string, std::function<int()>>> handlers;
+    bool need_bailout = true;
 
     yasd::Buffer *buffer = nullptr;
 
