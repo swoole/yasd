@@ -1,5 +1,7 @@
 <?php
 
+namespace Bar;
+
 use Swoole\Coroutine;
 
 use function Swoole\Coroutine\run;
@@ -76,6 +78,8 @@ class Foo
 
     public $foo2;
 
+    public $arr;
+
     public function test()
     {
         return [
@@ -87,6 +91,9 @@ class Foo
 
     public function __construct($a)
     {
+        $this->arr = [
+            self::class => [self::class => [self::class => 1]],
+        ];
         $this->a = "hello";
         $this->foo2 = new Foo2();
     }

@@ -26,6 +26,10 @@
 #include "include/dbgp.h"
 #include "include/zend_property_info.h"
 
+YASD_EXTERN_C_BEGIN
+#include "ext/standard/php_string.h"
+YASD_EXTERN_C_END
+
 #include <boost/algorithm/string.hpp>
 
 namespace yasd {
@@ -678,6 +682,11 @@ int RemoteDebugger::parse_property_get_cmd() {
     if (fullname.front() == '$') {
         fullname.erase(0, 1);
     }
+
+    zend_string *tmp_name_zstr = zend_string_init(fullname.c_str(), fullname.length(), 0);
+    php_stripslashes(tmp_name_zstr);
+    fullname = std::string(ZSTR_VAL(tmp_name_zstr), ZSTR_LEN(tmp_name_zstr));
+    zend_string_release(tmp_name_zstr);
 
     property = yasd::Util::fetch_zval_by_fullname(fullname);
 
