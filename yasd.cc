@@ -237,7 +237,7 @@ static PHP_FUNCTION(Yasd_Zval_getRefCount) {
     if (!Z_REFCOUNTED_P(zv) && !(Z_TYPE_P(zv) == IS_ARRAY) && !(Z_TYPE_P(zv) == IS_STRING)) {
         RETURN_NULL();
     }
-    RETURN_LONG(zval_refcount_p(zv));
+    RETURN_LONG(GC_REFCOUNT(Z_COUNTED_P(zv)));
 }
 
 // clang-format off
