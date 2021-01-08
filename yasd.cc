@@ -234,7 +234,7 @@ static PHP_FUNCTION(Yasd_Zval_getRefCount) {
     Z_PARAM_ZVAL(zv)
     ZEND_PARSE_PARAMETERS_END();
 
-    if (!Z_REFCOUNTED_P(zv) && !(Z_TYPE_P(zv) == IS_ARRAY)) {
+    if (!Z_REFCOUNTED_P(zv) && !(Z_TYPE_P(zv) == IS_ARRAY) && !(Z_TYPE_P(zv) == IS_STRING)) {
         RETURN_NULL();
     }
     RETURN_LONG(zval_refcount_p(zv));
