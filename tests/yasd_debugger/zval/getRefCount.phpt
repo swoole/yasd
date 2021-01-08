@@ -18,7 +18,7 @@ var_dump(Yasd\Zval\getRefCount($object));
 var_dump(Yasd\Zval\getRefCount($bool));
 ?>
 --EXPECTF--
-Notice: Undefined variable: undef %s
+%s: Undefined variable: %s
 NULL
 NULL
 NULL
