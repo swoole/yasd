@@ -27,6 +27,7 @@
 #include "main/php.h"
 #include "main/SAPI.h"
 #include "Zend/zend_extensions.h"
+#include "Zend/zend_API.h"
 #include "ext/standard/info.h"
 #include "./php_yasd.h"
 
@@ -37,21 +38,6 @@
 #include "include/redirect_file_to_cin.h"
 
 ZEND_DECLARE_MODULE_GLOBALS(yasd)
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_yasd_redirectStdin, 0, 0, 1)
-ZEND_ARG_INFO(0, data)
-ZEND_END_ARG_INFO()
-
-PHP_FUNCTION(redirectStdin) {
-    char *file;
-    size_t l_file;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-    Z_PARAM_STRING(file, l_file)
-    ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE);
-
-    global->redirector = new yasd::RedirectFileToCin(file);
-}
 
 // clang-format off
 PHP_INI_BEGIN()
@@ -237,9 +223,26 @@ ZEND_DLEXPORT int yasd_zend_startup(zend_extension *extension) {
     return zend_startup_module(&yasd_module_entry);
 }
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_Yasd_Zval_getRefCount, ZEND_RETURN_VALUE, 1, IS_LONG, 0)
+ZEND_ARG_INFO(0, zval)
+ZEND_END_ARG_INFO()
+
+static PHP_FUNCTION(Yasd_Zval_getRefCount) {
+    zval *zv;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+    Z_PARAM_ZVAL(zv)
+    ZEND_PARSE_PARAMETERS_END();
+
+    if (!Z_REFCOUNTED_P(zv) && !(Z_TYPE_P(zv) == IS_ARRAY)) {
+        RETURN_NULL();
+    }
+    RETURN_LONG(zval_refcount_p(zv));
+}
+
 // clang-format off
 static const zend_function_entry yasd_functions[] = {
-    PHP_FE(redirectStdin, arginfo_yasd_redirectStdin)
+    ZEND_FENTRY(Yasd\\Zval\\getRefCount, PHP_FN(Yasd_Zval_getRefCount), arginfo_Yasd_Zval_getRefCount, 0)
     PHP_FE_END /* Must be the last line in yasd_functions[] */
 };
 
