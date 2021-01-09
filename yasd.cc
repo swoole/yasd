@@ -223,7 +223,7 @@ ZEND_DLEXPORT int yasd_zend_startup(zend_extension *extension) {
     return zend_startup_module(&yasd_module_entry);
 }
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_Yasd_Zval_getRefCount, ZEND_RETURN_VALUE, 1, IS_LONG, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_Yasd_Zval_getRefCount, ZEND_RETURN_VALUE, 1, IS_LONG, 1)
 ZEND_ARG_INFO(0, zval)
 ZEND_END_ARG_INFO()
 
