@@ -255,7 +255,7 @@ static PHP_FUNCTION(Yasd_getOpcodeByName) {
     zend_uchar i = 0;
     for (i; i <= 254; i++) {
         const char *tmp = zend_get_opcode_name(i);
-        if (!tmp) {  // eg  大于last opcode
+        if (!tmp) {  // eg  greater then last opcode
             continue;
         }
         if (strcasecmp(tmp, data) == 0) {
