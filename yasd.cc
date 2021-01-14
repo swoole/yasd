@@ -240,9 +240,35 @@ static PHP_FUNCTION(Yasd_Zval_getRefCount) {
     RETURN_LONG(GC_REFCOUNT(Z_COUNTED_P(zv)));
 }
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_Yasd_getOpcodeByName, ZEND_RETURN_VALUE, 1, IS_LONG, 1)
+ZEND_ARG_INFO(0, zval)
+ZEND_END_ARG_INFO()
+
+static PHP_FUNCTION(Yasd_getOpcodeByName) {
+    char *data;
+    size_t data_len;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+    Z_PARAM_STRING(data, data_len)
+    ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE);
+
+    zend_uchar i = 0;
+    for (i; i <= 254; i++) {
+        const char *tmp = zend_get_opcode_name(i);
+        if (!tmp) {  // eg  greater then last opcode
+            continue;
+        }
+        if (strcasecmp(tmp, data) == 0) {
+            RETURN_LONG(i);
+        }
+    }
+    RETURN_FALSE;
+}
+
 // clang-format off
 static const zend_function_entry yasd_functions[] = {
     ZEND_FENTRY(Yasd\\Zval\\getRefCount, PHP_FN(Yasd_Zval_getRefCount), arginfo_Yasd_Zval_getRefCount, 0)
+    ZEND_FENTRY(Yasd\\getOpcodeByName, PHP_FN(Yasd_Zval_getRefCount), arginfo_Yasd_getOpcodeByName, 0)
     PHP_FE_END /* Must be the last line in yasd_functions[] */
 };
 
