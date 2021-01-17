@@ -2,7 +2,7 @@
 
 # yasd
 
-另一个 Swoole 调试器。
+另一个 Swoole 调试器。[文档](https://huanghantao.github.io/yasd-wiki/)
 
 ## 如何使用它
 
