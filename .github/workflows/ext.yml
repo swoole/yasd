@@ -5,6 +5,8 @@ on: [push, pull_request]
 jobs:
   build-yasd:
     runs-on: ${{ matrix.os }}
+    env:
+      SWOOLE_VERSION: 4.5.6
     strategy:
       fail-fast: false
       matrix:
@@ -32,7 +34,15 @@ jobs:
         echo "`git log -10 --stat --pretty --oneline`"
     - name: Install swoole
       run: |
-        sudo pecl install swoole
+        wget https://github.com/swoole/swoole-src/archive/v${SWOOLE_VERSION}.tar.gz -O swoole.tar.gz
+        mkdir -p swoole
+        tar -xf swoole.tar.gz -C swoole --strip-components=1
+        rm swoole.tar.gz
+        cd swoole
+        phpize
+        ./configure
+        make -j$(nproc)
+        sudo make install
     - if: startsWith(runner.os, 'Linux')
       name: Install dependencies on Linux
       run: |
