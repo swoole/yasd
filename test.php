@@ -123,6 +123,14 @@ while (true) {
     }
 }
 
+$a = 0;
+while (true) {
+    $a++;
+    if ($a > 50000) {
+        break;
+    }
+}
+
 echo 'hello' . PHP_EOL;
 
 require __DIR__ . '/header.php';

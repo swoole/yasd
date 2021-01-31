@@ -107,6 +107,21 @@ void clear_watch_point(zend_execute_data *execute_data) {
     }
 }
 
+yasd::CurrentFunctionStatus *save_current_function_status() {
+    yasd::Context *context = global->get_current_context();
+
+    yasd::CurrentFunctionStatus *current_function_status = new yasd::CurrentFunctionStatus();
+    context->function_status.emplace_back(current_function_status);
+    return current_function_status;
+}
+
+void drop_current_function_status(yasd::CurrentFunctionStatus *function_status) {
+    yasd::Context *context = global->get_current_context();
+
+    context->function_status.pop_back();
+    delete function_status;
+}
+
 void yasd_execute_ex(zend_execute_data *execute_data) {
     // if not set -e, we will not initialize global
     if (!(CG(compiler_options) & ZEND_COMPILE_EXTENDED_INFO)) {
@@ -128,7 +143,9 @@ void yasd_execute_ex(zend_execute_data *execute_data) {
 
     context->level++;
     yasd::StackFrame *frame = save_prev_stack_frame(execute_data);
+    yasd::CurrentFunctionStatus *function_status = save_current_function_status();
     old_execute_ex(execute_data);
+    drop_current_function_status(function_status);
     // reduce the function call trace
     drop_prev_stack_frame(frame);
     // reduce the level of function call

@@ -176,6 +176,26 @@ bool is_hit_line_condition_breakpoint(int lineno) {
     return Z_TYPE(retval) == IS_TRUE;
 }
 
+void add_executed_opline_num() {
+    yasd::Context *context = global->get_current_context();
+
+    yasd::CurrentFunctionStatus *function_status = context->function_status.back();
+    function_status->executed_opline_num++;
+}
+
+bool is_infinite_loop() {
+    yasd::Context *context = global->get_current_context();
+
+    yasd::CurrentFunctionStatus *function_status = context->function_status.back();
+
+    if (function_status->executed_opline_num < 10000) {
+        return false;
+    }
+
+    function_status->executed_opline_num = 0;
+    return true;
+}
+
 ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
     // zend_op_array *op_array = &frame->func->op_array;
     const zend_op *online = EG(current_execute_data)->opline;
@@ -184,6 +204,8 @@ ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
     int start_lineno;
 
     yasd::Context *context = global->get_current_context();
+    
+    add_executed_opline_num();
 
     if (!EG(current_execute_data)) {
         return;
@@ -206,6 +228,12 @@ ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
         }
     }
 
+    // infinite loop detection
+    if (is_infinite_loop()) {
+        return global->debugger->handle_request(filename, lineno);
+    }
+    
+    // The breakpoint check should be last
     if (!global->do_step && !global->do_next) {
         if (!is_hit_line_breakpoint(filename, lineno)) {
             return;
