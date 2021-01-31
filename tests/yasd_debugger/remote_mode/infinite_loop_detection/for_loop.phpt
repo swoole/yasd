@@ -25,7 +25,7 @@ $client = (new DbgpClient())->setCommands($commands)->setTestFile($filename)->st
 
 -> run -i 1
 <?xml version="1.0" encoding="iso-8859-1"?>
-<response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="run" transaction_id="1" status="break" reason="ok"><xdebug:message filename="file://%s" lineno="12"/></response>
+<response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="run" transaction_id="1" status="break" reason="ok"><xdebug:message filename="file://%s" lineno="%d"/></response>
 
 -> stop -i 2
 <?xml version="1.0" encoding="iso-8859-1"?>
