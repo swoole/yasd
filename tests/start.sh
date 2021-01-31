@@ -34,7 +34,7 @@ else
 fi
 
 if [ $? -eq 0 ]; then
-    PHPT=1 ${TEST_PHP_EXECUTABLE} -d "memory_limit=1024m" ${__DIR__}/run-tests ${glob}
+    USE_ZEND_ALLOC=0 PHPT=1 ${TEST_PHP_EXECUTABLE} -d "memory_limit=1024m" ${__DIR__}/run-tests ${glob}
 fi
 
 # after tests

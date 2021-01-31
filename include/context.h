@@ -21,6 +21,14 @@
 
 namespace yasd {
 
+class CurrentFunctionStatus {
+  public:
+    int executed_opline_num = 0;
+
+    CurrentFunctionStatus() {}
+    ~CurrentFunctionStatus() {}
+};
+
 class StackFrame {
   public:
     std::string filename;
@@ -41,6 +49,7 @@ class Context {
     int64_t next_level = 0;
 
     std::vector<StackFrame *> *strace = nullptr;
+    std::vector<CurrentFunctionStatus *> function_status;
 
     Context();
     ~Context();

@@ -53,6 +53,8 @@ STD_PHP_INI_ENTRY("yasd.depth", "1", PHP_INI_ALL, OnUpdateLong,
         depth, zend_yasd_globals, yasd_globals)
 STD_PHP_INI_ENTRY("yasd.log_level", "-1", PHP_INI_ALL, OnUpdateLong,
         log_level, zend_yasd_globals, yasd_globals)
+STD_PHP_INI_ENTRY("yasd.max_executed_opline_num", "10000", PHP_INI_ALL, OnUpdateLong,
+        max_executed_opline_num, zend_yasd_globals, yasd_globals)
 
 // compatible with phpstorm
 STD_PHP_INI_ENTRY("xdebug.coverage_enable", "1", PHP_INI_ALL, OnUpdateLong,
@@ -176,6 +178,32 @@ bool is_hit_line_condition_breakpoint(int lineno) {
     return Z_TYPE(retval) == IS_TRUE;
 }
 
+void add_executed_opline_num(zend_execute_data *frame) {
+    yasd::Context *context = global->get_current_context();
+    const zend_op *opline = frame->opline + 1;
+
+    // skip ZEND_NOP, every function definition, the location of the class definition, is a ZEND_NOP
+    if (opline->opcode == ZEND_NOP) {
+        return;
+    }
+
+    yasd::CurrentFunctionStatus *function_status = context->function_status.back();
+    function_status->executed_opline_num++;
+}
+
+bool is_infinite_loop() {
+    yasd::Context *context = global->get_current_context();
+
+    yasd::CurrentFunctionStatus *function_status = context->function_status.back();
+
+    if (function_status->executed_opline_num < YASD_G(max_executed_opline_num)) {
+        return false;
+    }
+
+    function_status->executed_opline_num = 0;
+    return true;
+}
+
 ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
     // zend_op_array *op_array = &frame->func->op_array;
     const zend_op *online = EG(current_execute_data)->opline;
@@ -184,6 +212,8 @@ ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
     int start_lineno;
 
     yasd::Context *context = global->get_current_context();
+    
+    add_executed_opline_num(frame);
 
     if (!EG(current_execute_data)) {
         return;
@@ -206,6 +236,12 @@ ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
         }
     }
 
+    // infinite loop detection
+    if (is_infinite_loop()) {
+        return global->debugger->handle_request(filename, lineno);
+    }
+    
+    // The breakpoint check should be last
     if (!global->do_step && !global->do_next) {
         if (!is_hit_line_breakpoint(filename, lineno)) {
             return;
