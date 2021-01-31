@@ -24,6 +24,12 @@ function test3() {
     ];
 }
 
+// Suppose the business code calls a function to determine whether to end the loop, 
+// but the business code always returns false
+function test4() {
+    return false;
+}
+
 class Foo3
 {
     public $a;
@@ -126,7 +132,7 @@ while (true) {
 $a = 0;
 while (true) {
     $a++;
-    if ($a > 50000) {
+    if (test4() || $a > 50000) {
         break;
     }
 }
