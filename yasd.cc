@@ -176,8 +176,14 @@ bool is_hit_line_condition_breakpoint(int lineno) {
     return Z_TYPE(retval) == IS_TRUE;
 }
 
-void add_executed_opline_num() {
+void add_executed_opline_num(zend_execute_data *frame) {
     yasd::Context *context = global->get_current_context();
+    const zend_op *opline = frame->opline + 1;
+
+    // skip ZEND_NOP, every function definition, the location of the class definition, is a ZEND_NOP
+    if (opline->opcode == ZEND_NOP) {
+        return;
+    }
 
     yasd::CurrentFunctionStatus *function_status = context->function_status.back();
     function_status->executed_opline_num++;
@@ -205,7 +211,7 @@ ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
 
     yasd::Context *context = global->get_current_context();
     
-    add_executed_opline_num();
+    add_executed_opline_num(frame);
 
     if (!EG(current_execute_data)) {
         return;
