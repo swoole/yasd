@@ -53,6 +53,8 @@ STD_PHP_INI_ENTRY("yasd.depth", "1", PHP_INI_ALL, OnUpdateLong,
         depth, zend_yasd_globals, yasd_globals)
 STD_PHP_INI_ENTRY("yasd.log_level", "-1", PHP_INI_ALL, OnUpdateLong,
         log_level, zend_yasd_globals, yasd_globals)
+STD_PHP_INI_ENTRY("yasd.max_executed_opline_num", "10000", PHP_INI_ALL, OnUpdateLong,
+        max_executed_opline_num, zend_yasd_globals, yasd_globals)
 
 // compatible with phpstorm
 STD_PHP_INI_ENTRY("xdebug.coverage_enable", "1", PHP_INI_ALL, OnUpdateLong,
@@ -194,7 +196,7 @@ bool is_infinite_loop() {
 
     yasd::CurrentFunctionStatus *function_status = context->function_status.back();
 
-    if (function_status->executed_opline_num < 10000) {
+    if (function_status->executed_opline_num < YASD_G(max_executed_opline_num)) {
         return false;
     }
 
