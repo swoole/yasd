@@ -31,7 +31,7 @@ ZEND_BEGIN_MODULE_GLOBALS(yasd)
     uint16_t remote_port;
     uint16_t depth;
     int log_level;
-    int max_executed_opline_num;
+    ssize_t max_executed_opline_num;
 
     // compatible with phpstorm
     int coverage_enable;
