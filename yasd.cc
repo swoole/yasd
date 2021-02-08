@@ -277,28 +277,23 @@ static PHP_FUNCTION(Yasd_Zval_getRefCount) {
 }
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_Yasd_getOpcodeByName, ZEND_RETURN_VALUE, 1, IS_LONG, 1)
-ZEND_ARG_INFO(0, zval)
+ZEND_ARG_INFO(0, opcodeName)
 ZEND_END_ARG_INFO()
 
 static PHP_FUNCTION(Yasd_getOpcodeByName) {
-    char *data;
-    size_t data_len;
+    zend_string *opcode_name;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-    Z_PARAM_STRING(data, data_len)
+    Z_PARAM_STR(opcode_name)
     ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE);
 
-    zend_uchar i = 0;
-    for (i; i <= 254; i++) {
+    for (zend_uchar i = 0; i <= ZEND_VM_LAST_OPCODE; i++) {
         const char *tmp = zend_get_opcode_name(i);
-        if (!tmp) {  // eg  greater then last opcode
-            continue;
-        }
-        if (strcasecmp(tmp, data) == 0) {
+        if (strcasecmp(tmp, ZSTR_VAL(opcode_name)) == 0) {
             RETURN_LONG(i);
         }
     }
-    RETURN_FALSE;
+    RETURN_LONG(-1);
 }
 
 // clang-format off
