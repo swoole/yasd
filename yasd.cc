@@ -260,7 +260,7 @@ ZEND_DLEXPORT int yasd_zend_startup(zend_extension *extension) {
 }
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_Yasd_Zval_getRefCount, ZEND_RETURN_VALUE, 1, IS_LONG, 1)
-ZEND_ARG_INFO(0, zval)
+ZEND_ARG_INFO(0, zv)
 ZEND_END_ARG_INFO()
 
 static PHP_FUNCTION(Yasd_Zval_getRefCount) {
