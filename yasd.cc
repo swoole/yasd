@@ -304,7 +304,7 @@ static PHP_FUNCTION(Yasd_getOpcodeByName) {
 // clang-format off
 static const zend_function_entry yasd_functions[] = {
     ZEND_FENTRY(Yasd\\Zval\\getRefCount, PHP_FN(Yasd_Zval_getRefCount), arginfo_Yasd_Zval_getRefCount, 0)
-    ZEND_FENTRY(Yasd\\getOpcodeByName, PHP_FN(Yasd_Zval_getRefCount), arginfo_Yasd_getOpcodeByName, 0)
+    ZEND_FENTRY(Yasd\\getOpcodeByName, PHP_FN(Yasd_getOpcodeByName), arginfo_Yasd_getOpcodeByName, 0)
     PHP_FE_END /* Must be the last line in yasd_functions[] */
 };
 
