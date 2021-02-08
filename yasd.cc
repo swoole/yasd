@@ -29,7 +29,9 @@
 #include "Zend/zend_extensions.h"
 #include "Zend/zend_API.h"
 #include "ext/standard/info.h"
+
 #include "./php_yasd.h"
+#include "yasd_api.h"
 
 #include "include/util.h"
 #include "include/context.h"
@@ -116,6 +118,8 @@ PHP_MINIT_FUNCTION(yasd) {
     REGISTER_INI_ENTRIES();
 
     yasd_minit(module_number);
+
+    yasd_api_module_init(module_number);
 
     return SUCCESS;
 }
