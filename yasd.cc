@@ -57,6 +57,8 @@ STD_PHP_INI_ENTRY("yasd.log_level", "-1", PHP_INI_ALL, OnUpdateLong,
         log_level, zend_yasd_globals, yasd_globals)
 STD_PHP_INI_ENTRY("yasd.max_executed_opline_num", "0", PHP_INI_ALL, OnUpdateLong,
         max_executed_opline_num, zend_yasd_globals, yasd_globals)
+STD_PHP_INI_ENTRY("yasd.init_file", "", PHP_INI_ALL, OnUpdateStringUnempty,
+        init_file, zend_yasd_globals, yasd_globals)
 
 // compatible with phpstorm
 STD_PHP_INI_ENTRY("xdebug.coverage_enable", "1", PHP_INI_ALL, OnUpdateLong,
@@ -72,7 +74,9 @@ STD_PHP_INI_ENTRY("xdebug.remote_mode", "req", PHP_INI_ALL, OnUpdateString,
 PHP_INI_END()
 // clang-format on
 
-static void php_yasd_init_globals(zend_yasd_globals *yasd_globals) {}
+static void php_yasd_init_globals(zend_yasd_globals *yasd_globals) {
+	memset(yasd_globals, 0, sizeof(zend_yasd_globals));
+}
 
 static void check_other_debugger() {
     // We should not use the E_ERROR level, otherwise php --ini would throw fetal error

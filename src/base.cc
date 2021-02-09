@@ -20,12 +20,39 @@
 #include "include/context.h"
 #include "include/global.h"
 #include "include/base.h"
+#include "php_yasd.h"
 
 #include "main/SAPI.h"
 
 extern sapi_module_struct sapi_module;
 
 static void (*old_execute_ex)(zend_execute_data *execute_data);
+
+void execute_init_file() {
+    zval retval;
+	zend_file_handle file_handle;
+	zend_op_array *op_array;
+
+    if (!YASD_G(init_file)) {
+        return;
+    }
+
+	memset(&file_handle, 0, sizeof(zend_file_handle));
+	file_handle.type = ZEND_HANDLE_FILENAME;
+	file_handle.filename = YASD_G(init_file);
+
+    CG(compiler_options) &= ~ZEND_COMPILE_EXTENDED_INFO;
+    op_array = zend_compile_file(&file_handle, ZEND_EVAL);
+    CG(compiler_options) |= ZEND_COMPILE_EXTENDED_INFO;
+
+    zend_execute_ex = old_execute_ex;
+	zend_execute(op_array, &retval);
+    zend_execute_ex = yasd_execute_ex;
+
+	zend_destroy_file_handle(&file_handle);
+	destroy_op_array(op_array);
+	efree_size(op_array, sizeof(zend_op_array));
+}
 
 bool skip_swoole_library_eval(zend_execute_data *execute_data) {
     zend_op_array *op_array = &(execute_data->func->op_array);
@@ -134,6 +161,7 @@ void yasd_execute_ex(zend_execute_data *execute_data) {
     }
 
     if (UNEXPECTED(global->first_entry)) {
+        execute_init_file();
         ZVAL_ARR(&global->globals, &EG(symbol_table));
         global->debugger->init();
         global->first_entry = false;
