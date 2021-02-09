@@ -30,28 +30,28 @@ static void (*old_execute_ex)(zend_execute_data *execute_data);
 
 void execute_init_file() {
     zval retval;
-	zend_file_handle file_handle;
-	zend_op_array *op_array;
+    zend_file_handle file_handle;
+    zend_op_array *op_array;
 
     if (!YASD_G(init_file)) {
         return;
     }
 
-	memset(&file_handle, 0, sizeof(zend_file_handle));
-	file_handle.type = ZEND_HANDLE_FILENAME;
-	file_handle.filename = YASD_G(init_file);
+    memset(&file_handle, 0, sizeof(zend_file_handle));
+    file_handle.type = ZEND_HANDLE_FILENAME;
+    file_handle.filename = YASD_G(init_file);
 
     CG(compiler_options) &= ~ZEND_COMPILE_EXTENDED_INFO;
     op_array = zend_compile_file(&file_handle, ZEND_EVAL);
     CG(compiler_options) |= ZEND_COMPILE_EXTENDED_INFO;
 
     zend_execute_ex = old_execute_ex;
-	zend_execute(op_array, &retval);
+    zend_execute(op_array, &retval);
     zend_execute_ex = yasd_execute_ex;
 
-	zend_destroy_file_handle(&file_handle);
-	destroy_op_array(op_array);
-	efree_size(op_array, sizeof(zend_op_array));
+    zend_destroy_file_handle(&file_handle);
+    destroy_op_array(op_array);
+    efree_size(op_array, sizeof(zend_op_array));
 }
 
 bool skip_swoole_library_eval(zend_execute_data *execute_data) {
