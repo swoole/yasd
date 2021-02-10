@@ -2,6 +2,7 @@
 #include "main/SAPI.h"
 #include "Zend/zend_extensions.h"
 #include "Zend/zend_API.h"
+#include "Zend/zend_exceptions.h"
 #include "ext/standard/info.h"
 #include "./php_yasd.h"
 
@@ -20,6 +21,11 @@ static PHP_FUNCTION(Yasd_Api_setBreakpoint) {
     Z_PARAM_STR(filename)
     Z_PARAM_LONG(lineno)
     ZEND_PARSE_PARAMETERS_END();
+
+    if (!global) {
+        zend_throw_exception(zend_ce_exception, "debugger is not init", 0);
+        RETURN_FALSE;
+    }
 
     auto iter = global->breakpoints->find(ZSTR_VAL(filename));
 
