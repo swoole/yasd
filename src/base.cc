@@ -15,14 +15,17 @@
 */
 
 #include <iostream>
+#include <boost/filesystem.hpp>
 
 #include "include/util.h"
+#include "include/common.h"
 #include "include/context.h"
 #include "include/global.h"
 #include "include/base.h"
 #include "php_yasd.h"
 
 #include "main/SAPI.h"
+#include "Zend/zend_exceptions.h"
 
 extern sapi_module_struct sapi_module;
 
@@ -35,6 +38,11 @@ void execute_init_file() {
 
     if (!YASD_G(init_file)) {
         return;
+    }
+
+    if (!boost::filesystem::exists(YASD_G(init_file))) {
+        yasd::Util::printfln_info(yasd::Color::YASD_ECHO_RED, "[yasd] init_file is configured, but does not exist");
+        exit(255);
     }
 
     memset(&file_handle, 0, sizeof(zend_file_handle));
