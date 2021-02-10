@@ -9,16 +9,16 @@
 #include "include/global.h"
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_Yasd_Api_setBreakpoint, ZEND_RETURN_VALUE, 2, _IS_BOOL, 0)
-ZEND_ARG_INFO(0, filename)
+ZEND_ARG_INFO(0, fileAbsolutePath)
 ZEND_ARG_INFO(0, lineno)
 ZEND_END_ARG_INFO()
 
 static PHP_FUNCTION(Yasd_Api_setBreakpoint) {
-    zend_string *filename;
+    zend_string *file_absolute_path;
     zend_long lineno;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
-    Z_PARAM_STR(filename)
+    Z_PARAM_STR(file_absolute_path)
     Z_PARAM_LONG(lineno)
     ZEND_PARSE_PARAMETERS_END();
 
@@ -27,14 +27,14 @@ static PHP_FUNCTION(Yasd_Api_setBreakpoint) {
         RETURN_FALSE;
     }
 
-    auto iter = global->breakpoints->find(ZSTR_VAL(filename));
+    auto iter = global->breakpoints->find(ZSTR_VAL(file_absolute_path));
 
     if (iter != global->breakpoints->end()) {
         iter->second.insert(lineno);
     } else {
         std::set<int> lineno_set;
         lineno_set.insert(lineno);
-        global->breakpoints->insert(std::make_pair(ZSTR_VAL(filename), lineno_set));
+        global->breakpoints->insert(std::make_pair(ZSTR_VAL(file_absolute_path), lineno_set));
     }
 
     RETURN_TRUE;
