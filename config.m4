@@ -92,6 +92,7 @@ if test "$PHP_YASD" != "no"; then
 
     yasd_source_file=" \
         yasd.cc \
+        yasd_api.cc \
         src/common.cc \
         src/util.cc \
         src/base.cc \

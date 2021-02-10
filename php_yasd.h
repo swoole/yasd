@@ -26,6 +26,7 @@ extern zend_module_entry yasd_module_entry;
 
 ZEND_BEGIN_MODULE_GLOBALS(yasd)
     char *breakpoints_file;
+    char *init_file;
     char *debug_mode;
     char *remote_host;
     uint16_t remote_port;
