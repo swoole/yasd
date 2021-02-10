@@ -161,7 +161,6 @@ void yasd_execute_ex(zend_execute_data *execute_data) {
     }
 
     if (UNEXPECTED(global->first_entry)) {
-        execute_init_file();
         ZVAL_ARR(&global->globals, &EG(symbol_table));
         global->debugger->init();
         global->first_entry = false;
@@ -206,6 +205,8 @@ void disable_opcache_optimizer() {
 
 void yasd_rinit(int module_number) {
     global = new yasd::Global();
+
+    execute_init_file();
 
     disable_opcache_optimizer();
 }
