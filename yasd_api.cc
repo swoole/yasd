@@ -61,9 +61,31 @@ static PHP_FUNCTION(Yasd_Api_setMaxExecutedOplineNum) {
     RETURN_TRUE;
 }
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_Yasd_Api_setRemoteHost, ZEND_RETURN_VALUE, 1, _IS_BOOL, 0)
+ZEND_ARG_INFO(0, host)
+ZEND_END_ARG_INFO()
+
+static PHP_FUNCTION(Yasd_Api_setRemoteHost) {
+    zend_string *host;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+    Z_PARAM_STR(host)
+    ZEND_PARSE_PARAMETERS_END();
+
+    if (!global) {
+        zend_throw_exception(zend_ce_exception, "debugger is not init", 0);
+        RETURN_FALSE;
+    }
+
+    YASD_G(remote_host) = strdup(ZSTR_VAL(host));
+
+    RETURN_TRUE;
+}
+
 static const zend_function_entry yasd_api_functions[] = {
     ZEND_FENTRY(Yasd\\Api\\setBreakpoint, PHP_FN(Yasd_Api_setBreakpoint), arginfo_Yasd_Api_setBreakpoint, 0)
     ZEND_FENTRY(Yasd\\Api\\setMaxExecutedOplineNum, PHP_FN(Yasd_Api_setMaxExecutedOplineNum), arginfo_Yasd_Api_setMaxExecutedOplineNum, 0)
+    ZEND_FENTRY(Yasd\\Api\\setRemoteHost, PHP_FN(Yasd_Api_setRemoteHost), arginfo_Yasd_Api_setRemoteHost, 0)
     PHP_FE_END /* Must be the last line in yasd_api_functions[] */
 };
 
