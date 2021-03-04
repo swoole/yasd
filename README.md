@@ -195,6 +195,17 @@ le
 
 ### Q&A
 
+#### Debugging with phpstorm (remote mode)
+
+- the port phpstorm listens on should be the one used for xdebug:
+![image](https://user-images.githubusercontent.com/21345604/109924706-c2044180-7cd1-11eb-80a1-79af023ea01e.png)
+- do **NOT** forget to use `-e` option when running scripts, debugging will not work otherwise
+
+- ensure that phpstorm listens on incoming connections:
+
+![image](https://user-images.githubusercontent.com/21345604/109924880-042d8300-7cd2-11eb-9972-002806afbb6c.png)
+
+
 #### Slow Start Framework
 
 When using `yasd`, if the framework starts slowly (most of the time it's because the framework is scanning a lot of files), you can execute the following command.
