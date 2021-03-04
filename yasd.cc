@@ -47,7 +47,7 @@ STD_PHP_INI_ENTRY("yasd.breakpoints_file", "", PHP_INI_ALL, OnUpdateString,
         breakpoints_file, zend_yasd_globals, yasd_globals)
 STD_PHP_INI_ENTRY("yasd.debug_mode", "cmd", PHP_INI_ALL, OnUpdateString,
         debug_mode, zend_yasd_globals, yasd_globals)
-STD_PHP_INI_ENTRY("yasd.remote_host", "127.0.0.1", PHP_INI_ALL, OnUpdateString,
+STD_PHP_INI_ENTRY("yasd.remote_host", "127.0.0.1", PHP_INI_ALL, OnUpdateStringUnempty,
         remote_host, zend_yasd_globals, yasd_globals)
 STD_PHP_INI_ENTRY("yasd.remote_port", "9000", PHP_INI_ALL, OnUpdateLong,
         remote_port, zend_yasd_globals, yasd_globals)

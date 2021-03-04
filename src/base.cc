@@ -40,7 +40,7 @@ void execute_init_file() {
         return;
     }
 
-    if (!boost::filesystem::exists(YASD_G(init_file))) {
+    if(access(YASD_G(init_file), F_OK) != 0 ) {
         yasd::Util::printfln_info(yasd::Color::YASD_ECHO_RED, "[yasd] init_file is configured, but does not exist");
         exit(255);
     }
