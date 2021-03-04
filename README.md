@@ -197,7 +197,7 @@ le
 
 #### Debugging with phpstorm (remote mode)
 
-- the port phpstorm listens on should be the one used for xdebug:
+- the port phpstorm listens on should be the one used for xdebug, also make sure remote connections are allowed:
 ![image](https://user-images.githubusercontent.com/21345604/109924706-c2044180-7cd1-11eb-80a1-79af023ea01e.png)
 - do **NOT** forget to use `-e` option when running scripts, debugging will not work otherwise
 
