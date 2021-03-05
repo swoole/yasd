@@ -153,19 +153,21 @@ yasd::CurrentFunctionStatus *save_current_function_status(zend_execute_data *exe
 }
 
 void analyze_function(yasd::CurrentFunctionStatus *function_status) {
-    zval argv[2];
-    long execute_time;
-    zend_string *function_name;
+    if (global->onGreaterThanMilliseconds) {
+        zval argv[2];
+        long execute_time;
+        zend_string *function_name;
 
-    function_status->end_time = yasd::Util::microtime();
-    execute_time = function_status->end_time - function_status->start_time;
-    function_name = function_status->execute_data->func->common.function_name;
+        function_status->end_time = yasd::Util::microtime();
+        execute_time = function_status->end_time - function_status->start_time;
+        function_name = function_status->execute_data->func->common.function_name;
 
-    ZVAL_STR(&argv[0], function_name ? function_name : zend_empty_string);
-    ZVAL_LONG(&argv[1], execute_time);
+        ZVAL_STR(&argv[0], function_name ? function_name : zend_empty_string);
+        ZVAL_LONG(&argv[1], execute_time);
 
-    if (execute_time >= YASD_G(max_executed_milliseconds)) {
-        zend::function::call(global->onGreaterThanMilliseconds, 2, argv, nullptr);
+        if (execute_time >= YASD_G(max_executed_milliseconds)) {
+            zend::function::call(global->onGreaterThanMilliseconds, 2, argv, nullptr);
+        }
     }
 }
 
