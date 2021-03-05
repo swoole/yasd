@@ -17,15 +17,14 @@
 #include <iostream>
 
 #include "include/util.h"
-#include "include/common.h"
 #include "include/global.h"
+
+#include "./php_yasd_cxx.h"
 
 YASD_EXTERN_C_BEGIN
 #include "ext/standard/php_var.h"
 #include "ext/standard/php_string.h"
 YASD_EXTERN_C_END
-
-#include "./php_yasd.h"
 
 namespace yasd {
 

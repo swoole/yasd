@@ -41,38 +41,41 @@ class Node
 
 echo 'execute init_file success' . PHP_EOL;
 
-// Yasd\Api\setBreakpoint(__DIR__ . DIRECTORY_SEPARATOR . 'test.php', 107);
-// Yasd\Api\setMaxExecutedOplineNum(2000000);
-\Yasd\Api\setRemoteHost(gethostbyname('localhost'));
+// Api\setBreakpoint(__DIR__ . DIRECTORY_SEPARATOR . 'test.php', 107);
+// Api\setMaxExecutedOplineNum(2000000);
+Api\setRemoteHost(gethostbyname('localhost'));
 
 $nodeStack = new SplStack();
 $nodeStack->push(null);
 
-\Yasd\Api\onGreaterThanMilliseconds(10, function (string $functionName, int $executeTime, ?string $parentFunctionName) {
+Api\onGreaterThanMilliseconds(10, function (FunctionStatus $functionStatus) {
     global $callRelationship;
     global $nodeStack;
 
-    if ($functionName === '') {
-        $functionName = 'main';
+    if ($functionStatus->functionName === '') {
+        $functionStatus->functionName = 'main';
     }
 
-    if ($parentFunctionName === '') {
-        $parentFunctionName = 'main';
+    if ($functionStatus->parentFunctionName === '') {
+        $functionStatus->parentFunctionName = 'main';
     }
 
-    if ($parentFunctionName !== null) {
-        $callRelationship[$parentFunctionName] = $functionName;
+    if ($functionStatus->parentFunctionName !== null) {
+        $callRelationship[$functionStatus->parentFunctionName] = $functionStatus->functionName;
     }
 
     /**
      * @var Node
      */
-    $node = new Node($functionName, $executeTime, $parentFunctionName);
+    $node = new Node($functionStatus->functionName, $functionStatus->executeTime, $functionStatus->parentFunctionName);
 
     while (!$nodeStack->isEmpty()) {
+        /**
+         * @var Node
+         */
         $lastNode = $nodeStack->top();
 
-        if ($lastNode && $lastNode->parentFunctionName == $functionName) {
+        if ($lastNode && $lastNode->parentFunctionName == $functionStatus->functionName) {
             $node->childNodes[] = $lastNode;
             $nodeStack->pop();
         } else {
@@ -90,7 +93,7 @@ $nodeStack->push(null);
         }
     }
 
-    $selfExecuteTime = $executeTime - $childFunctionExecuteTime;
+    $selfExecuteTime = $functionStatus->executeTime - $childFunctionExecuteTime;
 
-    echo "functionName: $functionName, selfExecuteTime: $selfExecuteTime, totalExecuteTime: $executeTime\n";
+    echo "functionName: $functionStatus->functionName, selfExecuteTime: $selfExecuteTime, totalExecuteTime: $functionStatus->executeTime\n";
 });

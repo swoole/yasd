@@ -17,10 +17,9 @@
 #include <iostream>
 #include <memory>
 
-#include "./php_yasd.h"
+#include "./php_yasd_cxx.h"
 #include "include/global.h"
 #include "include/util.h"
-#include "include/common.h"
 #include "include/base64.h"
 #include "include/remote_debugger.h"
 #include "include/dbgp.h"

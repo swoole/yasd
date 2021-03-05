@@ -94,6 +94,7 @@ if test "$PHP_YASD" != "no"; then
         yasd.cc \
         yasd_api.cc \
         php_yasd_cxx.cc \
+        yasd_function_status.cc \
         src/common.cc \
         src/util.cc \
         src/base.cc \

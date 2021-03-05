@@ -28,3 +28,24 @@ namespace Yasd\Api
      */
     function onGreaterThanMilliseconds(int $milliseconds, callable $callback) { }
 }
+
+namespace Yasd
+{
+    class FunctionStatus
+    {
+        /**
+         * @var string
+         */
+        public $functionName;
+
+        /**
+         * @var int
+         */
+        public $executeTime;
+
+        /**
+         * @var string
+         */
+        public $parentFunctionName;
+    }
+}

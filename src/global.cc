@@ -15,7 +15,6 @@
 */
 #include "include/global.h"
 #include "include/util.h"
-#include "include/common.h"
 #include "include/cmder_debugger.h"
 #include "include/remote_debugger.h"
 

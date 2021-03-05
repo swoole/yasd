@@ -18,8 +18,10 @@
 #define PHP_YASD_H_
 
 #include "main/php.h"
+#include "Zend/zend_types.h"
 #include "zend_closures.h"
 #include "zend_exceptions.h"
+#include "include/common.h"
 
 extern zend_module_entry yasd_module_entry;
 #define phpext_yasd_ptr &yasd_module_entry
@@ -51,60 +53,6 @@ extern ZEND_DECLARE_MODULE_GLOBALS(yasd);
 
 #define php_yasd_fatal_error(level, fmt_str, ...) \
         php_error_docref(NULL, level, (const char *) (fmt_str), ##__VA_ARGS__)
-
-/* PHP 7.3 compatibility macro {{{*/
-#ifndef GC_ADDREF
-#define GC_ADDREF(ref) ++GC_REFCOUNT(ref)
-#define GC_DELREF(ref) --GC_REFCOUNT(ref)
-#endif
-
-#ifndef ZEND_CLOSURE_OBJECT
-#define ZEND_CLOSURE_OBJECT(func) (zend_object *) func->op_array.prototype
-#endif
-
-/* PHP 7.4 compatibility macro {{{*/
-#ifndef ZEND_COMPILE_EXTENDED_STMT
-#define ZEND_COMPILE_EXTENDED_STMT ZEND_COMPILE_EXTENDED_INFO
-#endif
-
-#ifndef ZVAL_EMPTY_ARRAY
-#define ZVAL_EMPTY_ARRAY(zval) (array_init((zval)))
-#endif
-#ifndef RETVAL_EMPTY_ARRAY
-#define RETVAL_EMPTY_ARRAY() ZVAL_EMPTY_ARRAY(return_value)
-#endif
-#ifndef RETURN_EMPTY_ARRAY
-#define RETURN_EMPTY_ARRAY()                                                                                           \
-    do {                                                                                                               \
-        RETVAL_EMPTY_ARRAY();                                                                                          \
-        return;                                                                                                        \
-    } while (0)
-#endif
-
-#ifndef ZEND_THIS
-#define ZEND_THIS (&EX(This))
-#endif
-
-#ifndef ZEND_THIS_OBJECT
-#define ZEND_THIS_OBJECT Z_OBJ_P(ZEND_THIS)
-#endif
-
-#ifndef E_FATAL_ERRORS
-#define E_FATAL_ERRORS (E_ERROR | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR | E_PARSE)
-#endif
-/*}}}*/
-
-/* PHP 8 compatibility macro {{{*/
-#if PHP_VERSION_ID < 80000
-#define sw_zend7_object zval
-#define SW_Z7_OBJ_P(object) Z_OBJ_P(object)
-#define SW_Z8_OBJ_P(zobj) zobj
-#else
-#define sw_zend7_object zend_object
-#define SW_Z7_OBJ_P(object) object
-#define SW_Z8_OBJ_P(zobj) Z_OBJ_P(zobj)
-#endif
-/*}}}*/
 
 static inline zend_bool yasd_zend_is_callable_at_frame(zval *zcallable,
                                                         zval *zobject,

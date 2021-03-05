@@ -14,10 +14,9 @@
   +----------------------------------------------------------------------+
 */
 
-#include "./php_yasd.h"
+#include "./php_yasd_cxx.h"
 #include "include/dbgp.h"
 #include "include/base64.h"
-#include "include/common.h"
 #include "include/util.h"
 #include "include/zend_property_info.h"
 

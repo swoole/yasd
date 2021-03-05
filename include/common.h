@@ -45,9 +45,47 @@
     }                                                                                                                  \
     ZEND_HASH_FOREACH_END();
 
+/* PHP 7.3 compatibility macro {{{*/
+#ifndef GC_ADDREF
+#define GC_ADDREF(ref) ++GC_REFCOUNT(ref)
+#define GC_DELREF(ref) --GC_REFCOUNT(ref)
+#endif
+
+#ifndef ZEND_CLOSURE_OBJECT
+#define ZEND_CLOSURE_OBJECT(func) (zend_object *) func->op_array.prototype
+#endif
+
+/* PHP 7.4 compatibility macro {{{*/
+#ifndef ZEND_COMPILE_EXTENDED_STMT
+#define ZEND_COMPILE_EXTENDED_STMT ZEND_COMPILE_EXTENDED_INFO
+#endif
+
+#ifndef ZVAL_EMPTY_ARRAY
+#define ZVAL_EMPTY_ARRAY(zval) (array_init((zval)))
+#endif
+#ifndef RETVAL_EMPTY_ARRAY
+#define RETVAL_EMPTY_ARRAY() ZVAL_EMPTY_ARRAY(return_value)
+#endif
+#ifndef RETURN_EMPTY_ARRAY
+#define RETURN_EMPTY_ARRAY()                                                                                           \
+    do {                                                                                                               \
+        RETVAL_EMPTY_ARRAY();                                                                                          \
+        return;                                                                                                        \
+    } while (0)
+#endif
+
 #ifndef ZEND_THIS
 #define ZEND_THIS (&EX(This))
 #endif
+
+#ifndef ZEND_THIS_OBJECT
+#define ZEND_THIS_OBJECT Z_OBJ_P(ZEND_THIS)
+#endif
+
+#ifndef E_FATAL_ERRORS
+#define E_FATAL_ERRORS (E_ERROR | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR | E_PARSE)
+#endif
+/*}}}*/
 
 /* PHP 8 compatibility macro {{{*/
 #if PHP_VERSION_ID < 80000
@@ -60,6 +98,37 @@
 #define YASD_Z8_OBJ_P(zobj) Z_OBJ_P(zobj)
 #endif
 /*}}}*/
+
+//----------------------------------Class API------------------------------------
+
+#define YASD_Z_OBJCE_NAME_VAL_P(zobject) ZSTR_VAL(Z_OBJCE_P(zobject)->name)
+
+/* PHP 7 class declaration macros */
+
+#define YASD_INIT_CLASS_ENTRY_BASE(module, namespace_name, methods, parent_ce)                   \
+    do {                                                                                                               \
+        zend_class_entry _##module##_ce = {};                                                                          \
+        INIT_CLASS_ENTRY(_##module##_ce, namespace_name, methods);                                                     \
+        module##_ce = zend_register_internal_class_ex(&_##module##_ce, parent_ce);                                     \
+    } while (0)
+
+#define YASD_INIT_CLASS_ENTRY(module, namespace_name, snake_name, short_name, methods)                                   \
+    YASD_INIT_CLASS_ENTRY_BASE(module, namespace_name, snake_name, short_name, methods, NULL);                           \
+    memcpy(&module##_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers))
+
+#define YASD_INIT_CLASS_ENTRY_EX(module, namespace_name, snake_name, short_name, methods, parent_module)                 \
+    YASD_INIT_CLASS_ENTRY_BASE(module, namespace_name, snake_name, short_name, methods, parent_module##_ce);             \
+    memcpy(&module##_handlers, &parent_module##_handlers, sizeof(zend_object_handlers))
+
+#define YASD_INIT_CLASS_ENTRY_EX2(                                                                                       \
+    module, namespace_name, snake_name, short_name, methods, parent_module_ce, parent_module_handlers)                 \
+    YASD_INIT_CLASS_ENTRY_BASE(module, namespace_name, snake_name, short_name, methods, parent_module_ce);               \
+    memcpy(&module##_handlers, parent_module_handlers, sizeof(zend_object_handlers))
+
+// Data Object: no methods, no parent
+#define YASD_INIT_CLASS_ENTRY_DATA_OBJECT(module, namespace_name)                                                        \
+    YASD_INIT_CLASS_ENTRY_BASE(module, namespace_name, NULL, NULL, NULL, NULL);                                          \
+    memcpy(&module##_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers))
 
 # if PHP_VERSION_ID >= 70300
 #  define YASD_ZEND_CONSTANT_MODULE_NUMBER(v) ZEND_CONSTANT_MODULE_NUMBER((v))
