@@ -51,11 +51,14 @@ void execute_init_file() {
 
     CG(compiler_options) &= ~ZEND_COMPILE_EXTENDED_INFO;
     op_array = zend_compile_file(&file_handle, ZEND_EVAL);
-    CG(compiler_options) |= ZEND_COMPILE_EXTENDED_INFO;
 
     zend_execute_ex = old_execute_ex;
     zend_execute(op_array, &retval);
     zend_execute_ex = yasd_execute_ex;
+
+    // we need to set ZEND_COMPILE_EXTENDED_INFO after the zend_execute function,
+    // not after zend_compile_file, because zend_execute may include files
+    CG(compiler_options) |= ZEND_COMPILE_EXTENDED_INFO;
 
     zend_destroy_file_handle(&file_handle);
     destroy_op_array(op_array);
