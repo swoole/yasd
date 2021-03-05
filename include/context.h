@@ -19,11 +19,15 @@
 #include <vector>
 #include <set>
 
+#include "Zend/zend_types.h"
+
 namespace yasd {
 
 class CurrentFunctionStatus {
   public:
+    long start_time, end_time;
     int executed_opline_num = 0;
+    zend_execute_data *execute_data;
 
     CurrentFunctionStatus() {}
     ~CurrentFunctionStatus() {}

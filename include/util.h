@@ -77,5 +77,7 @@ class Util {
     static std::string stripslashes(std::string str);
     static std::string stripcslashes(std::string str);
     static std::string addslashes(std::string str);
+
+    static long microtime(void);
 };
 }  // namespace yasd

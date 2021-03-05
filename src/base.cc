@@ -22,7 +22,7 @@
 #include "include/context.h"
 #include "include/global.h"
 #include "include/base.h"
-#include "php_yasd.h"
+#include "php_yasd_cxx.h"
 
 #include "main/SAPI.h"
 #include "Zend/zend_exceptions.h"
@@ -142,12 +142,31 @@ void clear_watch_point(zend_execute_data *execute_data) {
     }
 }
 
-yasd::CurrentFunctionStatus *save_current_function_status() {
+yasd::CurrentFunctionStatus *save_current_function_status(zend_execute_data *execute_data) {
     yasd::Context *context = global->get_current_context();
 
     yasd::CurrentFunctionStatus *current_function_status = new yasd::CurrentFunctionStatus();
+    current_function_status->start_time = yasd::Util::microtime();
+    current_function_status->execute_data = execute_data;
     context->function_status.emplace_back(current_function_status);
     return current_function_status;
+}
+
+void analyze_function(yasd::CurrentFunctionStatus *function_status) {
+    zval argv[2];
+    long execute_time;
+    zend_string *function_name;
+
+    function_status->end_time = yasd::Util::microtime();
+    execute_time = function_status->end_time - function_status->start_time;
+    function_name = function_status->execute_data->func->common.function_name;
+
+    ZVAL_STR(&argv[0], function_name ? function_name : zend_empty_string);
+    ZVAL_LONG(&argv[1], execute_time);
+
+    if (execute_time >= YASD_G(max_executed_milliseconds)) {
+        zend::function::call(global->onGreaterThanMilliseconds, 2, argv, nullptr);
+    }
 }
 
 void drop_current_function_status(yasd::CurrentFunctionStatus *function_status) {
@@ -178,8 +197,9 @@ void yasd_execute_ex(zend_execute_data *execute_data) {
 
     context->level++;
     yasd::StackFrame *frame = save_prev_stack_frame(execute_data);
-    yasd::CurrentFunctionStatus *function_status = save_current_function_status();
+    yasd::CurrentFunctionStatus *function_status = save_current_function_status(execute_data);
     old_execute_ex(execute_data);
+    analyze_function(function_status);
     drop_current_function_status(function_status);
     // reduce the function call trace
     drop_prev_stack_frame(frame);

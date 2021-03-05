@@ -65,6 +65,10 @@ Global::~Global() {
     delete breakpoints;
     breakpoints = nullptr;
     delete logger;
+
+    yasd_zend_fci_cache_discard(onGreaterThanMilliseconds);
+    efree(onGreaterThanMilliseconds);
+    onGreaterThanMilliseconds = nullptr;
 }
 
 Context *Global::get_current_context() {

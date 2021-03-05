@@ -30,6 +30,10 @@ function test4() {
     return false;
 }
 
+function test5() {
+    sleep(1);
+}
+
 class Foo3
 {
     public $a;
@@ -104,6 +108,7 @@ class Foo
         $this->foo2 = new Foo2();
     }
 }
+test5();
 $b = true;
 $b = false;
 $i = 0;

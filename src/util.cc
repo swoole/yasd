@@ -568,4 +568,10 @@ std::string Util::addslashes(std::string str) {
     return str;
 }
 
+long Util::microtime() {
+    struct timeval t;
+    gettimeofday(&t, nullptr);
+    return t.tv_sec * 1000 + t.tv_usec / 1000;
+}
+
 }  // namespace yasd

@@ -20,4 +20,11 @@ namespace Yasd\Api
      * @return bool
      */
     function setMaxExecutedOplineNum(int $num) { }
+
+    /**
+     * @param int $milliseconds
+     * @param callable $callback
+     * @return bool
+     */
+    function onGreaterThanMilliseconds(int $milliseconds, callable $callback) { }
 }
