@@ -163,7 +163,7 @@ void analyze_function(yasd::CurrentFunctionStatus *function_status) {
         execute_time = function_status->end_time - function_status->start_time;
         function_name = function_status->execute_data->func->common.function_name;
 
-        if (function_status->execute_data->prev_execute_data) {
+        if (function_status->execute_data->prev_execute_data && function_status->execute_data->prev_execute_data->func) {
             parent_function_name = function_status->execute_data->prev_execute_data->func->common.function_name;
             ZVAL_STR(&argv[2], parent_function_name ? parent_function_name : zend_empty_string);
         } else {
