@@ -4,7 +4,7 @@
 #include "Zend/zend_API.h"
 #include "Zend/zend_exceptions.h"
 #include "ext/standard/info.h"
-#include "./php_yasd.h"
+#include "./php_yasd_cxx.h"
 
 #include "include/global.h"
 
@@ -61,6 +61,46 @@ static PHP_FUNCTION(Yasd_Api_setMaxExecutedOplineNum) {
     RETURN_TRUE;
 }
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_Yasd_Api_onGreaterThanMilliseconds, ZEND_RETURN_VALUE, 2, _IS_BOOL, 0)
+ZEND_ARG_INFO(0, milliseconds)
+ZEND_ARG_INFO(0, callback)
+ZEND_END_ARG_INFO()
+
+static PHP_FUNCTION(Yasd_Api_onGreaterThanMilliseconds) {
+    zend_long milliseconds;
+    zval *zcallback = nullptr;
+    char *func_name;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+    Z_PARAM_LONG(milliseconds)
+    Z_PARAM_ZVAL_EX(zcallback, 1, 0)
+    ZEND_PARSE_PARAMETERS_END();
+
+    if (!global) {
+        zend_throw_exception(zend_ce_exception, "debugger is not init", 0);
+        RETURN_FALSE;
+    }
+
+    YASD_G(max_executed_milliseconds) = milliseconds;
+
+    if (global->onGreaterThanMilliseconds) {
+        efree(global->onGreaterThanMilliseconds);
+        global->onGreaterThanMilliseconds = nullptr;
+    }
+
+    global->onGreaterThanMilliseconds = (zend_fcall_info_cache *) ecalloc(1, sizeof(zend_fcall_info_cache));
+    if (!yasd_zend_is_callable_ex(zcallback, nullptr, 0, &func_name, 0, global->onGreaterThanMilliseconds, nullptr)) {
+        php_yasd_fatal_error(E_WARNING, "function '%s' is not callable", func_name);
+        efree(func_name);
+        efree(global->onGreaterThanMilliseconds);
+        RETURN_FALSE;
+    }
+    efree(func_name);
+    yasd_zend_fci_cache_persist(global->onGreaterThanMilliseconds);
+
+    RETURN_TRUE;
+}
+
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_Yasd_Api_setRemoteHost, ZEND_RETURN_VALUE, 1, _IS_BOOL, 0)
 ZEND_ARG_INFO(0, host)
 ZEND_END_ARG_INFO()
@@ -86,6 +126,7 @@ static const zend_function_entry yasd_api_functions[] = {
     ZEND_FENTRY(Yasd\\Api\\setBreakpoint, PHP_FN(Yasd_Api_setBreakpoint), arginfo_Yasd_Api_setBreakpoint, 0)
     ZEND_FENTRY(Yasd\\Api\\setMaxExecutedOplineNum, PHP_FN(Yasd_Api_setMaxExecutedOplineNum), arginfo_Yasd_Api_setMaxExecutedOplineNum, 0)
     ZEND_FENTRY(Yasd\\Api\\setRemoteHost, PHP_FN(Yasd_Api_setRemoteHost), arginfo_Yasd_Api_setRemoteHost, 0)
+    ZEND_FENTRY(Yasd\\Api\\onGreaterThanMilliseconds, PHP_FN(Yasd_Api_onGreaterThanMilliseconds), arginfo_Yasd_Api_onGreaterThanMilliseconds, 0)
     PHP_FE_END /* Must be the last line in yasd_api_functions[] */
 };
 

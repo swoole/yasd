@@ -32,6 +32,7 @@
 
 #include "./php_yasd.h"
 #include "yasd_api.h"
+#include "yasd_function_status.h"
 
 #include "include/util.h"
 #include "include/context.h"
@@ -124,6 +125,7 @@ PHP_MINIT_FUNCTION(yasd) {
     yasd_minit(module_number);
 
     yasd_api_module_init(module_number);
+    yasd_function_status_minit(module_number);
 
     return SUCCESS;
 }

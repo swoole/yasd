@@ -15,7 +15,6 @@
 */
 #include "include/global.h"
 #include "include/util.h"
-#include "include/common.h"
 #include "include/cmder_debugger.h"
 #include "include/remote_debugger.h"
 
@@ -65,6 +64,12 @@ Global::~Global() {
     delete breakpoints;
     breakpoints = nullptr;
     delete logger;
+
+    if (onGreaterThanMilliseconds) {
+        yasd_zend_fci_cache_discard(onGreaterThanMilliseconds);
+        efree(onGreaterThanMilliseconds);
+        onGreaterThanMilliseconds = nullptr;
+    }
 }
 
 Context *Global::get_current_context() {

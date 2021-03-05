@@ -1,6 +1,7 @@
 <?php
 
-echo 'execute init_file success' . PHP_EOL;
-Yasd\Api\setBreakpoint(__DIR__ . DIRECTORY_SEPARATOR . 'test.php', 107);
-Yasd\Api\setMaxExecutedOplineNum(2000000);
-Yasd\Api\setRemoteHost(gethostbyname('host.docker.internal'));
+namespace Yasd;
+
+printf("\e[32m%s\e[0m", "[yasd] execute init_file success\n");
+
+require './plugin/analyze_function.php';

@@ -17,15 +17,14 @@
 #include <iostream>
 
 #include "include/util.h"
-#include "include/common.h"
 #include "include/global.h"
+
+#include "./php_yasd_cxx.h"
 
 YASD_EXTERN_C_BEGIN
 #include "ext/standard/php_var.h"
 #include "ext/standard/php_string.h"
 YASD_EXTERN_C_END
-
-#include "./php_yasd.h"
 
 namespace yasd {
 
@@ -566,6 +565,12 @@ std::string Util::addslashes(std::string str) {
     str = std::string(ZSTR_VAL(tmp_zstr), ZSTR_LEN(tmp_zstr));
     zend_string_release(tmp_zstr);
     return str;
+}
+
+long Util::microtime() {
+    struct timeval t;
+    gettimeofday(&t, nullptr);
+    return t.tv_sec * 1000 + t.tv_usec / 1000;
 }
 
 }  // namespace yasd

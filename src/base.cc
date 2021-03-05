@@ -18,11 +18,11 @@
 #include <boost/filesystem.hpp>
 
 #include "include/util.h"
-#include "include/common.h"
 #include "include/context.h"
 #include "include/global.h"
 #include "include/base.h"
-#include "php_yasd.h"
+#include "php_yasd_cxx.h"
+#include "yasd_function_status.h"
 
 #include "main/SAPI.h"
 #include "Zend/zend_exceptions.h"
@@ -51,11 +51,14 @@ void execute_init_file() {
 
     CG(compiler_options) &= ~ZEND_COMPILE_EXTENDED_INFO;
     op_array = zend_compile_file(&file_handle, ZEND_EVAL);
-    CG(compiler_options) |= ZEND_COMPILE_EXTENDED_INFO;
 
     zend_execute_ex = old_execute_ex;
     zend_execute(op_array, &retval);
     zend_execute_ex = yasd_execute_ex;
+
+    // we need to set ZEND_COMPILE_EXTENDED_INFO after the zend_execute function,
+    // not after zend_compile_file, because zend_execute may include files
+    CG(compiler_options) |= ZEND_COMPILE_EXTENDED_INFO;
 
     zend_destroy_file_handle(&file_handle);
     destroy_op_array(op_array);
@@ -142,12 +145,57 @@ void clear_watch_point(zend_execute_data *execute_data) {
     }
 }
 
-yasd::CurrentFunctionStatus *save_current_function_status() {
+yasd::CurrentFunctionStatus *save_current_function_status(zend_execute_data *execute_data) {
     yasd::Context *context = global->get_current_context();
 
     yasd::CurrentFunctionStatus *current_function_status = new yasd::CurrentFunctionStatus();
+    current_function_status->start_time = yasd::Util::microtime();
+    current_function_status->execute_data = execute_data;
     context->function_status.emplace_back(current_function_status);
     return current_function_status;
+}
+
+void analyze_function(yasd::CurrentFunctionStatus *function_status) {
+    zval argv[1];
+    zval *object = &argv[0];
+    long execute_time;
+    zend_string *function_name = nullptr;
+    zend_string *parent_function_name = nullptr;
+
+    function_name = function_status->execute_data->func->common.function_name;
+    function_status->end_time = yasd::Util::microtime();
+    execute_time = function_status->end_time - function_status->start_time;
+
+    if (!global->onGreaterThanMilliseconds) {
+        return;
+    }
+
+    if (execute_time < YASD_G(max_executed_milliseconds)) {
+        return;
+    }
+
+    object_init_ex(object, yasd_function_status_ce);
+
+    zend_update_property_long(
+            yasd_function_status_ce, YASD_Z8_OBJ_P(object), ZEND_STRL("executeTime"), execute_time);
+    zend_update_property_str(
+            yasd_function_status_ce, YASD_Z8_OBJ_P(object), ZEND_STRL("functionName"), 
+            function_name ? function_name : zend_empty_string);
+
+    if (function_status->execute_data->prev_execute_data && function_status->execute_data->prev_execute_data->func) {
+        parent_function_name = function_status->execute_data->prev_execute_data->func->common.function_name;
+        zend_update_property_str(
+            yasd_function_status_ce, YASD_Z8_OBJ_P(object), ZEND_STRL("parentFunctionName"), 
+            parent_function_name ? parent_function_name : zend_empty_string);
+    } else {
+        zend_update_property_null(yasd_function_status_ce, YASD_Z8_OBJ_P(object), ZEND_STRL("parentFunctionName"));
+    }
+
+    zend_execute_ex = old_execute_ex;
+    zend::function::call(global->onGreaterThanMilliseconds, 1, argv, nullptr);
+    zend_execute_ex = yasd_execute_ex;
+
+    zval_ptr_dtor(&argv[0]);
 }
 
 void drop_current_function_status(yasd::CurrentFunctionStatus *function_status) {
@@ -178,8 +226,9 @@ void yasd_execute_ex(zend_execute_data *execute_data) {
 
     context->level++;
     yasd::StackFrame *frame = save_prev_stack_frame(execute_data);
-    yasd::CurrentFunctionStatus *function_status = save_current_function_status();
+    yasd::CurrentFunctionStatus *function_status = save_current_function_status(execute_data);
     old_execute_ex(execute_data);
+    analyze_function(function_status);
     drop_current_function_status(function_status);
     // reduce the function call trace
     drop_prev_stack_frame(frame);
