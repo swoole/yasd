@@ -14,6 +14,7 @@
   +----------------------------------------------------------------------+
 */
 #include "include/global.h"
+#include "include/util.h"
 #include "include/debuger_mode_base.h"
 
 namespace yasd {
@@ -56,5 +57,62 @@ int DebuggerModeBase::parse_step_out_cmd() {
     global->do_finish = true;
 
     return NEXT_OPLINE;
+}
+
+bool DebuggerModeBase::is_hit_watch_point() {
+    if (!EG(current_execute_data)) {
+        return false;
+    }
+
+    zend_function *func = EG(current_execute_data)->func;
+
+    auto var_watchpoint = global->watchPoints.var_watchpoint.find(func);
+
+    if (var_watchpoint == global->watchPoints.var_watchpoint.end()) {
+        return false;
+    }
+
+    for (auto watchpointIter = var_watchpoint->second->begin(); watchpointIter != var_watchpoint->second->end();
+         watchpointIter++) {
+        std::string var_name = watchpointIter->first;
+        yasd::WatchPointElement &watchpoint = watchpointIter->second;
+
+        zval *new_var = yasd::util::variable::find_variable(var_name);
+        if (new_var == nullptr) {
+            zval tmp;
+            new_var = &tmp;
+            ZVAL_UNDEF(new_var);
+        }
+        std::string op = watchpoint.operation;
+        zval *old_var = &watchpoint.old_var;
+
+        if (watchpoint.type == yasd::WatchPointElement::VARIABLE_CHANGE) {
+            zval *old_var = &watchpoint.old_var;
+
+            if (!yasd::util::variable::is_equal(new_var, old_var)) {
+                watchpoint.old_var = *new_var;
+                return true;
+            }
+        } else {
+            if (op == "<") {
+                if (yasd::util::variable::is_smaller(new_var, old_var)) {
+                    var_watchpoint->second->erase(watchpointIter);
+                    return true;
+                }
+            } else if (op == ">") {
+                if (yasd::util::variable::is_greater(new_var, old_var)) {
+                    var_watchpoint->second->erase(watchpointIter);
+                    return true;
+                }
+            } else if (op == "==") {
+                if (yasd::util::variable::is_equal(new_var, old_var)) {
+                    var_watchpoint->second->erase(watchpointIter);
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
 }
 }  // namespace yasd

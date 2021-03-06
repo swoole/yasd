@@ -185,6 +185,23 @@ int get_prev_file_lineno() {
 
     return 0;
 }
+
+bool eval_string(char *str, zval *retval_ptr, char *string_name) {
+    int origin_error_reporting = EG(error_reporting);
+
+    // we need to turn off the warning if the variable is UNDEF
+    EG(error_reporting) = 0;
+
+    int ret;
+    ret = zend_eval_string(str, retval_ptr, const_cast<char *>("yasd://debug-eval"));
+    if (ret == FAILURE) {
+        return false;
+    }
+
+    EG(error_reporting) = origin_error_reporting;
+
+    return true;
+}
 } // execution
 
 namespace string {
@@ -217,6 +234,25 @@ std::string addslashes(std::string str) {
     zend_string_release(tmp_zstr);
     return str;
 }
+
+bool is_substring(std::string sub_str, std::string target_str) {
+    for (size_t i = 0; i < sub_str.length(); i++) {
+        if (sub_str[i] != target_str[i]) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool is_integer(const std::string &s) {
+    if (s.empty() || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+'))) return false;
+
+    char *p;
+    strtol(s.c_str(), &p, 10);
+
+    return (*p == 0);
+}
 } // namespace string
 
 namespace time {
@@ -227,6 +263,21 @@ long microtime() {
     return t.tv_sec * 1000 + t.tv_usec / 1000;
 }
 } // namespace time
+
+namespace option {
+
+std::string get_value(const std::vector<std::string> &options, std::string option) {
+    auto iter = options.begin();
+
+    for (; iter != options.end(); iter++) {
+        if (option == *iter) {
+            break;
+        }
+    }
+
+    return *(++iter);
+}
+}
 
 
 void print_property(std::string obj_name, std::string property_name) {
@@ -291,128 +342,6 @@ void printf_info(int color, const char *format, ...) {
     }
 }
 
-bool is_match(std::string sub_str, std::string target_str) {
-    for (size_t i = 0; i < sub_str.length(); i++) {
-        if (sub_str[i] != target_str[i]) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-// create file and clear file
-void clear_breakpoint_cache_file() {
-    std::string cache_filename_path = yasd::util::get_breakpoint_cache_filename();
-
-    if (cache_filename_path == "") {
-        return;
-    }
-
-    std::ofstream file(cache_filename_path);
-    file.close();
-}
-
-std::string get_breakpoint_cache_filename() {
-    return std::string(YASD_G(breakpoints_file));
-}
-
-void cache_breakpoint(std::string filename, int lineno) {
-    std::ofstream file;
-    std::string cache_filename_path = yasd::util::get_breakpoint_cache_filename();
-
-    if (cache_filename_path == "") {
-        return;
-    }
-
-    file.open(cache_filename_path, std::ios_base::app);
-    file << filename + ":" + std::to_string(lineno) + "\n";
-    file.close();
-}
-
-bool is_hit_watch_point() {
-    if (!EG(current_execute_data)) {
-        return false;
-    }
-
-    zend_function *func = EG(current_execute_data)->func;
-
-    auto var_watchpoint = global->watchPoints.var_watchpoint.find(func);
-
-    if (var_watchpoint == global->watchPoints.var_watchpoint.end()) {
-        return false;
-    }
-
-    for (auto watchpointIter = var_watchpoint->second->begin(); watchpointIter != var_watchpoint->second->end();
-         watchpointIter++) {
-        std::string var_name = watchpointIter->first;
-        yasd::WatchPointElement &watchpoint = watchpointIter->second;
-
-        zval *new_var = yasd::util::variable::find_variable(var_name);
-        if (new_var == nullptr) {
-            zval tmp;
-            new_var = &tmp;
-            ZVAL_UNDEF(new_var);
-        }
-        std::string op = watchpoint.operation;
-        zval *old_var = &watchpoint.old_var;
-
-        if (watchpoint.type == yasd::WatchPointElement::VARIABLE_CHANGE) {
-            zval *old_var = &watchpoint.old_var;
-
-            if (!variable::is_equal(new_var, old_var)) {
-                watchpoint.old_var = *new_var;
-                return true;
-            }
-        } else {
-            if (op == "<") {
-                if (variable::is_smaller(new_var, old_var)) {
-                    var_watchpoint->second->erase(watchpointIter);
-                    return true;
-                }
-            } else if (op == ">") {
-                if (variable::is_greater(new_var, old_var)) {
-                    var_watchpoint->second->erase(watchpointIter);
-                    return true;
-                }
-            } else if (op == "==") {
-                if (variable::is_equal(new_var, old_var)) {
-                    var_watchpoint->second->erase(watchpointIter);
-                    return true;
-                }
-            }
-        }
-    }
-
-    return false;
-}
-
-bool is_integer(const std::string &s) {
-    if (s.empty() || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+'))) return false;
-
-    char *p;
-    strtol(s.c_str(), &p, 10);
-
-    return (*p == 0);
-}
-
-bool eval(char *str, zval *retval_ptr, char *string_name) {
-    int origin_error_reporting = EG(error_reporting);
-
-    // we need to turn off the warning if the variable is UNDEF
-    EG(error_reporting) = 0;
-
-    int ret;
-    ret = zend_eval_string(str, retval_ptr, const_cast<char *>("yasd://debug-eval"));
-    if (ret == FAILURE) {
-        return false;
-    }
-
-    EG(error_reporting) = origin_error_reporting;
-
-    return true;
-}
-
 zend_array *get_properties(zval *zobj) {
 #if PHP_VERSION_ID >= 70400
     return zend_get_properties_for(zobj, ZEND_PROP_PURPOSE_VAR_EXPORT);
@@ -431,18 +360,6 @@ std::string get_property_name(zend_string *property_name) {
     zend_unmangle_property_name_ex(property_name, &class_name, &_property_name, &_property_name_len);
 
     return std::string(_property_name, _property_name_len);
-}
-
-std::string get_option_value(const std::vector<std::string> &options, std::string option) {
-    auto iter = options.begin();
-
-    for (; iter != options.end(); iter++) {
-        if (option == *iter) {
-            break;
-        }
-    }
-
-    return *(++iter);
 }
 
 // TODO(codinghuang): maybe we can use re2c and yacc later

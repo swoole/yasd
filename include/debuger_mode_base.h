@@ -34,6 +34,8 @@ class DebuggerModeBase {
     int parse_step_into_cmd();
     int parse_step_out_cmd();
 
+    bool is_hit_watch_point();
+
     virtual void init() = 0;
     virtual void handle_request(const char *filename, int lineno) = 0;
     virtual void handle_stop() = 0;

@@ -43,16 +43,23 @@ namespace execution {
   const char *get_prev_filename();
   const char *get_prev_function_name();
   int get_prev_file_lineno();
+  bool eval_string(char *str, zval *retval_ptr, char *string_name);
 }
 
 namespace string {
   std::string stripslashes(std::string str);
   std::string stripcslashes(std::string str);
   std::string addslashes(std::string str);
+  bool is_substring(std::string sub_str, std::string target_str);
+  bool is_integer(const std::string &s);
 }
 
 namespace time {
   long microtime(void);
+}
+
+namespace option {
+  std::string get_value(const std::vector<std::string> &options, std::string option);
 }
     
   void print_property(std::string obj_name, std::string property_name);
@@ -64,25 +71,11 @@ namespace time {
       printf_info(color, format, args...);
       std::cout << std::endl;
   }
-  
-  bool is_match(std::string sub_str, std::string target_str);
-
-  void clear_breakpoint_cache_file();
-  std::string get_breakpoint_cache_filename();
-  void cache_breakpoint(std::string filename, int lineno);
-
-  bool is_hit_watch_point();
-
-  bool is_integer(const std::string &s);
-
-  bool eval(char *str, zval *retval_ptr, char *string_name);
 
   zend_array *get_properties(zval *zobj);
 
   // get the property name of a common property, including public, protected, private
   std::string get_property_name(zend_string *property_name);
-
-  std::string get_option_value(const std::vector<std::string> &options, std::string option);
 
   zval *fetch_zval_by_fullname(std::string fullname);
 } // namespace yasd

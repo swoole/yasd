@@ -104,7 +104,7 @@ int RemoteDebugger::execute_cmd() {
 
     boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
 
-    transaction_id = atoi(yasd::util::get_option_value(exploded_cmd, "-i").c_str());
+    transaction_id = atoi(yasd::util::option::get_value(exploded_cmd, "-i").c_str());
 
     auto handler = find_cmd_handler(exploded_cmd[0]);
 
@@ -320,7 +320,7 @@ int RemoteDebugger::parse_feature_set_cmd() {
     tinyxml2::XMLElement *root;
     yasd::ResponseElement response_element;
 
-    std::string feature = yasd::util::get_option_value(exploded_cmd, "-n");
+    std::string feature = yasd::util::option::get_value(exploded_cmd, "-n");
 
     root = doc->NewElement("response");
     doc->LinkEndChild(root);
@@ -394,7 +394,7 @@ int RemoteDebugger::parse_eval_cmd() {
 
     // std::cout << "base64_decode eval_str: " << eval_str << std::endl;
 
-    yasd::util::eval(const_cast<char *>(eval_str.c_str()), &ret_zval, const_cast<char *>("yasd://debug-eval"));
+    yasd::util::execution::eval_string(const_cast<char *>(eval_str.c_str()), &ret_zval, const_cast<char *>("yasd://debug-eval"));
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
     tinyxml2::XMLElement *root;
@@ -455,7 +455,7 @@ int RemoteDebugger::parse_breakpoint_set_cmd() {
         return yasd::DebuggerModeBase::FAILED;
     }
 
-    breakpoint_type = yasd::util::get_option_value(exploded_cmd, "-t");
+    breakpoint_type = yasd::util::option::get_value(exploded_cmd, "-t");
 
     if (breakpoint_type == "line") {
         parse_breakpoint_set_line_cmd(exploded_cmd);
@@ -482,8 +482,8 @@ int RemoteDebugger::parse_breakpoint_set_cmd() {
 void RemoteDebugger::parse_breakpoint_set_line_cmd(const std::vector<std::string> &exploded_cmd) {
     // https://xdebug.org/docs/dbgp#id3
 
-    std::string file_url = yasd::util::get_option_value(exploded_cmd, "-f");
-    int lineno = atoi(yasd::util::get_option_value(exploded_cmd, "-n").c_str());
+    std::string file_url = yasd::util::option::get_value(exploded_cmd, "-f");
+    int lineno = atoi(yasd::util::option::get_value(exploded_cmd, "-n").c_str());
 
     file_url.substr(sizeof("file://") - 1, file_url.length() - (sizeof("file://") - 1));
     std::string filename = file_url.substr(7, file_url.length() - 7);
@@ -500,8 +500,8 @@ void RemoteDebugger::parse_breakpoint_set_line_cmd(const std::vector<std::string
 }
 
 void RemoteDebugger::parse_breakpoint_set_condition_line_cmd(const std::vector<std::string> &exploded_cmd) {
-    int lineno = atoi(yasd::util::get_option_value(exploded_cmd, "-n").c_str());
-    std::string condition = base64_decode(yasd::util::get_option_value(exploded_cmd, "--"));
+    int lineno = atoi(yasd::util::option::get_value(exploded_cmd, "-n").c_str());
+    std::string condition = base64_decode(yasd::util::option::get_value(exploded_cmd, "--"));
 
     parse_breakpoint_set_line_cmd(exploded_cmd);
 
@@ -614,7 +614,7 @@ int RemoteDebugger::parse_context_get_cmd() {
     if (exploded_cmd[0] != "context_get") {
         return yasd::DebuggerModeBase::FAILED;
     }
-    context_id = atoi(yasd::util::get_option_value(exploded_cmd, "-c").c_str());
+    context_id = atoi(yasd::util::option::get_value(exploded_cmd, "-c").c_str());
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
     tinyxml2::XMLElement *root;
@@ -666,7 +666,7 @@ int RemoteDebugger::parse_property_get_cmd() {
     response_element.set_cmd("property_get").set_transaction_id(transaction_id);
     yasd::Dbgp::get_response_doc(root, response_element);
 
-    fullname = yasd::util::get_option_value(exploded_cmd, "-n");
+    fullname = yasd::util::option::get_value(exploded_cmd, "-n");
 
     // vscode has double quotes, but PhpStorm does not
     if (fullname.front() == '"') {
@@ -753,7 +753,7 @@ std::function<int()> RemoteDebugger::find_cmd_handler(std::string cmd) {
 
 std::string RemoteDebugger::get_full_name(std::string sub_cmd) {
     for (auto &&kv : handlers) {
-        if (yasd::util::is_match(sub_cmd, kv.first)) {
+        if (yasd::util::string::is_substring(sub_cmd, kv.first)) {
             return kv.first;
         }
     }

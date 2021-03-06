@@ -21,7 +21,7 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/filesystem.hpp>
 
-#include "include/common.h"
+#include "./php_yasd_cxx.h"
 #include "include/context.h"
 #include "include/cmder_debugger.h"
 #include "include/util.h"
@@ -134,7 +134,7 @@ int CmderDebugger::parse_breakpoint_cmd() {
         global->breakpoints->insert(std::make_pair(filename, lineno_set));
     }
 
-    yasd::util::cache_breakpoint(filename, lineno);
+    cache_breakpoint(filename, lineno);
 
     yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "set breakpoint at %s:%d", filename.c_str(), lineno);
 
@@ -298,7 +298,7 @@ int CmderDebugger::parse_watch_cmd() {
         var_name = exploded_cmd[1];
         element.operation = exploded_cmd[2];
 
-        if (yasd::util::is_integer(exploded_cmd[3])) {
+        if (yasd::util::string::is_integer(exploded_cmd[3])) {
             ZVAL_LONG(&element.old_var, atoi(exploded_cmd[3].c_str()));
         } else {
             ZVAL_NEW_STR(&element.old_var, zend_string_init(exploded_cmd[3].c_str(), exploded_cmd[3].length(), 0));
@@ -360,7 +360,7 @@ bool CmderDebugger::is_disable_cmd(std::string cmd) {
 
 std::string CmderDebugger::get_full_name(std::string sub_cmd) {
     for (auto &&kv : handlers) {
-        if (yasd::util::is_match(sub_cmd, kv.first)) {
+        if (yasd::util::string::is_substring(sub_cmd, kv.first)) {
             return kv.first;
         }
     }
@@ -372,9 +372,26 @@ void CmderDebugger::show_welcome_info() {
     yasd::util::printfln_info(YASD_ECHO_GREEN, "[You can set breakpoint now]");
 }
 
+std::string CmderDebugger::get_breakpoint_cache_filename() {
+    return std::string(YASD_G(breakpoints_file));
+}
+
+void CmderDebugger::cache_breakpoint(std::string filename, int lineno) {
+    std::ofstream file;
+    std::string cache_filename_path = get_breakpoint_cache_filename();
+
+    if (cache_filename_path == "") {
+        return;
+    }
+
+    file.open(cache_filename_path, std::ios_base::app);
+    file << filename + ":" + std::to_string(lineno) + "\n";
+    file.close();
+}
+
 void CmderDebugger::reload_cache_breakpoint() {
     std::string content;
-    std::string cache_filename_path = yasd::util::get_breakpoint_cache_filename();
+    std::string cache_filename_path = get_breakpoint_cache_filename();
 
     if (cache_filename_path == "") {
         return;
