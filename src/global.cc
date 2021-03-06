@@ -70,6 +70,12 @@ Global::~Global() {
         efree(onGreaterThanMilliseconds);
         onGreaterThanMilliseconds = nullptr;
     }
+
+    if (onEnterFunction) {
+        yasd_zend_fci_cache_discard(onEnterFunction);
+        efree(onEnterFunction);
+        onEnterFunction = nullptr;
+    }
 }
 
 Context *Global::get_current_context() {

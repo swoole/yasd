@@ -57,6 +57,8 @@ class Global {
     yasd::Logger *logger = nullptr;
 
     zend_fcall_info_cache *onGreaterThanMilliseconds = nullptr;
+    zend_fcall_info_cache *onEnterFunction = nullptr;
+    zend_fcall_info_cache *onLeaveFunction = nullptr;
 
     Global();
     ~Global();

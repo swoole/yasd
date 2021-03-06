@@ -205,6 +205,42 @@ void drop_current_function_status(yasd::CurrentFunctionStatus *function_status) 
     delete function_status;
 }
 
+void callbackEnterFunction(yasd::CurrentFunctionStatus *function_status) {
+    if (!global->onEnterFunction) {
+        return;
+    }
+
+    zval argv[1];
+    zval *object = &argv[0];
+    zend_string *function_name = nullptr;
+    zend_string *parent_function_name = nullptr;
+
+    function_name = function_status->execute_data->func->common.function_name;
+
+    object_init_ex(object, yasd_function_status_ce);
+
+    zend_update_property_long(
+            yasd_function_status_ce, YASD_Z8_OBJ_P(object), ZEND_STRL("executeTime"), 0);
+    zend_update_property_str(
+            yasd_function_status_ce, YASD_Z8_OBJ_P(object), ZEND_STRL("functionName"), 
+            function_name ? function_name : zend_empty_string);
+
+    if (function_status->execute_data->prev_execute_data && function_status->execute_data->prev_execute_data->func) {
+        parent_function_name = function_status->execute_data->prev_execute_data->func->common.function_name;
+        zend_update_property_str(
+            yasd_function_status_ce, YASD_Z8_OBJ_P(object), ZEND_STRL("parentFunctionName"), 
+            parent_function_name ? parent_function_name : zend_empty_string);
+    } else {
+        zend_update_property_null(yasd_function_status_ce, YASD_Z8_OBJ_P(object), ZEND_STRL("parentFunctionName"));
+    }
+
+    zend_execute_ex = old_execute_ex;
+    zend::function::call(global->onEnterFunction, 1, argv, nullptr);
+    zend_execute_ex = yasd_execute_ex;
+
+    zval_ptr_dtor(&argv[0]);
+}
+
 void yasd_execute_ex(zend_execute_data *execute_data) {
     // if not set -e, we will not initialize global
     if (!(CG(compiler_options) & ZEND_COMPILE_EXTENDED_INFO)) {
@@ -227,6 +263,7 @@ void yasd_execute_ex(zend_execute_data *execute_data) {
     context->level++;
     yasd::StackFrame *frame = save_prev_stack_frame(execute_data);
     yasd::CurrentFunctionStatus *function_status = save_current_function_status(execute_data);
+    callbackEnterFunction(function_status);
     old_execute_ex(execute_data);
     analyze_function(function_status);
     drop_current_function_status(function_status);
