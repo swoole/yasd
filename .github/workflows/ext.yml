@@ -46,6 +46,7 @@ jobs:
     - if: startsWith(runner.os, 'Linux')
       name: Install dependencies on Linux
       run: |
+        sudo apt-get update
         sudo apt-get install libboost-all-dev
     - if: startsWith(runner.os, 'macOS')
       name: Install dependencies on macOS

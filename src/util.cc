@@ -26,9 +26,10 @@ YASD_EXTERN_C_BEGIN
 #include "ext/standard/php_string.h"
 YASD_EXTERN_C_END
 
-namespace yasd {
+namespace yasd { namespace util {
+namespace variable {
 
-HashTable *Util::get_defined_vars() {
+HashTable *get_defined_vars() {
     HashTable *symbol_table;
 
     symbol_table = zend_rebuild_symbol_table();
@@ -36,7 +37,7 @@ HashTable *Util::get_defined_vars() {
     return symbol_table;
 }
 
-zval *Util::find_variable(std::string var_name) {
+zval *find_variable(std::string var_name) {
     HashTable *defined_vars;
 
     defined_vars = get_defined_vars();
@@ -44,7 +45,7 @@ zval *Util::find_variable(std::string var_name) {
     return find_variable(defined_vars, var_name);
 }
 
-zval *Util::find_variable(zend_array *symbol_table, zend_ulong index) {
+zval *find_variable(zend_array *symbol_table, zend_ulong index) {
     zval *var;
 
     var = zend_hash_index_find(symbol_table, index);
@@ -61,7 +62,7 @@ zval *Util::find_variable(zend_array *symbol_table, zend_ulong index) {
     return var;
 }
 
-zval *Util::find_variable(zend_array *symbol_table, std::string var_name) {
+zval *find_variable(zend_array *symbol_table, std::string var_name) {
     zval *var;
 
     if (var_name == "this") {
@@ -82,19 +83,204 @@ zval *Util::find_variable(zend_array *symbol_table, std::string var_name) {
     return var;
 }
 
-void Util::print_var(std::string fullname) {
+void print_var(std::string fullname) {
     zval *var;
 
-    var = yasd::Util::fetch_zval_by_fullname(fullname);
+    var = yasd::util::fetch_zval_by_fullname(fullname);
 
     if (!var) {
-        yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "not found variable $%s", fullname.c_str());
+        yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "not found variable $%s", fullname.c_str());
     } else {
         php_var_dump(var, 1);
     }
 }
 
-void Util::print_property(std::string obj_name, std::string property_name) {
+bool is_equal(zval *op1, zval *op2) {
+    zval result;
+
+    is_equal_function(&result, op1, op2);
+    return Z_LVAL(result) == 0;
+}
+
+bool is_smaller(zval *op1, zval *op2) {
+    zval result;
+    is_smaller_function(&result, op1, op2);
+    return zend_is_true(&result) == 1;
+}
+
+bool is_greater(zval *op1, zval *op2) {
+    zval result;
+    is_smaller_or_equal_function(&result, op1, op2);
+    return zend_is_true(&result) == 0;
+}
+} // namespace variable
+
+namespace execution {
+
+const char *get_filename() {
+    zend_string *filename;
+
+    filename = zend_get_executed_filename_ex();
+
+    return ZSTR_VAL(filename);
+}
+
+const char *get_function_name() {
+    zend_execute_data *ptr = EG(current_execute_data);
+
+    while (ptr && (!ptr->func || !ZEND_USER_CODE(ptr->func->type))) {
+        ptr = ptr->prev_execute_data;
+    }
+
+    if (ptr && ptr->func && ptr->func->op_array.function_name) {
+        return ZSTR_VAL(ptr->func->op_array.function_name);
+    }
+    return "main";
+}
+
+int get_file_lineno() {
+    if (!EG(current_execute_data)) {
+        return 0;
+    }
+    return EG(current_execute_data)->opline->lineno;
+}
+
+const char *get_prev_filename() {
+    zend_execute_data *ptr = EG(current_execute_data)->prev_execute_data;
+
+    while (ptr && (!ptr->func || !ZEND_USER_CODE(ptr->func->type))) {
+        ptr = ptr->prev_execute_data;
+    }
+
+    if (ptr && ptr->func) {
+        return ptr->func->op_array.filename->val;
+    }
+
+    return "unknow file";
+}
+
+const char *get_prev_function_name() {
+    zend_execute_data *ptr = EG(current_execute_data)->prev_execute_data;
+
+    while (ptr && (!ptr->func || !ZEND_USER_CODE(ptr->func->type))) {
+        ptr = ptr->prev_execute_data;
+    }
+
+    if (ptr && ptr->func && ptr->func->op_array.function_name) {
+        return ZSTR_VAL(ptr->func->op_array.function_name);
+    }
+    return "main";
+}
+
+int get_prev_file_lineno() {
+    zend_execute_data *ptr = EG(current_execute_data)->prev_execute_data;
+
+    while (ptr && (!ptr->func || !ZEND_USER_CODE(ptr->func->type))) {
+        ptr = ptr->prev_execute_data;
+    }
+
+    if (ptr && ptr->opline) {
+        return ptr->opline->lineno;
+    }
+
+    return 0;
+}
+
+bool eval_string(char *str, zval *retval_ptr, char *string_name) {
+    int origin_error_reporting = EG(error_reporting);
+
+    // we need to turn off the warning if the variable is UNDEF
+    EG(error_reporting) = 0;
+
+    int ret;
+    ret = zend_eval_string(str, retval_ptr, const_cast<char *>("yasd://debug-eval"));
+    if (ret == FAILURE) {
+        return false;
+    }
+
+    EG(error_reporting) = origin_error_reporting;
+
+    return true;
+}
+} // execution
+
+namespace string {
+
+std::string stripslashes(std::string str) {
+    zend_string *tmp_zstr = zend_string_init(str.c_str(), str.length(), 0);
+    php_stripslashes(tmp_zstr);
+    str = std::string(ZSTR_VAL(tmp_zstr), ZSTR_LEN(tmp_zstr));
+    zend_string_release(tmp_zstr);
+    return str;
+}
+
+std::string stripcslashes(std::string str) {
+    zend_string *tmp_zstr = zend_string_init(str.c_str(), str.length(), 0);
+    php_stripcslashes(tmp_zstr);
+    str = std::string(ZSTR_VAL(tmp_zstr), ZSTR_LEN(tmp_zstr));
+    zend_string_release(tmp_zstr);
+    return str;
+}
+
+std::string addslashes(std::string str) {
+    zend_string *tmp_zstr = zend_string_init(str.c_str(), str.length(), 0);
+
+# if PHP_VERSION_ID >= 70300
+    tmp_zstr = php_addslashes(tmp_zstr);
+# else
+    tmp_zstr = php_addslashes(tmp_zstr, 0);
+# endif
+    str = std::string(ZSTR_VAL(tmp_zstr), ZSTR_LEN(tmp_zstr));
+    zend_string_release(tmp_zstr);
+    return str;
+}
+
+bool is_substring(std::string sub_str, std::string target_str) {
+    for (size_t i = 0; i < sub_str.length(); i++) {
+        if (sub_str[i] != target_str[i]) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool is_integer(const std::string &s) {
+    if (s.empty() || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+'))) return false;
+
+    char *p;
+    strtol(s.c_str(), &p, 10);
+
+    return (*p == 0);
+}
+} // namespace string
+
+namespace time {
+
+long microtime() {
+    struct timeval t;
+    gettimeofday(&t, nullptr);
+    return t.tv_sec * 1000 + t.tv_usec / 1000;
+}
+} // namespace time
+
+namespace option {
+
+std::string get_value(const std::vector<std::string> &options, std::string option) {
+    auto iter = options.begin();
+
+    for (; iter != options.end(); iter++) {
+        if (option == *iter) {
+            break;
+        }
+    }
+
+    return *(++iter);
+}
+}
+
+
+void print_property(std::string obj_name, std::string property_name) {
     zval *obj;
     zval *property;
     zend_execute_data *execute_data = EG(current_execute_data);
@@ -104,14 +290,14 @@ void Util::print_property(std::string obj_name, std::string property_name) {
             yasd_zend_read_property(Z_OBJCE_P(ZEND_THIS), ZEND_THIS, property_name.c_str(), property_name.length(), 1);
         php_var_dump(property, 1);
     } else {
-        obj = find_variable(obj_name);
+        obj = variable::find_variable(obj_name);
         if (!obj) {
-            yasd::Util::printfln_info(yasd::Color::YASD_ECHO_RED, "undefined variable %s", obj_name.c_str());
+            yasd::util::printfln_info(yasd::Color::YASD_ECHO_RED, "undefined variable %s", obj_name.c_str());
             return;
         }
         property = yasd_zend_read_property(Z_OBJCE_P(obj), obj, property_name.c_str(), property_name.length(), 1);
         if (!property) {
-            yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN,
+            yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN,
                                       "undefined property %s::$%s",
                                       ZSTR_VAL(Z_OBJCE_P(obj)->name),
                                       property_name.c_str());
@@ -123,7 +309,7 @@ void Util::print_property(std::string obj_name, std::string property_name) {
     return;
 }
 
-void Util::printf_info(int color, const char *format, ...) {
+void printf_info(int color, const char *format, ...) {
     va_list args;
     va_start(args, format);
     vsnprintf(yasd_info_buf, sizeof(yasd_info_buf), format, args);
@@ -156,221 +342,7 @@ void Util::printf_info(int color, const char *format, ...) {
     }
 }
 
-void Util::show_breakpoint_hit_info() {
-    printf_info(YASD_ECHO_GREEN, "stop at breakponit ");
-}
-
-const char *Util::get_executed_filename() {
-    zend_string *filename;
-
-    filename = zend_get_executed_filename_ex();
-
-    return ZSTR_VAL(filename);
-}
-
-const char *Util::get_executed_function_name() {
-    zend_execute_data *ptr = EG(current_execute_data);
-
-    while (ptr && (!ptr->func || !ZEND_USER_CODE(ptr->func->type))) {
-        ptr = ptr->prev_execute_data;
-    }
-
-    if (ptr && ptr->func && ptr->func->op_array.function_name) {
-        return ZSTR_VAL(ptr->func->op_array.function_name);
-    }
-    return "main";
-}
-
-int Util::get_executed_file_lineno() {
-    if (!EG(current_execute_data)) {
-        return 0;
-    }
-    return EG(current_execute_data)->opline->lineno;
-}
-
-const char *Util::get_prev_executed_filename() {
-    zend_execute_data *ptr = EG(current_execute_data)->prev_execute_data;
-
-    while (ptr && (!ptr->func || !ZEND_USER_CODE(ptr->func->type))) {
-        ptr = ptr->prev_execute_data;
-    }
-
-    if (ptr && ptr->func) {
-        return ptr->func->op_array.filename->val;
-    }
-
-    return "unknow file";
-}
-
-const char *Util::get_prev_executed_function_name() {
-    zend_execute_data *ptr = EG(current_execute_data)->prev_execute_data;
-
-    while (ptr && (!ptr->func || !ZEND_USER_CODE(ptr->func->type))) {
-        ptr = ptr->prev_execute_data;
-    }
-
-    if (ptr && ptr->func && ptr->func->op_array.function_name) {
-        return ZSTR_VAL(ptr->func->op_array.function_name);
-    }
-    return "main";
-}
-
-int Util::get_prev_executed_file_lineno() {
-    zend_execute_data *ptr = EG(current_execute_data)->prev_execute_data;
-
-    while (ptr && (!ptr->func || !ZEND_USER_CODE(ptr->func->type))) {
-        ptr = ptr->prev_execute_data;
-    }
-
-    if (ptr && ptr->opline) {
-        return ptr->opline->lineno;
-    }
-
-    return 0;
-}
-
-bool Util::is_match(std::string sub_str, std::string target_str) {
-    for (size_t i = 0; i < sub_str.length(); i++) {
-        if (sub_str[i] != target_str[i]) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-// create file and clear file
-void Util::clear_breakpoint_cache_file() {
-    std::string cache_filename_path = yasd::Util::get_breakpoint_cache_filename();
-
-    if (cache_filename_path == "") {
-        return;
-    }
-
-    std::ofstream file(cache_filename_path);
-    file.close();
-}
-
-std::string Util::get_breakpoint_cache_filename() {
-    return std::string(YASD_G(breakpoints_file));
-}
-
-void Util::cache_breakpoint(std::string filename, int lineno) {
-    std::ofstream file;
-    std::string cache_filename_path = yasd::Util::get_breakpoint_cache_filename();
-
-    if (cache_filename_path == "") {
-        return;
-    }
-
-    file.open(cache_filename_path, std::ios_base::app);
-    file << filename + ":" + std::to_string(lineno) + "\n";
-    file.close();
-}
-
-bool Util::is_variable_equal(zval *op1, zval *op2) {
-    zval result;
-
-    is_equal_function(&result, op1, op2);
-    return Z_LVAL(result) == 0;
-}
-
-bool Util::is_variable_smaller(zval *op1, zval *op2) {
-    zval result;
-    is_smaller_function(&result, op1, op2);
-    return zend_is_true(&result) == 1;
-}
-
-bool Util::is_variable_greater(zval *op1, zval *op2) {
-    zval result;
-    is_smaller_or_equal_function(&result, op1, op2);
-    return zend_is_true(&result) == 0;
-}
-
-bool Util::is_hit_watch_point() {
-    if (!EG(current_execute_data)) {
-        return false;
-    }
-
-    zend_function *func = EG(current_execute_data)->func;
-
-    auto var_watchpoint = global->watchPoints.var_watchpoint.find(func);
-
-    if (var_watchpoint == global->watchPoints.var_watchpoint.end()) {
-        return false;
-    }
-
-    for (auto watchpointIter = var_watchpoint->second->begin(); watchpointIter != var_watchpoint->second->end();
-         watchpointIter++) {
-        std::string var_name = watchpointIter->first;
-        yasd::WatchPointElement &watchpoint = watchpointIter->second;
-
-        zval *new_var = yasd::Util::find_variable(var_name);
-        if (new_var == nullptr) {
-            zval tmp;
-            new_var = &tmp;
-            ZVAL_UNDEF(new_var);
-        }
-        std::string op = watchpoint.operation;
-        zval *old_var = &watchpoint.old_var;
-
-        if (watchpoint.type == yasd::WatchPointElement::VARIABLE_CHANGE) {
-            zval *old_var = &watchpoint.old_var;
-
-            if (!yasd::Util::is_variable_equal(new_var, old_var)) {
-                watchpoint.old_var = *new_var;
-                return true;
-            }
-        } else {
-            if (op == "<") {
-                if (yasd::Util::is_variable_smaller(new_var, old_var)) {
-                    var_watchpoint->second->erase(watchpointIter);
-                    return true;
-                }
-            } else if (op == ">") {
-                if (yasd::Util::is_variable_greater(new_var, old_var)) {
-                    var_watchpoint->second->erase(watchpointIter);
-                    return true;
-                }
-            } else if (op == "==") {
-                if (yasd::Util::is_variable_equal(new_var, old_var)) {
-                    var_watchpoint->second->erase(watchpointIter);
-                    return true;
-                }
-            }
-        }
-    }
-
-    return false;
-}
-
-bool Util::is_integer(const std::string &s) {
-    if (s.empty() || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+'))) return false;
-
-    char *p;
-    strtol(s.c_str(), &p, 10);
-
-    return (*p == 0);
-}
-
-bool Util::eval(char *str, zval *retval_ptr, char *string_name) {
-    int origin_error_reporting = EG(error_reporting);
-
-    // we need to turn off the warning if the variable is UNDEF
-    EG(error_reporting) = 0;
-
-    int ret;
-    ret = zend_eval_string(str, retval_ptr, const_cast<char *>("yasd://debug-eval"));
-    if (ret == FAILURE) {
-        return false;
-    }
-
-    EG(error_reporting) = origin_error_reporting;
-
-    return true;
-}
-
-zend_array *Util::get_properties(zval *zobj) {
+zend_array *get_properties(zval *zobj) {
 #if PHP_VERSION_ID >= 70400
     return zend_get_properties_for(zobj, ZEND_PROP_PURPOSE_VAR_EXPORT);
 #else
@@ -381,7 +353,7 @@ zend_array *Util::get_properties(zval *zobj) {
     return nullptr;
 }
 
-std::string Util::get_property_name(zend_string *property_name) {
+std::string get_property_name(zend_string *property_name) {
     const char *class_name, *_property_name;
     size_t _property_name_len;
 
@@ -390,20 +362,8 @@ std::string Util::get_property_name(zend_string *property_name) {
     return std::string(_property_name, _property_name_len);
 }
 
-std::string Util::get_option_value(const std::vector<std::string> &options, std::string option) {
-    auto iter = options.begin();
-
-    for (; iter != options.end(); iter++) {
-        if (option == *iter) {
-            break;
-        }
-    }
-
-    return *(++iter);
-}
-
 // TODO(codinghuang): maybe we can use re2c and yacc later
-zval *Util::fetch_zval_by_fullname(std::string fullname) {
+zval *fetch_zval_by_fullname(std::string fullname) {
     int state = 0;
     char quotechar = 0;
     const char *ptr = fullname.c_str();
@@ -443,14 +403,14 @@ zval *Util::fetch_zval_by_fullname(std::string fullname) {
         }
 
         if (!next_zval_info->retval_ptr) {
-            next_zval_info->retval_ptr = find_variable(next_zval_info->symbol_table, name);
+            next_zval_info->retval_ptr = variable::find_variable(next_zval_info->symbol_table, name);
         } else if (Z_TYPE_P(next_zval_info->retval_ptr) == IS_ARRAY) {
             if (next_zval_info->type == NextZvalInfo::NextZvalType::ARRAY_INDEX_NUM) {
                 next_zval_info->retval_ptr =
-                    find_variable(next_zval_info->symbol_table, strtoull(name.c_str(), NULL, 10));
+                    variable::find_variable(next_zval_info->symbol_table, strtoull(name.c_str(), NULL, 10));
             } else {
-                name = yasd::Util::stripslashes(name);
-                next_zval_info->retval_ptr = find_variable(next_zval_info->symbol_table, name);
+                name = yasd::util::string::stripslashes(name);
+                next_zval_info->retval_ptr = variable::find_variable(next_zval_info->symbol_table, name);
             }
         } else {
             next_zval_info->retval_ptr = yasd_zend_read_property(
@@ -538,39 +498,6 @@ zval *Util::fetch_zval_by_fullname(std::string fullname) {
     return next_zval_info.retval_ptr;
 }
 
-std::string Util::stripslashes(std::string str) {
-    zend_string *tmp_zstr = zend_string_init(str.c_str(), str.length(), 0);
-    php_stripslashes(tmp_zstr);
-    str = std::string(ZSTR_VAL(tmp_zstr), ZSTR_LEN(tmp_zstr));
-    zend_string_release(tmp_zstr);
-    return str;
-}
-
-std::string Util::stripcslashes(std::string str) {
-    zend_string *tmp_zstr = zend_string_init(str.c_str(), str.length(), 0);
-    php_stripcslashes(tmp_zstr);
-    str = std::string(ZSTR_VAL(tmp_zstr), ZSTR_LEN(tmp_zstr));
-    zend_string_release(tmp_zstr);
-    return str;
-}
-
-std::string Util::addslashes(std::string str) {
-    zend_string *tmp_zstr = zend_string_init(str.c_str(), str.length(), 0);
-
-# if PHP_VERSION_ID >= 70300
-    tmp_zstr = php_addslashes(tmp_zstr);
-# else
-    tmp_zstr = php_addslashes(tmp_zstr, 0);
-# endif
-    str = std::string(ZSTR_VAL(tmp_zstr), ZSTR_LEN(tmp_zstr));
-    zend_string_release(tmp_zstr);
-    return str;
-}
-
-long Util::microtime() {
-    struct timeval t;
-    gettimeofday(&t, nullptr);
-    return t.tv_sec * 1000 + t.tv_usec / 1000;
-}
+} // namespace util
 
 }  // namespace yasd

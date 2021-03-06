@@ -41,7 +41,7 @@ void execute_init_file() {
     }
 
     if(access(YASD_G(init_file), F_OK) != 0 ) {
-        yasd::Util::printfln_info(yasd::Color::YASD_ECHO_RED, "[yasd] init_file is configured, but does not exist");
+        yasd::util::printfln_info(yasd::Color::YASD_ECHO_RED, "[yasd] init_file is configured, but does not exist");
         exit(255);
     }
 
@@ -114,9 +114,9 @@ yasd::StackFrame *save_prev_stack_frame(zend_execute_data *execute_data) {
 
     yasd::StackFrame *frame = new yasd::StackFrame();
     frame->level = context->level;
-    frame->filename = yasd::Util::get_prev_executed_filename();
-    frame->lineno = yasd::Util::get_prev_executed_file_lineno();
-    frame->function_name = yasd::Util::get_prev_executed_function_name();
+    frame->filename = yasd::util::execution::get_prev_filename();
+    frame->lineno = yasd::util::execution::get_prev_file_lineno();
+    frame->function_name = yasd::util::execution::get_prev_function_name();
     context->strace->emplace_back(frame);
     return frame;
 }
@@ -149,7 +149,7 @@ yasd::CurrentFunctionStatus *save_current_function_status(zend_execute_data *exe
     yasd::Context *context = global->get_current_context();
 
     yasd::CurrentFunctionStatus *current_function_status = new yasd::CurrentFunctionStatus();
-    current_function_status->start_time = yasd::Util::microtime();
+    current_function_status->start_time = yasd::util::time::microtime();
     current_function_status->execute_data = execute_data;
     context->function_status.emplace_back(current_function_status);
     return current_function_status;
@@ -163,7 +163,7 @@ void analyze_function(yasd::CurrentFunctionStatus *function_status) {
     zend_string *parent_function_name = nullptr;
 
     function_name = function_status->execute_data->func->common.function_name;
-    function_status->end_time = yasd::Util::microtime();
+    function_status->end_time = yasd::util::time::microtime();
     execute_time = function_status->end_time - function_status->start_time;
 
     if (!global->onGreaterThanMilliseconds) {

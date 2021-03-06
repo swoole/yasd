@@ -21,7 +21,7 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/filesystem.hpp>
 
-#include "include/common.h"
+#include "./php_yasd_cxx.h"
 #include "include/context.h"
 #include "include/cmder_debugger.h"
 #include "include/util.h"
@@ -44,7 +44,7 @@ void CmderDebugger::init() {
     do {
         cmd = get_next_cmd();
         if (cmd == "") {
-            yasd::Util::printfln_info(yasd::Color::YASD_ECHO_RED, "please input cmd!");
+            yasd::util::printfln_info(yasd::Color::YASD_ECHO_RED, "please input cmd!");
             continue;
         }
         status = execute_cmd();
@@ -60,9 +60,9 @@ void CmderDebugger::handle_request(const char *filename, int lineno) {
     boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
 
     if (get_full_name(exploded_cmd[0]) == "run" || get_full_name(exploded_cmd[0]) == "continue") {
-        yasd::Util::printf_info(yasd::Color::YASD_ECHO_MAGENTA, "stop because of breakpoint ");
+        yasd::util::printf_info(yasd::Color::YASD_ECHO_MAGENTA, "stop because of breakpoint ");
     } else {
-        yasd::Util::printf_info(
+        yasd::util::printf_info(
             yasd::Color::YASD_ECHO_MAGENTA, "stop because of %s ", get_full_name(exploded_cmd[0]).c_str());
     }
 
@@ -75,7 +75,7 @@ void CmderDebugger::handle_request(const char *filename, int lineno) {
 
         cmd = get_next_cmd();
         if (cmd == "") {
-            yasd::Util::printfln_info(yasd::Color::YASD_ECHO_RED, "please input cmd!");
+            yasd::util::printfln_info(yasd::Color::YASD_ECHO_RED, "please input cmd!");
             continue;
         }
         status = execute_cmd();
@@ -114,13 +114,13 @@ int CmderDebugger::parse_breakpoint_cmd() {
 
     // breakpoint in current file with lineno
     if (exploded_cmd.size() == 2) {
-        filename = yasd::Util::get_executed_filename();
+        filename = yasd::util::execution::get_filename();
         lineno = atoi(exploded_cmd[1].c_str());
     } else if (exploded_cmd.size() == 3) {
         filename = exploded_cmd[1];
         lineno = atoi(exploded_cmd[2].c_str());
     } else {
-        yasd::Util::printfln_info(YASD_ECHO_RED, "use set breakpoint cmd error!");
+        yasd::util::printfln_info(YASD_ECHO_RED, "use set breakpoint cmd error!");
         return RECV_CMD_AGAIN;
     }
 
@@ -134,9 +134,9 @@ int CmderDebugger::parse_breakpoint_cmd() {
         global->breakpoints->insert(std::make_pair(filename, lineno_set));
     }
 
-    yasd::Util::cache_breakpoint(filename, lineno);
+    cache_breakpoint(filename, lineno);
 
-    yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "set breakpoint at %s:%d", filename.c_str(), lineno);
+    yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "set breakpoint at %s:%d", filename.c_str(), lineno);
 
     return RECV_CMD_AGAIN;
 }
@@ -149,13 +149,13 @@ int CmderDebugger::parse_delete_breakpoint_cmd() {
     boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
 
     if (exploded_cmd.size() == 2) {
-        filename = yasd::Util::get_executed_filename();
+        filename = yasd::util::execution::get_filename();
         lineno = atoi(exploded_cmd[1].c_str());
     } else if (exploded_cmd.size() == 3) {
         filename = exploded_cmd[1];
         lineno = atoi(exploded_cmd[2].c_str());
     } else {
-        yasd::Util::printfln_info(YASD_ECHO_RED, "use delete breakpoint cmd error!");
+        yasd::util::printfln_info(YASD_ECHO_RED, "use delete breakpoint cmd error!");
         return RECV_CMD_AGAIN;
     }
 
@@ -166,9 +166,9 @@ int CmderDebugger::parse_delete_breakpoint_cmd() {
         if (iter->second.empty()) {
             global->breakpoints->erase(iter->first);
         }
-        yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "delete breakpoint at %s:%d", filename.c_str(), lineno);
+        yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "delete breakpoint at %s:%d", filename.c_str(), lineno);
     } else {
-        yasd::Util::printfln_info(YASD_ECHO_RED, "breakpoint at %s:%d is not existed!", filename.c_str(), lineno);
+        yasd::util::printfln_info(YASD_ECHO_RED, "breakpoint at %s:%d is not existed!", filename.c_str(), lineno);
     }
 
     return RECV_CMD_AGAIN;
@@ -176,11 +176,11 @@ int CmderDebugger::parse_delete_breakpoint_cmd() {
 
 int CmderDebugger::parse_info_cmd() {
     if (global->breakpoints->empty()) {
-        yasd::Util::printfln_info(YASD_ECHO_RED, "no found breakpoints!");
+        yasd::util::printfln_info(YASD_ECHO_RED, "no found breakpoints!");
     }
     for (auto i = global->breakpoints->begin(); i != global->breakpoints->end(); i++) {
         for (auto j = i->second.begin(); j != i->second.end(); j++) {
-            yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "filename: %s:%d", i->first.c_str(), *j);
+            yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "filename: %s:%d", i->first.c_str(), *j);
         }
     }
 
@@ -199,11 +199,11 @@ int CmderDebugger::parse_level_cmd() {
 int CmderDebugger::parse_backtrace_cmd() {
     yasd::Context *context = global->get_current_context();
 
-    yasd::Util::printfln_info(
-        YASD_ECHO_GREEN, "%s:%d", yasd::Util::get_executed_filename(), yasd::Util::get_executed_file_lineno());
+    yasd::util::printfln_info(
+        YASD_ECHO_GREEN, "%s:%d", yasd::util::execution::get_filename(), yasd::util::execution::get_file_lineno());
 
     for (auto iter = context->strace->rbegin(); iter != context->strace->rend(); ++iter) {
-        yasd::Util::printfln_info(YASD_ECHO_GREEN, "%s:%d", (*iter)->filename.c_str(), (*iter)->lineno);
+        yasd::util::printfln_info(YASD_ECHO_GREEN, "%s:%d", (*iter)->filename.c_str(), (*iter)->lineno);
     }
 
     return RECV_CMD_AGAIN;
@@ -214,7 +214,7 @@ int CmderDebugger::parse_continue_cmd() {
 }
 
 int CmderDebugger::parse_quit_cmd() {
-    yasd::Util::printfln_info(YASD_ECHO_RED, "quit!");
+    yasd::util::printfln_info(YASD_ECHO_RED, "quit!");
     exit(255);
 
     return FAILED;
@@ -225,7 +225,7 @@ int CmderDebugger::parse_print_cmd() {
 
     boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
 
-    yasd::Util::print_var(exploded_cmd[1]);
+    yasd::util::variable::print_var(exploded_cmd[1]);
     global->do_next = true;
 
     return RECV_CMD_AGAIN;
@@ -233,7 +233,7 @@ int CmderDebugger::parse_print_cmd() {
 
 int CmderDebugger::parse_list_cmd() {
     int lineno = last_list_lineno;
-    const char *filename = yasd::Util::get_executed_filename();
+    const char *filename = yasd::util::execution::get_filename();
     yasd::SourceReader reader(filename);
     std::vector<std::string> exploded_cmd;
 
@@ -277,13 +277,13 @@ int CmderDebugger::parse_watch_cmd() {
 
     boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
     if (exploded_cmd.size() < 2) {
-        yasd::Util::printfln_info(yasd::Color::YASD_ECHO_RED, "you should set watch point");
+        yasd::util::printfln_info(yasd::Color::YASD_ECHO_RED, "you should set watch point");
         return RECV_CMD_AGAIN;
     } else if (exploded_cmd.size() == 2) {
         element.type = yasd::WatchPointElement::t::VARIABLE_CHANGE;
         var_name = exploded_cmd[1];
 
-        zval *old_var = yasd::Util::find_variable(var_name);
+        zval *old_var = yasd::util::variable::find_variable(var_name);
 
         if (!old_var) {
             zval tmp;
@@ -298,7 +298,7 @@ int CmderDebugger::parse_watch_cmd() {
         var_name = exploded_cmd[1];
         element.operation = exploded_cmd[2];
 
-        if (yasd::Util::is_integer(exploded_cmd[3])) {
+        if (yasd::util::string::is_integer(exploded_cmd[3])) {
             ZVAL_LONG(&element.old_var, atoi(exploded_cmd[3].c_str()));
         } else {
             ZVAL_NEW_STR(&element.old_var, zend_string_init(exploded_cmd[3].c_str(), exploded_cmd[3].length(), 0));
@@ -314,7 +314,7 @@ int CmderDebugger::parse_watch_cmd() {
         iter->second->insert(std::make_pair(var_name, element));
     }
 
-    yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "watching variable $%s", var_name.c_str());
+    yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "watching variable $%s", var_name.c_str());
 
     return RECV_CMD_AGAIN;
 }
@@ -325,22 +325,22 @@ int CmderDebugger::parse_unwatch_cmd() {
 
     boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
     if (exploded_cmd.size() < 2) {
-        yasd::Util::printfln_info(yasd::Color::YASD_ECHO_RED, "you should set watch point");
+        yasd::util::printfln_info(yasd::Color::YASD_ECHO_RED, "you should set watch point");
         return RECV_CMD_AGAIN;
     }
     std::string var_name = exploded_cmd[1];
 
     auto iter = global->watchPoints.var_watchpoint.find(func);
     if (iter == global->watchPoints.var_watchpoint.end()) {
-        yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "not found watch point $%s", var_name.c_str());
+        yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "not found watch point $%s", var_name.c_str());
     } else {
         auto zval_iter = iter->second->find(var_name);
         if (zval_iter == iter->second->end()) {
-            yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "not found watch point $%s", var_name.c_str());
+            yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "not found watch point $%s", var_name.c_str());
         } else {
             zval_dtor(&zval_iter->second.old_var);
             iter->second->erase(var_name);
-            yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "unwatch variable $%s", var_name.c_str());
+            yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "unwatch variable $%s", var_name.c_str());
         }
     }
 
@@ -360,7 +360,7 @@ bool CmderDebugger::is_disable_cmd(std::string cmd) {
 
 std::string CmderDebugger::get_full_name(std::string sub_cmd) {
     for (auto &&kv : handlers) {
-        if (yasd::Util::is_match(sub_cmd, kv.first)) {
+        if (yasd::util::string::is_substring(sub_cmd, kv.first)) {
             return kv.first;
         }
     }
@@ -368,13 +368,30 @@ std::string CmderDebugger::get_full_name(std::string sub_cmd) {
 }
 
 void CmderDebugger::show_welcome_info() {
-    yasd::Util::printfln_info(YASD_ECHO_GREEN, "[Welcome to yasd, the Swoole debugger]");
-    yasd::Util::printfln_info(YASD_ECHO_GREEN, "[You can set breakpoint now]");
+    yasd::util::printfln_info(YASD_ECHO_GREEN, "[Welcome to yasd, the Swoole debugger]");
+    yasd::util::printfln_info(YASD_ECHO_GREEN, "[You can set breakpoint now]");
+}
+
+std::string CmderDebugger::get_breakpoint_cache_filename() {
+    return std::string(YASD_G(breakpoints_file));
+}
+
+void CmderDebugger::cache_breakpoint(std::string filename, int lineno) {
+    std::ofstream file;
+    std::string cache_filename_path = get_breakpoint_cache_filename();
+
+    if (cache_filename_path == "") {
+        return;
+    }
+
+    file.open(cache_filename_path, std::ios_base::app);
+    file << filename + ":" + std::to_string(lineno) + "\n";
+    file.close();
 }
 
 void CmderDebugger::reload_cache_breakpoint() {
     std::string content;
-    std::string cache_filename_path = yasd::Util::get_breakpoint_cache_filename();
+    std::string cache_filename_path = get_breakpoint_cache_filename();
 
     if (cache_filename_path == "") {
         return;
@@ -404,7 +421,7 @@ void CmderDebugger::reload_cache_breakpoint() {
 
         auto iter = global->breakpoints->find(filename);
 
-        yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "reload breakpoint at %s:%d", filename.c_str(), lineno);
+        yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "reload breakpoint at %s:%d", filename.c_str(), lineno);
 
         if (iter != global->breakpoints->end()) {
             iter->second.insert(lineno);
@@ -423,7 +440,7 @@ int CmderDebugger::execute_cmd() {
 
     if (!global->is_running) {
         if (is_disable_cmd(exploded_cmd[0])) {
-            yasd::Util::printfln_info(YASD_ECHO_RED, "program is not running!");
+            yasd::util::printfln_info(YASD_ECHO_RED, "program is not running!");
             return RECV_CMD_AGAIN;
         }
     }

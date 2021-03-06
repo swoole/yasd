@@ -201,7 +201,7 @@ void Dbgp::get_zend_array_child_property_doc(tinyxml2::XMLElement *child, const 
                     }
                 } else {  // string key
                     child_name = ZSTR_VAL(key);
-                    slashe_child_name = yasd::Util::addslashes(std::string(ZSTR_VAL(key), ZSTR_LEN(key)));
+                    slashe_child_name = yasd::util::string::addslashes(std::string(ZSTR_VAL(key), ZSTR_LEN(key)));
 
                     if (property_element.fullname != "") {  // eval don't need fullname in phpstorm
                         child_fullname = property_element.fullname + "[\"" + slashe_child_name + "\"]";
@@ -234,7 +234,7 @@ void Dbgp::get_zend_object_child_property_doc(tinyxml2::XMLElement *child, const
     zval *val;
 
     // TODO(codinghuang): it seems that properties will be nullptr
-    properties = yasd::Util::get_properties(property_element.value);
+    properties = yasd::util::get_properties(property_element.value);
     int level = property_element.level;
 
     child->SetAttribute("type", "object");
@@ -258,7 +258,7 @@ void Dbgp::get_zend_object_child_property_doc(tinyxml2::XMLElement *child, const
                 std::string child_fullname;
                 std::string child_name;
 
-                child_name = yasd::Util::get_property_name(key);
+                child_name = yasd::util::get_property_name(key);
                 if (property_element.fullname != "") {  // eval don't need fullname in phpstorm
                     child_fullname = property_element.fullname + "->" + child_name;
                 }
