@@ -114,7 +114,7 @@ int CmderDebugger::parse_breakpoint_cmd() {
 
     // breakpoint in current file with lineno
     if (exploded_cmd.size() == 2) {
-        filename = yasd::util::get_executed_filename();
+        filename = yasd::util::execution::get_filename();
         lineno = atoi(exploded_cmd[1].c_str());
     } else if (exploded_cmd.size() == 3) {
         filename = exploded_cmd[1];
@@ -149,7 +149,7 @@ int CmderDebugger::parse_delete_breakpoint_cmd() {
     boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
 
     if (exploded_cmd.size() == 2) {
-        filename = yasd::util::get_executed_filename();
+        filename = yasd::util::execution::get_filename();
         lineno = atoi(exploded_cmd[1].c_str());
     } else if (exploded_cmd.size() == 3) {
         filename = exploded_cmd[1];
@@ -200,7 +200,7 @@ int CmderDebugger::parse_backtrace_cmd() {
     yasd::Context *context = global->get_current_context();
 
     yasd::util::printfln_info(
-        YASD_ECHO_GREEN, "%s:%d", yasd::util::get_executed_filename(), yasd::util::get_executed_file_lineno());
+        YASD_ECHO_GREEN, "%s:%d", yasd::util::execution::get_filename(), yasd::util::execution::get_file_lineno());
 
     for (auto iter = context->strace->rbegin(); iter != context->strace->rend(); ++iter) {
         yasd::util::printfln_info(YASD_ECHO_GREEN, "%s:%d", (*iter)->filename.c_str(), (*iter)->lineno);
@@ -225,7 +225,7 @@ int CmderDebugger::parse_print_cmd() {
 
     boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
 
-    yasd::util::print_var(exploded_cmd[1]);
+    yasd::util::variable::print_var(exploded_cmd[1]);
     global->do_next = true;
 
     return RECV_CMD_AGAIN;
@@ -233,7 +233,7 @@ int CmderDebugger::parse_print_cmd() {
 
 int CmderDebugger::parse_list_cmd() {
     int lineno = last_list_lineno;
-    const char *filename = yasd::util::get_executed_filename();
+    const char *filename = yasd::util::execution::get_filename();
     yasd::SourceReader reader(filename);
     std::vector<std::string> exploded_cmd;
 
@@ -283,7 +283,7 @@ int CmderDebugger::parse_watch_cmd() {
         element.type = yasd::WatchPointElement::t::VARIABLE_CHANGE;
         var_name = exploded_cmd[1];
 
-        zval *old_var = yasd::util::find_variable(var_name);
+        zval *old_var = yasd::util::variable::find_variable(var_name);
 
         if (!old_var) {
             zval tmp;

@@ -229,7 +229,7 @@ ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
         return;
     }
 
-    filename = yasd::util::get_executed_filename();
+    filename = yasd::util::execution::get_filename();
     start_lineno = lineno = online->lineno;
 
     if (yasd::util::is_hit_watch_point()) {

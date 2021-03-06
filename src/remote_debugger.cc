@@ -189,7 +189,7 @@ ssize_t RemoteDebugger::send_init_event_message() {
         .set_copyright("Copyright (c) 2020-2021 by Codinghuang")
         .set_debugger_name("Yasd")
         .set_debugger_version(PHP_YASD_VERSION)
-        .set_fileuri("file://" + std::string(yasd::util::get_executed_filename()))
+        .set_fileuri("file://" + std::string(yasd::util::execution::get_filename()))
         .set_idekey("hantaohuang")
         .set_language("PHP")
         .set_language_version(PHP_VERSION)
@@ -228,7 +228,7 @@ void RemoteDebugger::init_local_variables_xml_child_node(tinyxml2::XMLElement *r
         std::string name = "$" + std::string(ZSTR_VAL(var_name));
         std::string fullname = std::string(ZSTR_VAL(var_name));
 
-        zval *var = yasd::util::find_variable(ZSTR_VAL(var_name));
+        zval *var = yasd::util::variable::find_variable(ZSTR_VAL(var_name));
 
         yasd::PropertyElement property_element;
         property_element.set_type(zend_zval_type_name(var))
@@ -545,14 +545,14 @@ int RemoteDebugger::parse_stack_get_cmd() {
     root->SetAttribute("id", breakpoint_admin_add());
 
     child = root->InsertNewChildElement("stack");
-    const char *tmp = yasd::util::get_executed_function_name();
+    const char *tmp = yasd::util::execution::get_function_name();
     child->SetAttribute("where", tmp);
     child->SetAttribute("level", "0");
     child->SetAttribute("type", "file");
 
-    std::string fileuri = "file://" + std::string(yasd::util::get_executed_filename());
+    std::string fileuri = "file://" + std::string(yasd::util::execution::get_filename());
     child->SetAttribute("filename", fileuri.c_str());
-    child->SetAttribute("lineno", yasd::util::get_executed_file_lineno());
+    child->SetAttribute("lineno", yasd::util::execution::get_file_lineno());
 
     for (auto iter = context->strace->rbegin(); iter != context->strace->rend(); ++iter) {
         // yasd::util::printfln_info(YASD_ECHO_GREEN, "%s:%d", (*iter)->filename.c_str(), (*iter)->lineno);
@@ -670,7 +670,7 @@ int RemoteDebugger::parse_property_get_cmd() {
 
     // vscode has double quotes, but PhpStorm does not
     if (fullname.front() == '"') {
-        fullname = yasd::util::stripcslashes(fullname);
+        fullname = yasd::util::string::stripcslashes(fullname);
         fullname.erase(0, 1);
     }
 

@@ -201,7 +201,7 @@ void Dbgp::get_zend_array_child_property_doc(tinyxml2::XMLElement *child, const 
                     }
                 } else {  // string key
                     child_name = ZSTR_VAL(key);
-                    slashe_child_name = yasd::util::addslashes(std::string(ZSTR_VAL(key), ZSTR_LEN(key)));
+                    slashe_child_name = yasd::util::string::addslashes(std::string(ZSTR_VAL(key), ZSTR_LEN(key)));
 
                     if (property_element.fullname != "") {  // eval don't need fullname in phpstorm
                         child_fullname = property_element.fullname + "[\"" + slashe_child_name + "\"]";
