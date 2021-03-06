@@ -291,10 +291,6 @@ void printf_info(int color, const char *format, ...) {
     }
 }
 
-void show_breakpoint_hit_info() {
-    printf_info(YASD_ECHO_GREEN, "stop at breakponit ");
-}
-
 bool is_match(std::string sub_str, std::string target_str) {
     for (size_t i = 0; i < sub_str.length(); i++) {
         if (sub_str[i] != target_str[i]) {

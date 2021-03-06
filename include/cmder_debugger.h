@@ -62,7 +62,6 @@ class CmderDebugger: public DebuggerModeBase {
     std::function<int()> find_cmd_handler(std::string cmd);
 
     void show_welcome_info();
-    void show_breakpoint_hit_info();
     void reload_cache_breakpoint();
 
     int get_listsize() {

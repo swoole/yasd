@@ -64,8 +64,6 @@ namespace time {
       printf_info(color, format, args...);
       std::cout << std::endl;
   }
-
-  void show_breakpoint_hit_info();
   
   bool is_match(std::string sub_str, std::string target_str);
 
