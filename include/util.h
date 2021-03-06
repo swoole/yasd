@@ -78,5 +78,5 @@ namespace option {
   std::string get_property_name(zend_string *property_name);
 
   zval *fetch_zval_by_fullname(std::string fullname);
-} // namespace yasd
+} // namespace util
 }  // namespace yasd
