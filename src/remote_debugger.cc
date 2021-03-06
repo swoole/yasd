@@ -61,7 +61,7 @@ void RemoteDebugger::init() {
     }
 
     if (connect(sock, (struct sockaddr *) &ide_address, sizeof(ide_address)) < 0) {
-        yasd::Util::printfln_info(yasd::Color::YASD_ECHO_YELLOW, "[yasd] %s", strerror(errno));
+        yasd::util::printfln_info(yasd::Color::YASD_ECHO_YELLOW, "[yasd] %s", strerror(errno));
         return;
     }
 
@@ -83,11 +83,11 @@ std::string RemoteDebugger::get_next_cmd() {
     do {
         ret = recv(sock, &c, 1, 0);
         if (ret == 0) {
-            yasd::Util::printfln_info(yasd::Color::YASD_ECHO_YELLOW, "[yasd] recv command error, connection closed");
+            yasd::util::printfln_info(yasd::Color::YASD_ECHO_YELLOW, "[yasd] recv command error, connection closed");
             zend_bailout();
         }
         if (ret < 0) {
-            yasd::Util::printfln_info(yasd::Color::YASD_ECHO_YELLOW, "[yasd] recv command error, %s", strerror(errno));
+            yasd::util::printfln_info(yasd::Color::YASD_ECHO_YELLOW, "[yasd] recv command error, %s", strerror(errno));
             zend_bailout();
         }
     } while ((c != '\0') && buffer.append(&c, 1));
@@ -104,7 +104,7 @@ int RemoteDebugger::execute_cmd() {
 
     boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
 
-    transaction_id = atoi(yasd::Util::get_option_value(exploded_cmd, "-i").c_str());
+    transaction_id = atoi(yasd::util::get_option_value(exploded_cmd, "-i").c_str());
 
     auto handler = find_cmd_handler(exploded_cmd[0]);
 
@@ -189,7 +189,7 @@ ssize_t RemoteDebugger::send_init_event_message() {
         .set_copyright("Copyright (c) 2020-2021 by Codinghuang")
         .set_debugger_name("Yasd")
         .set_debugger_version(PHP_YASD_VERSION)
-        .set_fileuri("file://" + std::string(yasd::Util::get_executed_filename()))
+        .set_fileuri("file://" + std::string(yasd::util::get_executed_filename()))
         .set_idekey("hantaohuang")
         .set_language("PHP")
         .set_language_version(PHP_VERSION)
@@ -228,7 +228,7 @@ void RemoteDebugger::init_local_variables_xml_child_node(tinyxml2::XMLElement *r
         std::string name = "$" + std::string(ZSTR_VAL(var_name));
         std::string fullname = std::string(ZSTR_VAL(var_name));
 
-        zval *var = yasd::Util::find_variable(ZSTR_VAL(var_name));
+        zval *var = yasd::util::find_variable(ZSTR_VAL(var_name));
 
         yasd::PropertyElement property_element;
         property_element.set_type(zend_zval_type_name(var))
@@ -320,7 +320,7 @@ int RemoteDebugger::parse_feature_set_cmd() {
     tinyxml2::XMLElement *root;
     yasd::ResponseElement response_element;
 
-    std::string feature = yasd::Util::get_option_value(exploded_cmd, "-n");
+    std::string feature = yasd::util::get_option_value(exploded_cmd, "-n");
 
     root = doc->NewElement("response");
     doc->LinkEndChild(root);
@@ -394,7 +394,7 @@ int RemoteDebugger::parse_eval_cmd() {
 
     // std::cout << "base64_decode eval_str: " << eval_str << std::endl;
 
-    yasd::Util::eval(const_cast<char *>(eval_str.c_str()), &ret_zval, const_cast<char *>("yasd://debug-eval"));
+    yasd::util::eval(const_cast<char *>(eval_str.c_str()), &ret_zval, const_cast<char *>("yasd://debug-eval"));
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
     tinyxml2::XMLElement *root;
@@ -455,7 +455,7 @@ int RemoteDebugger::parse_breakpoint_set_cmd() {
         return yasd::DebuggerModeBase::FAILED;
     }
 
-    breakpoint_type = yasd::Util::get_option_value(exploded_cmd, "-t");
+    breakpoint_type = yasd::util::get_option_value(exploded_cmd, "-t");
 
     if (breakpoint_type == "line") {
         parse_breakpoint_set_line_cmd(exploded_cmd);
@@ -482,8 +482,8 @@ int RemoteDebugger::parse_breakpoint_set_cmd() {
 void RemoteDebugger::parse_breakpoint_set_line_cmd(const std::vector<std::string> &exploded_cmd) {
     // https://xdebug.org/docs/dbgp#id3
 
-    std::string file_url = yasd::Util::get_option_value(exploded_cmd, "-f");
-    int lineno = atoi(yasd::Util::get_option_value(exploded_cmd, "-n").c_str());
+    std::string file_url = yasd::util::get_option_value(exploded_cmd, "-f");
+    int lineno = atoi(yasd::util::get_option_value(exploded_cmd, "-n").c_str());
 
     file_url.substr(sizeof("file://") - 1, file_url.length() - (sizeof("file://") - 1));
     std::string filename = file_url.substr(7, file_url.length() - 7);
@@ -500,8 +500,8 @@ void RemoteDebugger::parse_breakpoint_set_line_cmd(const std::vector<std::string
 }
 
 void RemoteDebugger::parse_breakpoint_set_condition_line_cmd(const std::vector<std::string> &exploded_cmd) {
-    int lineno = atoi(yasd::Util::get_option_value(exploded_cmd, "-n").c_str());
-    std::string condition = base64_decode(yasd::Util::get_option_value(exploded_cmd, "--"));
+    int lineno = atoi(yasd::util::get_option_value(exploded_cmd, "-n").c_str());
+    std::string condition = base64_decode(yasd::util::get_option_value(exploded_cmd, "--"));
 
     parse_breakpoint_set_line_cmd(exploded_cmd);
 
@@ -545,17 +545,17 @@ int RemoteDebugger::parse_stack_get_cmd() {
     root->SetAttribute("id", breakpoint_admin_add());
 
     child = root->InsertNewChildElement("stack");
-    const char *tmp = yasd::Util::get_executed_function_name();
+    const char *tmp = yasd::util::get_executed_function_name();
     child->SetAttribute("where", tmp);
     child->SetAttribute("level", "0");
     child->SetAttribute("type", "file");
 
-    std::string fileuri = "file://" + std::string(yasd::Util::get_executed_filename());
+    std::string fileuri = "file://" + std::string(yasd::util::get_executed_filename());
     child->SetAttribute("filename", fileuri.c_str());
-    child->SetAttribute("lineno", yasd::Util::get_executed_file_lineno());
+    child->SetAttribute("lineno", yasd::util::get_executed_file_lineno());
 
     for (auto iter = context->strace->rbegin(); iter != context->strace->rend(); ++iter) {
-        // yasd::Util::printfln_info(YASD_ECHO_GREEN, "%s:%d", (*iter)->filename.c_str(), (*iter)->lineno);
+        // yasd::util::printfln_info(YASD_ECHO_GREEN, "%s:%d", (*iter)->filename.c_str(), (*iter)->lineno);
         child = root->InsertNewChildElement("stack");
         child->SetAttribute("where", (*iter)->function_name.c_str());
         child->SetAttribute("level", (*iter)->level);
@@ -614,7 +614,7 @@ int RemoteDebugger::parse_context_get_cmd() {
     if (exploded_cmd[0] != "context_get") {
         return yasd::DebuggerModeBase::FAILED;
     }
-    context_id = atoi(yasd::Util::get_option_value(exploded_cmd, "-c").c_str());
+    context_id = atoi(yasd::util::get_option_value(exploded_cmd, "-c").c_str());
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
     tinyxml2::XMLElement *root;
@@ -666,11 +666,11 @@ int RemoteDebugger::parse_property_get_cmd() {
     response_element.set_cmd("property_get").set_transaction_id(transaction_id);
     yasd::Dbgp::get_response_doc(root, response_element);
 
-    fullname = yasd::Util::get_option_value(exploded_cmd, "-n");
+    fullname = yasd::util::get_option_value(exploded_cmd, "-n");
 
     // vscode has double quotes, but PhpStorm does not
     if (fullname.front() == '"') {
-        fullname = yasd::Util::stripcslashes(fullname);
+        fullname = yasd::util::stripcslashes(fullname);
         fullname.erase(0, 1);
     }
 
@@ -683,7 +683,7 @@ int RemoteDebugger::parse_property_get_cmd() {
         fullname.erase(0, 1);
     }
 
-    property = yasd::Util::fetch_zval_by_fullname(fullname);
+    property = yasd::util::fetch_zval_by_fullname(fullname);
 
     child = root->InsertNewChildElement("property");
 
@@ -753,7 +753,7 @@ std::function<int()> RemoteDebugger::find_cmd_handler(std::string cmd) {
 
 std::string RemoteDebugger::get_full_name(std::string sub_cmd) {
     for (auto &&kv : handlers) {
-        if (yasd::Util::is_match(sub_cmd, kv.first)) {
+        if (yasd::util::is_match(sub_cmd, kv.first)) {
             return kv.first;
         }
     }

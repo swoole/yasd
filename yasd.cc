@@ -181,7 +181,7 @@ bool is_hit_line_condition_breakpoint(int lineno) {
 
     std::string condition = map_iter->second;
 
-    if (!yasd::Util::eval(const_cast<char *>(condition.c_str()), &retval, nullptr)) {
+    if (!yasd::util::eval(const_cast<char *>(condition.c_str()), &retval, nullptr)) {
         return false;
     }
 
@@ -229,10 +229,10 @@ ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
         return;
     }
 
-    filename = yasd::Util::get_executed_filename();
+    filename = yasd::util::get_executed_filename();
     start_lineno = lineno = online->lineno;
 
-    if (yasd::Util::is_hit_watch_point()) {
+    if (yasd::util::is_hit_watch_point()) {
         return global->debugger->handle_request(filename, lineno);
     }
 

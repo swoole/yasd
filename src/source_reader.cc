@@ -65,10 +65,10 @@ std::map<int, std::string> SourceReader::read_contents(int start, int count, boo
 
 void SourceReader::show_contents(int start_lineno, int line_num, bool point_lineno, bool show_prev) {
     std::map<int, std::string> contents = read_contents(start_lineno, line_num, show_prev);
-    yasd::Util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "%s:%d", filename, start_lineno);
+    yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "%s:%d", filename, start_lineno);
     for (const auto &content : contents) {
         if (point_lineno && (start_lineno == content.first)) {
-            yasd::Util::printfln_info(YASD_ECHO_GREEN, "%d-->\t%s", content.first, content.second.c_str());
+            yasd::util::printfln_info(YASD_ECHO_GREEN, "%d-->\t%s", content.first, content.second.c_str());
         } else {
             std::cout << content.first << "\t" << content.second << std::endl;
         }

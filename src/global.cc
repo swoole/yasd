@@ -51,7 +51,7 @@ Global::Global() {
     } else if (strncmp(YASD_G(debug_mode), "remote", sizeof("remote") - 1) == 0) {
         debugger = new RemoteDebugger();
     } else {
-        yasd::Util::printfln_info(yasd::Color::YASD_ECHO_RED, "error debug mode");
+        yasd::util::printfln_info(yasd::Color::YASD_ECHO_RED, "error debug mode");
         exit(255);
     }
 }

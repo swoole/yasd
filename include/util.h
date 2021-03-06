@@ -24,60 +24,58 @@
 
 #include "main/php.h"
 
-namespace yasd {
-class Util {
- public:
-    static HashTable *get_defined_vars();
-    static zval *find_variable(std::string var_name);
-    static zval *find_variable(zend_array *symbol_table, zend_ulong index);
-    static zval *find_variable(zend_array *symbol_table, std::string var_name);
-    static void print_var(std::string fullname);
-    static void print_property(std::string obj_name, std::string property_name);
+namespace yasd { namespace util {
+    HashTable *get_defined_vars();
+    zval *find_variable(std::string var_name);
+    zval *find_variable(zend_array *symbol_table, zend_ulong index);
+    zval *find_variable(zend_array *symbol_table, std::string var_name);
+    void print_var(std::string fullname);
+    void print_property(std::string obj_name, std::string property_name);
 
-    static void printf_info(int color, const char *format, ...);
+    void printf_info(int color, const char *format, ...);
 
     template <typename... Args>
-    static void printfln_info(int color, const char *format, Args... args) {
+    void printfln_info(int color, const char *format, Args... args) {
         printf_info(color, format, args...);
         std::cout << std::endl;
     }
 
-    static void show_breakpoint_hit_info();
-    static const char *get_executed_filename();
-    static const char *get_executed_function_name();
-    static int get_executed_file_lineno();
-    static const char *get_prev_executed_filename();
-    static const char *get_prev_executed_function_name();
-    static int get_prev_executed_file_lineno();
-    static bool is_match(std::string sub_str, std::string target_str);
+    void show_breakpoint_hit_info();
+    const char *get_executed_filename();
+    const char *get_executed_function_name();
+    int get_executed_file_lineno();
+    const char *get_prev_executed_filename();
+    const char *get_prev_executed_function_name();
+    int get_prev_executed_file_lineno();
+    bool is_match(std::string sub_str, std::string target_str);
 
-    static void clear_breakpoint_cache_file();
-    static std::string get_breakpoint_cache_filename();
-    static void cache_breakpoint(std::string filename, int lineno);
+    void clear_breakpoint_cache_file();
+    std::string get_breakpoint_cache_filename();
+    void cache_breakpoint(std::string filename, int lineno);
 
-    static bool is_variable_equal(zval *op1, zval *op2);
-    static bool is_variable_smaller(zval *op1, zval *op2);
-    static bool is_variable_greater(zval *op1, zval *op2);
+    bool is_variable_equal(zval *op1, zval *op2);
+    bool is_variable_smaller(zval *op1, zval *op2);
+    bool is_variable_greater(zval *op1, zval *op2);
 
-    static bool is_hit_watch_point();
+    bool is_hit_watch_point();
 
-    static bool is_integer(const std::string &s);
+    bool is_integer(const std::string &s);
 
-    static bool eval(char *str, zval *retval_ptr, char *string_name);
+    bool eval(char *str, zval *retval_ptr, char *string_name);
 
-    static zend_array *get_properties(zval *zobj);
+    zend_array *get_properties(zval *zobj);
 
     // get the property name of a common property, including public, protected, private
-    static std::string get_property_name(zend_string *property_name);
+    std::string get_property_name(zend_string *property_name);
 
-    static std::string get_option_value(const std::vector<std::string> &options, std::string option);
+    std::string get_option_value(const std::vector<std::string> &options, std::string option);
 
-    static zval *fetch_zval_by_fullname(std::string fullname);
+    zval *fetch_zval_by_fullname(std::string fullname);
 
-    static std::string stripslashes(std::string str);
-    static std::string stripcslashes(std::string str);
-    static std::string addslashes(std::string str);
+    std::string stripslashes(std::string str);
+    std::string stripcslashes(std::string str);
+    std::string addslashes(std::string str);
 
-    static long microtime(void);
-};
+    long microtime(void);
+}; // namespace yasd
 }  // namespace yasd
