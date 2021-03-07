@@ -27,6 +27,12 @@ namespace Yasd\Api
      * @return bool
      */
     function onGreaterThanMilliseconds(int $milliseconds, callable $callback) { }
+
+    /**
+     * @param callable $callback
+     * @return bool
+     */
+    function onEnterFunction(callable $callback) { }
 }
 
 namespace Yasd
