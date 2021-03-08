@@ -50,6 +50,12 @@ namespace Yasd
         public $executeTime;
 
         /**
+         * @var int
+         */
+
+        public $level;
+
+        /**
          * @var string
          */
         public $parentFunctionName;
