@@ -161,6 +161,7 @@ void analyze_function(yasd::CurrentFunctionStatus *function_status) {
     long execute_time;
     zend_string *function_name = nullptr;
     zend_string *parent_function_name = nullptr;
+    yasd::Context *context = global->get_current_context();
 
     function_name = function_status->execute_data->func->common.function_name;
     function_status->end_time = yasd::util::time::microtime();
@@ -181,6 +182,8 @@ void analyze_function(yasd::CurrentFunctionStatus *function_status) {
     zend_update_property_str(
             yasd_function_status_ce, YASD_Z8_OBJ_P(object), ZEND_STRL("functionName"), 
             function_name ? function_name : zend_empty_string);
+    zend_update_property_long(
+            yasd_function_status_ce, YASD_Z8_OBJ_P(object), ZEND_STRL("level"), context->level);
 
     if (function_status->execute_data->prev_execute_data && function_status->execute_data->prev_execute_data->func) {
         parent_function_name = function_status->execute_data->prev_execute_data->func->common.function_name;
@@ -214,6 +217,7 @@ void callbackEnterFunction(yasd::CurrentFunctionStatus *function_status) {
     zval *object = &argv[0];
     zend_string *function_name = nullptr;
     zend_string *parent_function_name = nullptr;
+    yasd::Context *context = global->get_current_context();
 
     function_name = function_status->execute_data->func->common.function_name;
 
@@ -224,6 +228,8 @@ void callbackEnterFunction(yasd::CurrentFunctionStatus *function_status) {
     zend_update_property_str(
             yasd_function_status_ce, YASD_Z8_OBJ_P(object), ZEND_STRL("functionName"), 
             function_name ? function_name : zend_empty_string);
+    zend_update_property_long(
+            yasd_function_status_ce, YASD_Z8_OBJ_P(object), ZEND_STRL("level"), context->level);
 
     if (function_status->execute_data->prev_execute_data && function_status->execute_data->prev_execute_data->func) {
         parent_function_name = function_status->execute_data->prev_execute_data->func->common.function_name;

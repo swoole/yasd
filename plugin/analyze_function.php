@@ -31,9 +31,15 @@ class Node
      */
     public $parentFunctionName;
 
-    public function __construct(string $functionName, int $totalExecuteTime, ?string $parentFunctionName)
+    /**
+     * @var int
+     */
+    public $level;
+
+    public function __construct(string $functionName, int $level, int $totalExecuteTime, ?string $parentFunctionName)
     {
         $this->functionName = $functionName;
+        $this->level = $level;
         $this->totalExecuteTime = $totalExecuteTime;
         $this->parentFunctionName = $parentFunctionName;
     }
@@ -45,7 +51,6 @@ $nodeStack = new SplStack();
 $nodeStack->push(null);
 
 Api\onGreaterThanMilliseconds(10, function (FunctionStatus $functionStatus) {
-    global $callRelationship;
     global $nodeStack;
 
     if ($functionStatus->functionName === '') {
@@ -56,14 +61,14 @@ Api\onGreaterThanMilliseconds(10, function (FunctionStatus $functionStatus) {
         $functionStatus->parentFunctionName = 'main';
     }
 
-    if ($functionStatus->parentFunctionName !== null) {
-        $callRelationship[$functionStatus->parentFunctionName] = $functionStatus->functionName;
-    }
-
     /**
      * @var Node
      */
-    $node = new Node($functionStatus->functionName, $functionStatus->executeTime, $functionStatus->parentFunctionName);
+    $node = new Node($functionStatus->functionName,
+                $functionStatus->level,
+                $functionStatus->executeTime,
+                $functionStatus->parentFunctionName
+    );
 
     while (!$nodeStack->isEmpty()) {
         /**
@@ -71,7 +76,7 @@ Api\onGreaterThanMilliseconds(10, function (FunctionStatus $functionStatus) {
          */
         $lastNode = $nodeStack->top();
 
-        if ($lastNode && $lastNode->parentFunctionName == $functionStatus->functionName) {
+        if ($lastNode && $lastNode->level - 1 == $functionStatus->level) {
             $node->childNodes[] = $lastNode;
             $nodeStack->pop();
         } else {
@@ -91,5 +96,10 @@ Api\onGreaterThanMilliseconds(10, function (FunctionStatus $functionStatus) {
 
     $selfExecuteTime = $functionStatus->executeTime - $childFunctionExecuteTime;
 
-    echo "functionName: $functionStatus->functionName, selfExecuteTime: $selfExecuteTime, totalExecuteTime: $functionStatus->executeTime\n";
+    printf("functionName: %s, level: %d, selfExecuteTime: %d, totalExecuteTime: %d\n",
+        $functionStatus->functionName,
+        $functionStatus->level,
+        $selfExecuteTime,
+        $functionStatus->executeTime
+    );
 });

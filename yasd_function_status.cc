@@ -9,5 +9,6 @@ void yasd_function_status_minit(int module_number)
 
     zend_declare_property_string(yasd_function_status_ce, ZEND_STRL("functionName"), "", ZEND_ACC_PUBLIC);
     zend_declare_property_long(yasd_function_status_ce, ZEND_STRL("executeTime"), 0, ZEND_ACC_PUBLIC);
+    zend_declare_property_long(yasd_function_status_ce, ZEND_STRL("level"), 0, ZEND_ACC_PUBLIC);
     zend_declare_property_string(yasd_function_status_ce, ZEND_STRL("parentFunctionName"), "", ZEND_ACC_PUBLIC);
 }
