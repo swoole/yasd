@@ -444,6 +444,45 @@ int RemoteDebugger::parse_breakpoint_list_cmd() {
     return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
 }
 
+int RemoteDebugger::parse_breakpoint_remove_cmd() {
+    // https://xdebug.org/docs/dbgp#id6
+
+    std::vector<std::string> exploded_cmd;
+
+    boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
+    if (exploded_cmd[0] != "breakpoint_remove") {
+        return yasd::DebuggerModeBase::FAILED;
+    }
+
+    int breakpoint_id = atoi(yasd::util::option::get_value(exploded_cmd, "-d").c_str());
+
+    auto iter = global->breakpoints_id->find(breakpoint_id);
+    std::string filename;
+    int lineno;
+    if (iter != global->breakpoints_id->end()) {
+        filename = iter->second[0];
+        lineno = atoi(iter->second[1].c_str());
+        auto breakpoint_iter = global->breakpoints->find(filename);
+        if (breakpoint_iter != global->breakpoints->end()) {
+            breakpoint_iter->second.erase(lineno);
+            global->breakpoints_id->erase(breakpoint_id);
+        }
+    }
+
+    std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
+    tinyxml2::XMLElement *root;
+    yasd::ResponseElement response_element;
+
+    root = doc->NewElement("response");
+    doc->LinkEndChild(root);
+
+    response_element.set_cmd("breakpoint_set").set_transaction_id(transaction_id);
+    yasd::Dbgp::get_response_doc(root, response_element);
+    send_doc(doc.get());
+
+    return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
+}
+
 int RemoteDebugger::parse_breakpoint_set_cmd() {
     // https://xdebug.org/docs/dbgp#id3
 
@@ -456,11 +495,11 @@ int RemoteDebugger::parse_breakpoint_set_cmd() {
     }
 
     breakpoint_type = yasd::util::option::get_value(exploded_cmd, "-t");
-
+    int breakpoint_id = breakpoint_admin_add();
     if (breakpoint_type == "line") {
-        parse_breakpoint_set_line_cmd(exploded_cmd);
+        parse_breakpoint_set_line_cmd(exploded_cmd, breakpoint_id);
     } else if (breakpoint_type == "conditional") {
-        parse_breakpoint_set_condition_line_cmd(exploded_cmd);
+        parse_breakpoint_set_condition_line_cmd(exploded_cmd, breakpoint_id);
     }
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
@@ -472,14 +511,14 @@ int RemoteDebugger::parse_breakpoint_set_cmd() {
 
     response_element.set_cmd("breakpoint_set").set_transaction_id(transaction_id);
     yasd::Dbgp::get_response_doc(root, response_element);
-    root->SetAttribute("id", breakpoint_admin_add());
+    root->SetAttribute("id", breakpoint_id);
 
     send_doc(doc.get());
 
     return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
 }
 
-void RemoteDebugger::parse_breakpoint_set_line_cmd(const std::vector<std::string> &exploded_cmd) {
+void RemoteDebugger::parse_breakpoint_set_line_cmd(const std::vector<std::string> &exploded_cmd, int breakpoint_id) {
     // https://xdebug.org/docs/dbgp#id3
 
     std::string file_url = yasd::util::option::get_value(exploded_cmd, "-f");
@@ -497,13 +536,18 @@ void RemoteDebugger::parse_breakpoint_set_line_cmd(const std::vector<std::string
         lineno_set.insert(lineno);
         global->breakpoints->insert(std::make_pair(filename, lineno_set));
     }
+
+    std::vector<std::string> arr;
+    arr.push_back(filename);
+    arr.push_back(std::to_string(lineno));
+    global->breakpoints_id->insert(std::make_pair(breakpoint_id, arr));
 }
 
-void RemoteDebugger::parse_breakpoint_set_condition_line_cmd(const std::vector<std::string> &exploded_cmd) {
+void RemoteDebugger::parse_breakpoint_set_condition_line_cmd(const std::vector<std::string> &exploded_cmd, int breakpoint_id) {
     int lineno = atoi(yasd::util::option::get_value(exploded_cmd, "-n").c_str());
     std::string condition = base64_decode(yasd::util::option::get_value(exploded_cmd, "--"));
 
-    parse_breakpoint_set_line_cmd(exploded_cmd);
+    parse_breakpoint_set_line_cmd(exploded_cmd, breakpoint_id);
 
     auto iter = global->breakpoint_conditions.find(lineno);
 
@@ -731,6 +775,7 @@ void RemoteDebugger::register_cmd_handler() {
     handlers.emplace_back(
         std::make_pair("breakpoint_list", std::bind(&RemoteDebugger::parse_breakpoint_list_cmd, this)));
     handlers.emplace_back(std::make_pair("breakpoint_set", std::bind(&RemoteDebugger::parse_breakpoint_set_cmd, this)));
+    handlers.emplace_back(std::make_pair("breakpoint_remove", std::bind(&RemoteDebugger::parse_breakpoint_remove_cmd, this)));
     handlers.emplace_back(std::make_pair("run", std::bind(&RemoteDebugger::parse_run_cmd, this)));
     handlers.emplace_back(std::make_pair("stack_get", std::bind(&RemoteDebugger::parse_stack_get_cmd, this)));
     handlers.emplace_back(std::make_pair("property_get", std::bind(&RemoteDebugger::parse_property_get_cmd, this)));

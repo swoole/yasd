@@ -24,6 +24,7 @@
 #include <map>
 
 #define BREAKPOINT std::string, std::set<int>
+#define BREAKPOINT_ID int, std::vector<std::string>
 #define BREAKPOINT_CONDITION int, std::string
 
 namespace yasd {
@@ -49,6 +50,8 @@ class Global {
 
     // filename, [lineno]
     std::map<BREAKPOINT> *breakpoints;
+    // breakpoint, [filename, lineno]
+    std::map<BREAKPOINT_ID> *breakpoints_id;
     // line, condition
     std::map<BREAKPOINT_CONDITION> breakpoint_conditions;
 
