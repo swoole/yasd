@@ -432,12 +432,22 @@ int RemoteDebugger::parse_breakpoint_list_cmd() {
 
     std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
     tinyxml2::XMLElement *root;
+    tinyxml2::XMLElement *breakpoint_node;
     yasd::ResponseElement response_element;
 
     root = doc->NewElement("response");
     doc->LinkEndChild(root);
     response_element.set_cmd("breakpoint_list").set_transaction_id(transaction_id);
     yasd::Dbgp::get_response_doc(root, response_element);
+
+    for (auto iter = global->breakpoints_id->begin(); iter != global->breakpoints_id->end(); iter++) {
+        breakpoint_node = root->InsertNewChildElement("breakpoint");
+        breakpoint_node->SetAttribute("id", iter->first);
+        std::string fileuri = "file://" + iter->second[0];
+        breakpoint_node->SetAttribute("filename", fileuri.c_str());
+        breakpoint_node->SetAttribute("lineno", iter->second[1].c_str());
+        breakpoint_node->SetAttribute("type", iter->second[2].c_str());
+    }
 
     send_doc(doc.get());
 
@@ -476,7 +486,7 @@ int RemoteDebugger::parse_breakpoint_remove_cmd() {
     root = doc->NewElement("response");
     doc->LinkEndChild(root);
 
-    response_element.set_cmd("breakpoint_set").set_transaction_id(transaction_id);
+    response_element.set_cmd("breakpoint_remove").set_transaction_id(transaction_id);
     yasd::Dbgp::get_response_doc(root, response_element);
     send_doc(doc.get());
 
@@ -523,6 +533,7 @@ void RemoteDebugger::parse_breakpoint_set_line_cmd(const std::vector<std::string
 
     std::string file_url = yasd::util::option::get_value(exploded_cmd, "-f");
     int lineno = atoi(yasd::util::option::get_value(exploded_cmd, "-n").c_str());
+    std::string breakpoint_type = yasd::util::option::get_value(exploded_cmd, "-t");
 
     file_url.substr(sizeof("file://") - 1, file_url.length() - (sizeof("file://") - 1));
     std::string filename = file_url.substr(7, file_url.length() - 7);
@@ -540,6 +551,7 @@ void RemoteDebugger::parse_breakpoint_set_line_cmd(const std::vector<std::string
     std::vector<std::string> arr;
     arr.push_back(filename);
     arr.push_back(std::to_string(lineno));
+    arr.push_back(breakpoint_type);
     global->breakpoints_id->insert(std::make_pair(breakpoint_id, arr));
 }
 
