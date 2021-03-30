@@ -44,6 +44,7 @@ Global::Global() {
     }
 
     breakpoints = new std::map<BREAKPOINT>();
+    breakpoints_id = new std::map<BREAKPOINT_ID>();
     contexts = new std::map<int, Context *>();
 
     if (strncmp(YASD_G(debug_mode), "cmd", sizeof("cmd") - 1) == 0) {
@@ -63,6 +64,8 @@ Global::~Global() {
     contexts = nullptr;
     delete breakpoints;
     breakpoints = nullptr;
+    delete breakpoints_id;
+    breakpoints_id = nullptr;
     delete logger;
 
     if (onGreaterThanMilliseconds) {
