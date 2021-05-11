@@ -272,6 +272,7 @@ int CmderDebugger::parse_set_cmd() {
 int CmderDebugger::parse_watch_cmd() {
     zend_function *func = EG(current_execute_data)->func;
     std::string var_name;
+    std::string condition;
     yasd::WatchPointElement element;
     std::vector<std::string> exploded_cmd;
 
@@ -279,8 +280,7 @@ int CmderDebugger::parse_watch_cmd() {
     if (exploded_cmd.size() < 2) {
         yasd::util::printfln_info(yasd::Color::YASD_ECHO_RED, "you should set watch point");
         return RECV_CMD_AGAIN;
-    } else if (exploded_cmd.size() == 2) {
-        element.type = yasd::WatchPointElement::t::VARIABLE_CHANGE;
+    } else if (exploded_cmd.size() == 2) { // variable change watch point
         var_name = exploded_cmd[1];
 
         zval *old_var = yasd::util::variable::find_variable(var_name);
@@ -292,26 +292,28 @@ int CmderDebugger::parse_watch_cmd() {
         }
 
         element.old_var = *old_var;
-    } else {
-        // w a < 1
-        element.type = yasd::WatchPointElement::t::CONDITION;
-        var_name = exploded_cmd[1];
-        element.operation = exploded_cmd[2];
 
-        if (yasd::util::string::is_integer(exploded_cmd[3])) {
-            ZVAL_LONG(&element.old_var, atoi(exploded_cmd[3].c_str()));
+        auto iter = global->watchPoints.variable_change_watchpoint.find(func);
+        if (iter == global->watchPoints.variable_change_watchpoint.end()) {
+            VARIABLE_CHANGE_WATCH_POINT *watchpoint = new VARIABLE_CHANGE_WATCH_POINT();
+            watchpoint->insert(std::make_pair(var_name, element));
+            global->watchPoints.variable_change_watchpoint.insert(std::make_pair(func, watchpoint));
         } else {
-            ZVAL_NEW_STR(&element.old_var, zend_string_init(exploded_cmd[3].c_str(), exploded_cmd[3].length(), 0));
+            iter->second->insert(std::make_pair(var_name, element));
         }
-    }
+    } else { // condition watch point
+        // w a < 1
+        const auto equals_idx = last_cmd.find_first_of(" ");
+        std::string condition = last_cmd.substr(equals_idx + 1);
 
-    auto iter = global->watchPoints.var_watchpoint.find(func);
-    if (iter == global->watchPoints.var_watchpoint.end()) {
-        WATCHPOINT *watchpoint = new WATCHPOINT();
-        watchpoint->insert(std::make_pair(var_name, element));
-        global->watchPoints.var_watchpoint.insert(std::make_pair(func, watchpoint));
-    } else {
-        iter->second->insert(std::make_pair(var_name, element));
+        auto iter = global->watchPoints.condition_watchpoint.find(func);
+        if (iter == global->watchPoints.condition_watchpoint.end()) {
+            CONDITION_WATCH_POINT *watchpoint = new CONDITION_WATCH_POINT();
+            watchpoint->insert(condition);
+            global->watchPoints.condition_watchpoint.insert(std::make_pair(func, watchpoint));
+        } else {
+            iter->second->insert(condition);
+        }
     }
 
     yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "watching variable $%s", var_name.c_str());
@@ -330,8 +332,8 @@ int CmderDebugger::parse_unwatch_cmd() {
     }
     std::string var_name = exploded_cmd[1];
 
-    auto iter = global->watchPoints.var_watchpoint.find(func);
-    if (iter == global->watchPoints.var_watchpoint.end()) {
+    auto iter = global->watchPoints.variable_change_watchpoint.find(func);
+    if (iter == global->watchPoints.variable_change_watchpoint.end()) {
         yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "not found watch point $%s", var_name.c_str());
     } else {
         auto zval_iter = iter->second->find(var_name);

@@ -131,17 +131,17 @@ void drop_prev_stack_frame(yasd::StackFrame *frame) {
 void clear_watch_point(zend_execute_data *execute_data) {
     zend_function *func = execute_data->func;
 
-    auto var_watchpoint = global->watchPoints.var_watchpoint.find(func);
+    auto variable_change_watchpoint = global->watchPoints.variable_change_watchpoint.find(func);
 
-    if (var_watchpoint == global->watchPoints.var_watchpoint.end()) {
+    if (variable_change_watchpoint == global->watchPoints.variable_change_watchpoint.end()) {
         return;
     }
 
-    var_watchpoint->second->begin();
+    variable_change_watchpoint->second->begin();
 
-    auto iter = var_watchpoint->second->begin();
-    while (iter != var_watchpoint->second->end()) {
-        var_watchpoint->second->erase(iter++);
+    auto iter = variable_change_watchpoint->second->begin();
+    while (iter != variable_change_watchpoint->second->end()) {
+        variable_change_watchpoint->second->erase(iter++);
     }
 }
 

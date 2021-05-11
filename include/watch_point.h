@@ -27,21 +27,17 @@ namespace yasd {
 
 class WatchPointElement {
   public:
-    enum t {
-        VARIABLE_CHANGE,
-        CONDITION
-    };
-    int type;
-    std::string operation;
     zval old_var;
 };
 
-#define WATCHPOINT std::map<std::string, WatchPointElement>
+#define VARIABLE_CHANGE_WATCH_POINT std::map<std::string, WatchPointElement>
+#define CONDITION_WATCH_POINT std::set<std::string>
 
 class WatchPoint {
   public:
     // variable name, zval *
-    std::map<zend_function *, WATCHPOINT *> var_watchpoint;
+    std::map<zend_function *, VARIABLE_CHANGE_WATCH_POINT *> variable_change_watchpoint;
+    std::map<zend_function *, CONDITION_WATCH_POINT *> condition_watchpoint;
 
     WatchPoint() {}
     ~WatchPoint() {}
