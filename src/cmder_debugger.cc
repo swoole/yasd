@@ -282,6 +282,7 @@ int CmderDebugger::parse_watch_cmd() {
         return RECV_CMD_AGAIN;
     } else if (exploded_cmd.size() == 2) { // variable change watch point
         var_name = exploded_cmd[1];
+        var_name.erase(0, 1);
 
         zval *old_var = yasd::util::variable::find_variable(var_name);
 
@@ -301,6 +302,8 @@ int CmderDebugger::parse_watch_cmd() {
         } else {
             iter->second->insert(std::make_pair(var_name, element));
         }
+
+        yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "watching variable $%s", var_name.c_str());
     } else { // condition watch point
         // w a < 1
         const auto equals_idx = last_cmd.find_first_of(" ");
@@ -314,9 +317,9 @@ int CmderDebugger::parse_watch_cmd() {
         } else {
             iter->second->insert(condition);
         }
-    }
 
-    yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "watching variable $%s", var_name.c_str());
+        yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "watching condition %s", condition.c_str());
+    }
 
     return RECV_CMD_AGAIN;
 }
