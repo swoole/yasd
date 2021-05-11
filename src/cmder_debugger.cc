@@ -158,7 +158,7 @@ int CmderDebugger::parse_delete_breakpoint_cmd() {
         for (auto linenos_iter = breakpoints_iter->second.begin(); linenos_iter != breakpoints_iter->second.end(); linenos_iter++) {
             if (i++ == number) {
                 breakpoints_iter->second.erase(linenos_iter);
-                yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "delete breakpoint at %s:%d", breakpoints_iter->first.c_str(), *linenos_iter);
+                yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "delete breakpoint at %d: %s:%d", i - 1, breakpoints_iter->first.c_str(), *linenos_iter);
                 break;
             }
         }
