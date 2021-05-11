@@ -178,9 +178,10 @@ int CmderDebugger::parse_info_cmd() {
     if (global->breakpoints->empty()) {
         yasd::util::printfln_info(YASD_ECHO_RED, "no found breakpoints!");
     }
+    int number = 1;
     for (auto i = global->breakpoints->begin(); i != global->breakpoints->end(); i++) {
         for (auto j = i->second.begin(); j != i->second.end(); j++) {
-            yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "filename: %s:%d", i->first.c_str(), *j);
+            yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "%d: %s:%d", number++, i->first.c_str(), *j);
         }
     }
 
