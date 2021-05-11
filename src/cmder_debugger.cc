@@ -305,7 +305,6 @@ int CmderDebugger::parse_watch_cmd() {
 
         yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "watching variable $%s", var_name.c_str());
     } else { // condition watch point
-        // w a < 1
         const auto equals_idx = last_cmd.find_first_of(" ");
         std::string condition = last_cmd.substr(equals_idx + 1);
 
