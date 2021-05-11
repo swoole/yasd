@@ -142,33 +142,26 @@ int CmderDebugger::parse_breakpoint_cmd() {
 }
 
 int CmderDebugger::parse_delete_breakpoint_cmd() {
-    int lineno;
     std::string filename;
     std::vector<std::string> exploded_cmd;
 
     boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
 
-    if (exploded_cmd.size() == 2) {
-        filename = yasd::util::execution::get_filename();
-        lineno = atoi(exploded_cmd[1].c_str());
-    } else if (exploded_cmd.size() == 3) {
-        filename = exploded_cmd[1];
-        lineno = atoi(exploded_cmd[2].c_str());
-    } else {
-        yasd::util::printfln_info(YASD_ECHO_RED, "use delete breakpoint cmd error!");
+    if (exploded_cmd.size() < 2) {
+        yasd::util::printfln_info(YASD_ECHO_RED, "please input the breakpoint number!");
         return RECV_CMD_AGAIN;
     }
 
-    auto iter = global->breakpoints->find(filename);
-
-    if (iter != global->breakpoints->end()) {
-        iter->second.erase(lineno);
-        if (iter->second.empty()) {
-            global->breakpoints->erase(iter->first);
+    int number = atoi(exploded_cmd[1].c_str());
+    int i = 1;
+    for (auto breakpoints_iter = global->breakpoints->begin(); breakpoints_iter != global->breakpoints->end(); breakpoints_iter++) {
+        for (auto linenos_iter = breakpoints_iter->second.begin(); linenos_iter != breakpoints_iter->second.end(); linenos_iter++) {
+            if (i++ == number) {
+                breakpoints_iter->second.erase(linenos_iter);
+                yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "delete breakpoint at %s:%d", breakpoints_iter->first.c_str(), *linenos_iter);
+                break;
+            }
         }
-        yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "delete breakpoint at %s:%d", filename.c_str(), lineno);
-    } else {
-        yasd::util::printfln_info(YASD_ECHO_RED, "breakpoint at %s:%d is not existed!", filename.c_str(), lineno);
     }
 
     return RECV_CMD_AGAIN;
