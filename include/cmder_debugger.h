@@ -31,6 +31,9 @@ class CmderDebugger: public DebuggerModeBase {
 
     std::string get_next_cmd();
     int execute_cmd();
+    void show_info_cmd_help();
+    void show_breakpoints();
+    void show_watchpoints();
 
   public:
 

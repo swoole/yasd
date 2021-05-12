@@ -64,52 +64,40 @@ bool DebuggerModeBase::is_hit_watch_point() {
         return false;
     }
 
+    zval retval;
     zend_function *func = EG(current_execute_data)->func;
 
-    auto var_watchpoint = global->watchPoints.var_watchpoint.find(func);
+    auto variable_change_watchpoint = global->watchPoints.variable_change_watchpoint.find(func);
+    auto condition_watchpoint = global->watchPoints.condition_watchpoint.find(func);
 
-    if (var_watchpoint == global->watchPoints.var_watchpoint.end()) {
-        return false;
-    }
+    if (variable_change_watchpoint != global->watchPoints.variable_change_watchpoint.end()) {
+        for (auto watchpoint_iter = variable_change_watchpoint->second->begin(); watchpoint_iter != variable_change_watchpoint->second->end();
+            watchpoint_iter++) {
+            std::string var_name = watchpoint_iter->first;
+            yasd::WatchPointElement &watchpoint = watchpoint_iter->second;
 
-    for (auto watchpointIter = var_watchpoint->second->begin(); watchpointIter != var_watchpoint->second->end();
-         watchpointIter++) {
-        std::string var_name = watchpointIter->first;
-        yasd::WatchPointElement &watchpoint = watchpointIter->second;
-
-        zval *new_var = yasd::util::variable::find_variable(var_name);
-        if (new_var == nullptr) {
-            zval tmp;
-            new_var = &tmp;
-            ZVAL_UNDEF(new_var);
-        }
-        std::string op = watchpoint.operation;
-        zval *old_var = &watchpoint.old_var;
-
-        if (watchpoint.type == yasd::WatchPointElement::VARIABLE_CHANGE) {
+            zval *new_var = yasd::util::variable::find_variable(var_name);
+            if (new_var == nullptr) {
+                zval tmp;
+                new_var = &tmp;
+                ZVAL_UNDEF(new_var);
+            }
             zval *old_var = &watchpoint.old_var;
 
             if (!yasd::util::variable::is_equal(new_var, old_var)) {
                 watchpoint.old_var = *new_var;
                 return true;
             }
-        } else {
-            if (op == "<") {
-                if (yasd::util::variable::is_smaller(new_var, old_var)) {
-                    var_watchpoint->second->erase(watchpointIter);
-                    return true;
-                }
-            } else if (op == ">") {
-                if (yasd::util::variable::is_greater(new_var, old_var)) {
-                    var_watchpoint->second->erase(watchpointIter);
-                    return true;
-                }
-            } else if (op == "==") {
-                if (yasd::util::variable::is_equal(new_var, old_var)) {
-                    var_watchpoint->second->erase(watchpointIter);
-                    return true;
-                }
+        }
+    }
+
+    if (condition_watchpoint != global->watchPoints.condition_watchpoint.end()) {
+        for (std::string condition : *condition_watchpoint->second) {
+            if (!yasd::util::execution::eval_string(const_cast<char *>(condition.c_str()), &retval, nullptr)) {
+                return false;
             }
+
+            return Z_TYPE(retval) == IS_TRUE;
         }
     }
 
