@@ -125,16 +125,22 @@ const char *get_filename() {
     return ZSTR_VAL(filename);
 }
 
-const char *get_function_name() {
-    zend_execute_data *ptr = EG(current_execute_data);
+const char *get_function_name(zend_function *func) {
+    if (func == nullptr) {
+        zend_execute_data *ptr = EG(current_execute_data);
+        while (ptr && (!ptr->func || !ZEND_USER_CODE(ptr->func->type))) {
+            ptr = ptr->prev_execute_data;
+        }
 
-    while (ptr && (!ptr->func || !ZEND_USER_CODE(ptr->func->type))) {
-        ptr = ptr->prev_execute_data;
+        if (ptr && ptr->func && ptr->func->op_array.function_name) {
+            return ZSTR_VAL(ptr->func->op_array.function_name);
+        }
+    } else {
+        if (func->common.function_name) {
+            return func->common.function_name->val;
+        }
     }
-
-    if (ptr && ptr->func && ptr->func->op_array.function_name) {
-        return ZSTR_VAL(ptr->func->op_array.function_name);
-    }
+    
     return "main";
 }
 

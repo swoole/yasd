@@ -167,14 +167,41 @@ int CmderDebugger::parse_delete_breakpoint_cmd() {
     return RECV_CMD_AGAIN;
 }
 
+void CmderDebugger::show_info_cmd_help() {
+    yasd::util::printfln_info(yasd::Color::YASD_ECHO_RED, "\"info\" must be followed by the name of an info command.");
+    yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "List of info subcommands:\n");
+    yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "info breakpoints -- IDs of currently known checkpoints");
+    yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "info watchpoints -- Status of specified watchpoints (all watchpoints if no argument)");
+}
+
 int CmderDebugger::parse_info_cmd() {
+    std::vector<std::string> exploded_cmd;
+
+    boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
+
+    if (exploded_cmd.size() < 2) {
+        show_info_cmd_help();
+        return RECV_CMD_AGAIN;
+    }
+
+    std::string type = exploded_cmd[1];
+
     if (global->breakpoints->empty()) {
         yasd::util::printfln_info(YASD_ECHO_RED, "no found breakpoints!");
     }
     int number = 1;
-    for (auto i = global->breakpoints->begin(); i != global->breakpoints->end(); i++) {
-        for (auto j = i->second.begin(); j != i->second.end(); j++) {
-            yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "%d: %s:%d", number++, i->first.c_str(), *j);
+    for (auto breakpoints_iter = global->breakpoints->begin(); breakpoints_iter != global->breakpoints->end(); breakpoints_iter++) {
+        for (auto linenos_iter = breakpoints_iter->second.begin(); linenos_iter != breakpoints_iter->second.end(); linenos_iter++) {
+            yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "%d: %s:%d", number++, breakpoints_iter->first.c_str(), *linenos_iter);
+        }
+    }
+
+    number = 1;
+    for (auto condition_watchpoints_iter = global->watchPoints.condition_watchpoint.begin(); condition_watchpoints_iter != global->watchPoints.condition_watchpoint.end(); condition_watchpoints_iter++) {
+        yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "%s:", yasd::util::execution::get_function_name(condition_watchpoints_iter->first));
+
+        for (auto conditions_iter : *condition_watchpoints_iter->second) {
+            yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "%d: %s", number++, conditions_iter.c_str());
         }
     }
 

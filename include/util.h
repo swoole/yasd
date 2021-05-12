@@ -38,7 +38,7 @@ namespace variable {
 
 namespace execution {
   const char *get_filename();
-  const char *get_function_name();
+  const char *get_function_name(zend_function *func = nullptr);
   int get_file_lineno();
   const char *get_prev_filename();
   const char *get_prev_function_name();
