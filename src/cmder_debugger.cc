@@ -184,6 +184,13 @@ void CmderDebugger::show_breakpoints() {
 
 void CmderDebugger::show_watchpoints() {
     int number = 1;
+    for (auto variable_changes_iter = global->watchPoints.variable_change_watchpoint.begin(); variable_changes_iter != global->watchPoints.variable_change_watchpoint.end(); variable_changes_iter++) {
+        yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "%s:", yasd::util::execution::get_function_name(variable_changes_iter->first));
+
+        for (auto conditions_iter : *variable_changes_iter->second) {
+            yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "%d: $%s", number++, conditions_iter.first.c_str());
+        }
+    }
     for (auto condition_watchpoints_iter = global->watchPoints.condition_watchpoint.begin(); condition_watchpoints_iter != global->watchPoints.condition_watchpoint.end(); condition_watchpoints_iter++) {
         yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "%s:", yasd::util::execution::get_function_name(condition_watchpoints_iter->first));
 
@@ -363,23 +370,36 @@ int CmderDebugger::parse_unwatch_cmd() {
     std::vector<std::string> exploded_cmd;
 
     boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
+
     if (exploded_cmd.size() < 2) {
-        yasd::util::printfln_info(yasd::Color::YASD_ECHO_RED, "you should set watch point");
+        yasd::util::printfln_info(YASD_ECHO_RED, "please input the breakpoint number!");
         return RECV_CMD_AGAIN;
     }
-    std::string var_name = exploded_cmd[1];
 
-    auto iter = global->watchPoints.variable_change_watchpoint.find(func);
-    if (iter == global->watchPoints.variable_change_watchpoint.end()) {
-        yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "not found watch point $%s", var_name.c_str());
-    } else {
-        auto zval_iter = iter->second->find(var_name);
-        if (zval_iter == iter->second->end()) {
-            yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "not found watch point $%s", var_name.c_str());
-        } else {
-            zval_dtor(&zval_iter->second.old_var);
-            iter->second->erase(var_name);
-            yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "unwatch variable $%s", var_name.c_str());
+    int i = atoi(exploded_cmd[1].c_str());
+    int number = 1;
+    for (auto variable_changes_iter = global->watchPoints.variable_change_watchpoint.begin(); variable_changes_iter != global->watchPoints.variable_change_watchpoint.end(); variable_changes_iter++) {
+        for (auto conditions_iter : *variable_changes_iter->second) {
+            if (number++ == i) {
+                variable_changes_iter->second->erase(conditions_iter.first);
+                yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "unwatch variable $%s", conditions_iter.first.c_str());
+                if (variable_changes_iter->second->empty()) {
+                    global->watchPoints.variable_change_watchpoint.erase(variable_changes_iter->first);
+                }
+                return RECV_CMD_AGAIN;
+            }
+        }
+    }
+    for (auto condition_watchpoints_iter = global->watchPoints.condition_watchpoint.begin(); condition_watchpoints_iter != global->watchPoints.condition_watchpoint.end(); condition_watchpoints_iter++) {
+        for (auto conditions_iter : *condition_watchpoints_iter->second) {
+            if (number++ == i) {
+                condition_watchpoints_iter->second->erase(conditions_iter);
+                yasd::util::printfln_info(yasd::Color::YASD_ECHO_GREEN, "unwatch condition %s", conditions_iter.c_str());
+                if (condition_watchpoints_iter->second->empty()) {
+                    global->watchPoints.condition_watchpoint.erase(condition_watchpoints_iter->first);
+                }
+                return RECV_CMD_AGAIN;
+            }
         }
     }
 
