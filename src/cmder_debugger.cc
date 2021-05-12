@@ -277,7 +277,9 @@ int CmderDebugger::parse_print_cmd() {
 
     boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
 
-    yasd::util::variable::print_var(exploded_cmd[1]);
+    std::string var_name = exploded_cmd[1];
+
+    yasd::util::variable::print_var(var_name.erase(0, 1));
     global->do_next = true;
 
     return RECV_CMD_AGAIN;

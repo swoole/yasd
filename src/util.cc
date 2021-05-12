@@ -83,6 +83,7 @@ zval *find_variable(zend_array *symbol_table, std::string var_name) {
     return var;
 }
 
+// need to drop the $ for fullname
 void print_var(std::string fullname) {
     zval *var;
 
