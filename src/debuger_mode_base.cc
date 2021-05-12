@@ -13,9 +13,11 @@
   | Author: codinghuang  <codinghuang@qq.com>                            |
   +----------------------------------------------------------------------+
 */
+#include "include/common.h"
 #include "include/global.h"
 #include "include/util.h"
 #include "include/debuger_mode_base.h"
+#include "Zend/zend_exceptions.h"
 
 namespace yasd {
 int DebuggerModeBase::parse_step_over_cmd() {
@@ -92,13 +94,33 @@ bool DebuggerModeBase::is_hit_watch_point() {
     }
 
     if (condition_watchpoint != global->watchPoints.condition_watchpoint.end()) {
-        for (std::string condition : *condition_watchpoint->second) {
-            if (!yasd::util::execution::eval_string(const_cast<char *>(condition.c_str()), &retval, nullptr)) {
-                return false;
+        std::set<std::string>::iterator conditions_iter = condition_watchpoint->second->begin();
+        std::set<std::string>::iterator tmp_iter;
+
+        for ( ; conditions_iter != condition_watchpoint->second->end(); ) {
+            std::string condition = *conditions_iter;
+
+            zend_first_try {
+                yasd::util::execution::eval_string(const_cast<char *>(condition.c_str()), &retval, nullptr);
+            } zend_end_try();
+
+            if (EG(exception)) {
+                yasd::util::printfln_info(yasd::Color::YASD_ECHO_RED, "condition %s is error, will be removed", condition.c_str());
+                zend_object_release(EG(exception));
+                EG(exception) = NULL;
+
+                tmp_iter = conditions_iter;
+                ++tmp_iter;
+                condition_watchpoint->second->erase(conditions_iter);
+                conditions_iter = tmp_iter;
+            } else {
+                ++conditions_iter;
             }
 
-            return Z_TYPE(retval) == IS_TRUE;
-        }
+            if (Z_TYPE(retval) == IS_TRUE) {
+                return true;
+            }
+        } 
     }
 
     return false;
