@@ -102,25 +102,31 @@ If the cache file exists, the breakpoints in the file are automatically loaded w
 #### Delete breakpoints
 
 ```bash
-d absolute-file-path lineno
+d number
 ```
 
 If a breakpoint is set or deleted without specifying `absolute-file-path`, It will set breakpoint in the current file.
 
 #### watch point
 
-We can monitor the variable changes or conditions, for example:
+We can monitor the variable changes or expression, for example:
 
 ```cpp
-watch a
+watch $a
 ```
 
 ```cpp
-watch a > 10
+watch $a > 10
 ```
 
 ```cpp
-watch name == swoole
+watch $name == 'swoole'
+```
+
+#### unwatch point
+
+```cpp
+unwatch number
 ```
 
 #### run
@@ -158,7 +164,13 @@ bt
 show all breakpoints:
 
 ```bash
-i
+info breakpoints
+```
+
+show all watchpoints:
+
+```bash
+info watchpoints
 ```
 
 #### continue
@@ -176,15 +188,9 @@ q
 #### print
 
 ```bash
-p
-```
-
-variable name do not need to have `$`, for example:
-
-```bash
-p a
-p this
-p this->prop
+p $a
+p $this
+p $this->prop
 ```
 
 #### level
@@ -204,7 +210,6 @@ le
 - ensure that phpstorm listens on incoming connections:
 
 ![image](https://user-images.githubusercontent.com/21345604/109924880-042d8300-7cd2-11eb-9972-002806afbb6c.png)
-
 
 #### Slow Start Framework
 
