@@ -115,9 +115,19 @@ int CmderDebugger::parse_breakpoint_cmd() {
     // breakpoint in current file with lineno
     if (exploded_cmd.size() == 2) {
         filename = yasd::util::execution::get_filename();
+
+        if (!yasd::util::string::is_integer(exploded_cmd[1].c_str())) {
+            yasd::util::printfln_info(YASD_ECHO_RED, "please set the correct lineno!");
+            return RECV_CMD_AGAIN;
+        }
         lineno = atoi(exploded_cmd[1].c_str());
     } else if (exploded_cmd.size() == 3) {
         filename = exploded_cmd[1];
+
+        if (!yasd::util::string::is_integer(exploded_cmd[2].c_str())) {
+            yasd::util::printfln_info(YASD_ECHO_RED, "please set the correct lineno!");
+            return RECV_CMD_AGAIN;
+        }
         lineno = atoi(exploded_cmd[2].c_str());
     } else {
         yasd::util::printfln_info(YASD_ECHO_RED, "use set breakpoint cmd error!");
