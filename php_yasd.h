@@ -26,7 +26,7 @@
 extern zend_module_entry yasd_module_entry;
 #define phpext_yasd_ptr &yasd_module_entry
 
-#define PHP_YASD_VERSION "0.3.7"
+#define PHP_YASD_VERSION "0.3.8"
 
 ZEND_BEGIN_MODULE_GLOBALS(yasd)
     char *breakpoints_file;
