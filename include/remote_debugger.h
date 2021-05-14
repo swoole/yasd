@@ -64,6 +64,7 @@ class RemoteDebugger : public DebuggerModeBase {
     ssize_t send_init_event_message();
 
     int parse_feature_set_cmd();
+    int parse_feature_get_cmd();
     int parse_stdout_cmd();
     int parse_status_cmd();
     int parse_eval_cmd();

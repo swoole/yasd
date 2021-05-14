@@ -335,6 +335,31 @@ int RemoteDebugger::parse_feature_set_cmd() {
     return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
 }
 
+int RemoteDebugger::parse_feature_get_cmd() {
+    // https://xdebug.org/docs/dbgp#feature-set
+    std::vector<std::string> exploded_cmd;
+
+    boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);
+
+    std::unique_ptr<tinyxml2::XMLDocument> doc(new tinyxml2::XMLDocument());
+    tinyxml2::XMLElement *root;
+    yasd::ResponseElement response_element;
+
+    std::string feature_name = yasd::util::option::get_value(exploded_cmd, "-n");
+
+    root = doc->NewElement("response");
+    doc->LinkEndChild(root);
+
+    response_element.set_cmd("feature_get").set_transaction_id(transaction_id);
+    yasd::Dbgp::get_response_doc(root, response_element);
+    root->SetAttribute("feature_name", feature_name.c_str());
+    root->SetAttribute("supported", "0");
+
+    send_doc(doc.get());
+
+    return yasd::DebuggerModeBase::RECV_CMD_AGAIN;
+}
+
 int RemoteDebugger::parse_stdout_cmd() {
     // https://xdebug.org/docs/dbgp#stdout-stderr
 
@@ -781,6 +806,7 @@ int RemoteDebugger::parse_stop_cmd() {
 
 void RemoteDebugger::register_cmd_handler() {
     handlers.emplace_back(std::make_pair("feature_set", std::bind(&RemoteDebugger::parse_feature_set_cmd, this)));
+    handlers.emplace_back(std::make_pair("feature_get", std::bind(&RemoteDebugger::parse_feature_get_cmd, this)));
     handlers.emplace_back(std::make_pair("stdout", std::bind(&RemoteDebugger::parse_stdout_cmd, this)));
     handlers.emplace_back(std::make_pair("status", std::bind(&RemoteDebugger::parse_status_cmd, this)));
     handlers.emplace_back(std::make_pair("eval", std::bind(&RemoteDebugger::parse_eval_cmd, this)));
