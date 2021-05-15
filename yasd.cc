@@ -60,6 +60,8 @@ STD_PHP_INI_ENTRY("yasd.max_executed_opline_num", "0", PHP_INI_ALL, OnUpdateLong
         max_executed_opline_num, zend_yasd_globals, yasd_globals)
 STD_PHP_INI_ENTRY("yasd.init_file", "", PHP_INI_ALL, OnUpdateStringUnempty,
         init_file, zend_yasd_globals, yasd_globals)
+STD_PHP_INI_ENTRY("yasd.open_extended_info", "0", PHP_INI_ALL, OnUpdateLong,
+        open_extended_info, zend_yasd_globals, yasd_globals)
 
 // compatible with phpstorm
 STD_PHP_INI_ENTRY("xdebug.coverage_enable", "1", PHP_INI_ALL, OnUpdateLong,

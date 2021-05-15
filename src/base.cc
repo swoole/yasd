@@ -317,6 +317,10 @@ void yasd_rshutdown(int module_number) {
 }
 
 void yasd_minit(int module_number) {
+    if (YASD_G(open_extended_info)) {
+        CG(compiler_options) |= ZEND_COMPILE_EXTENDED_INFO;
+    }
+
     replace_execute_ex();
 
     // it seems that -e does not work in PHP-FPM mode. so we need to add ZEND_COMPILE_EXTENDED_INFO ourselves.
