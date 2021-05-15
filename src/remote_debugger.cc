@@ -16,6 +16,7 @@
 
 #include <iostream>
 #include <memory>
+#include <netdb.h>
 
 #include "./php_yasd_cxx.h"
 #include "include/global.h"
@@ -46,6 +47,7 @@ void RemoteDebugger::init() {
     register_cmd_handler();
 
     struct sockaddr_in ide_address;
+    struct hostent *host_entry;
 
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
         perror("create socket failed");
@@ -55,13 +57,17 @@ void RemoteDebugger::init() {
     ide_address.sin_family = AF_INET;
     ide_address.sin_port = htons(YASD_G(remote_port));
 
-    if (inet_pton(AF_INET, YASD_G(remote_host), &ide_address.sin_addr) <= 0) {
-        perror("Invalid address/ Address not supported");
-        exit(EXIT_FAILURE);
+    if (!inet_pton(AF_INET, YASD_G(remote_host), &ide_address.sin_addr)) {
+        host_entry = gethostbyname(YASD_G(remote_host));
+        if (host_entry == nullptr) {
+            yasd::util::printfln_info(yasd::Color::YASD_ECHO_YELLOW, "[yasd] DNS resolution failed (%s %s)", YASD_G(remote_host), hstrerror(h_errno));
+            return;
+        }
+        memcpy(&(ide_address.sin_addr.s_addr), host_entry->h_addr_list[0], host_entry->h_length);
     }
 
     if (connect(sock, (struct sockaddr *) &ide_address, sizeof(ide_address)) < 0) {
-        yasd::util::printfln_info(yasd::Color::YASD_ECHO_YELLOW, "[yasd] %s", strerror(errno));
+        yasd::util::printfln_info(yasd::Color::YASD_ECHO_YELLOW, "[yasd] Connect IDE failed (%s), please check that the IDE is in a listening state", strerror(errno));
         return;
     }
 
