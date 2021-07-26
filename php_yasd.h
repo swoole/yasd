@@ -46,6 +46,7 @@ ZEND_BEGIN_MODULE_GLOBALS(yasd)
     int remote_autostart;
     int remote_connect_back;
     char *remote_mode;
+    char *ide_key;
 ZEND_END_MODULE_GLOBALS(yasd)
 
 extern ZEND_DECLARE_MODULE_GLOBALS(yasd);

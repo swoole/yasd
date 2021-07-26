@@ -63,6 +63,7 @@ class RemoteDebugger : public DebuggerModeBase {
 
     ssize_t send_init_event_message();
 
+    char *yasd_debugger_get_ide_key();
     int parse_feature_set_cmd();
     int parse_feature_get_cmd();
     int parse_stdout_cmd();
