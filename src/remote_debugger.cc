@@ -196,7 +196,7 @@ ssize_t RemoteDebugger::send_init_event_message() {
         .set_debugger_name("Yasd")
         .set_debugger_version(PHP_YASD_VERSION)
         .set_fileuri("file://" + std::string(yasd::util::execution::get_filename()))
-        .set_idekey("hantaohuang")
+        .set_idekey(yasd_debugger_get_ide_key())
         .set_language("PHP")
         .set_language_version(PHP_VERSION)
         .set_url("https://github.com/swoole/yasd");
@@ -204,6 +204,17 @@ ssize_t RemoteDebugger::send_init_event_message() {
     yasd::Dbgp::get_init_event_doc(doc.get(), init_element);
 
     return send_doc(doc.get());
+}
+
+char *RemoteDebugger::yasd_debugger_get_ide_key(void) {
+    char *ide_key;
+
+    ide_key = getenv("DBGP_IDEKEY");
+    if (ide_key && *ide_key) {
+        return ide_key;
+    }
+
+    return YASD_G(ide_key);
 }
 
 ssize_t RemoteDebugger::send_doc(tinyxml2::XMLDocument *doc) {

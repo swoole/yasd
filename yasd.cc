@@ -74,6 +74,8 @@ STD_PHP_INI_ENTRY("xdebug.remote_connect_back", "0", PHP_INI_ALL, OnUpdateLong,
         remote_autostart, zend_yasd_globals, yasd_globals)
 STD_PHP_INI_ENTRY("xdebug.remote_mode", "req", PHP_INI_ALL, OnUpdateString,
         remote_mode, zend_yasd_globals, yasd_globals)
+STD_PHP_INI_ENTRY("xdebug.idekey", "hantaohuang", PHP_INI_ALL, OnUpdateStringUnempty,
+        ide_key, zend_yasd_globals, yasd_globals)
 PHP_INI_END()
 // clang-format on
 

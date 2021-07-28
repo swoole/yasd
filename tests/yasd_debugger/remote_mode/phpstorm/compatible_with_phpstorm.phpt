@@ -12,7 +12,7 @@ $basename = basename(__FILE__, '.php');
 $filename = realpath(dirname(__FILE__) . "/{$basename}.inc");
 
 $code1 = base64_encode("isset(\$_SERVER['PHP_IDE_CONFIG'])");
-$code2 = base64_encode("(string)(ini_get('xdebug.coverage_enable').';'.ini_get('xdebug.profiler_enable').';'.ini_get('xdebug.remote_autostart').';'.ini_get('xdebug.remote_connect_back').';'.ini_get('xdebug.remote_mode'))");
+$code2 = base64_encode("(string)(ini_get('xdebug.coverage_enable').';'.ini_get('xdebug.profiler_enable').';'.ini_get('xdebug.remote_autostart').';'.ini_get('xdebug.remote_connect_back').';'.ini_get('xdebug.remote_mode').';'.ini_get('xdebug.ide_key'))");
 
 $commands = [
     "eval -- {$code1}",
@@ -32,9 +32,9 @@ $client = (new DbgpClient())->setCommands($commands)->setTestFile($filename)->st
 <?xml version="1.0" encoding="iso-8859-1"?>
 <response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="eval" transaction_id="1"><property type="bool"><![CDATA[0]]></property></response>
 
--> eval -i 2 -- KHN0cmluZykoaW5pX2dldCgneGRlYnVnLmNvdmVyYWdlX2VuYWJsZScpLic7Jy5pbmlfZ2V0KCd4ZGVidWcucHJvZmlsZXJfZW5hYmxlJykuJzsnLmluaV9nZXQoJ3hkZWJ1Zy5yZW1vdGVfYXV0b3N0YXJ0JykuJzsnLmluaV9nZXQoJ3hkZWJ1Zy5yZW1vdGVfY29ubmVjdF9iYWNrJykuJzsnLmluaV9nZXQoJ3hkZWJ1Zy5yZW1vdGVfbW9kZScpKQ==
+-> eval -i 2 -- KHN0cmluZykoaW5pX2dldCgneGRlYnVnLmNvdmVyYWdlX2VuYWJsZScpLic7Jy5pbmlfZ2V0KCd4ZGVidWcucHJvZmlsZXJfZW5hYmxlJykuJzsnLmluaV9nZXQoJ3hkZWJ1Zy5yZW1vdGVfYXV0b3N0YXJ0JykuJzsnLmluaV9nZXQoJ3hkZWJ1Zy5yZW1vdGVfY29ubmVjdF9iYWNrJykuJzsnLmluaV9nZXQoJ3hkZWJ1Zy5yZW1vdGVfbW9kZScpLic7Jy5pbmlfZ2V0KCd4ZGVidWcuaWRlX2tleScpKQ==
 <?xml version="1.0" encoding="iso-8859-1"?>
-<response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="eval" transaction_id="2"><property type="string" size="11" encoding="base64"><![CDATA[MTsxOzE7MDtyZXE=]]></property></response>
+<response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="eval" transaction_id="2"><property type="string" size="12" encoding="base64"><![CDATA[MTsxOzE7MDtyZXE7]]></property></response>
 
 -> run -i 3
 <?xml version="1.0" encoding="iso-8859-1"?>

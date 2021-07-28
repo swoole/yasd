@@ -24,7 +24,7 @@ $client = (new DbgpClient())->setCommands($commands)->setTestFile($filename)->st
 ?>
 --EXPECTF--
 <?xml version="1.0" encoding="iso-8859-1"?>
-<init xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" fileuri="file://%s" language="PHP" xdebug:language_version="%s" protocol_version="1.0" appid="%s" idekey="hantaohuang"><engine version="%s"><![CDATA[Yasd]]></engine><author><![CDATA[Codinghuang]]></author><url><![CDATA[https://github.com/swoole/yasd]]></url><copyright><![CDATA[Copyright (c) 2020-2021 by Codinghuang]]></copyright></init>
+<init xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" fileuri="file://%s" language="PHP" xdebug:language_version="%s" protocol_version="1.0" appid="%s" idekey=%s><engine version="%s"><![CDATA[Yasd]]></engine><author><![CDATA[Codinghuang]]></author><url><![CDATA[https://github.com/swoole/yasd]]></url><copyright><![CDATA[Copyright (c) 2020-2021 by Codinghuang]]></copyright></init>
 
 -> eval -i 1 -- aW5pX2dldCgneWFzZC5kZWJ1Z19tb2RlJyk7
 <?xml version="1.0" encoding="iso-8859-1"?>
