@@ -6,6 +6,8 @@ Yet Another Swoole Debugger. [document](https://huanghantao.github.io/yasd-wiki/
 
 ## How to use it
 
+**Notice: if you use Swoole\Server, set the `worker_num` to 1, otherwise the breakpoint may fail.**
+
 ### build
 
 You'll need to install the Boost library first.
