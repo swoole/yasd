@@ -33,7 +33,7 @@ namespace yasd {
 CmderDebugger::CmderDebugger() {}
 
 void CmderDebugger::init() {
-    int status;
+    int status = -1;
     std::string cmd;
 
     show_welcome_info();
@@ -52,7 +52,7 @@ void CmderDebugger::init() {
 }
 
 void CmderDebugger::handle_request(const char *filename, int lineno) {
-    int status;
+    int status = -1;
     std::string cmd;
     yasd::SourceReader reader(filename);
     std::vector<std::string> exploded_cmd;
