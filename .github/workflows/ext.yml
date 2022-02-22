@@ -6,7 +6,7 @@ jobs:
   build-yasd:
     runs-on: ${{ matrix.os }}
     env:
-      SWOOLE_VERSION: 4.5.6
+      SWOOLE_VERSION: 4.8.7
     strategy:
       fail-fast: false
       matrix:
