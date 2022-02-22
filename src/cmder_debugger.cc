@@ -378,7 +378,6 @@ int CmderDebugger::parse_watch_cmd() {
 }
 
 int CmderDebugger::parse_unwatch_cmd() {
-    zend_function *func = EG(current_execute_data)->func;
     std::vector<std::string> exploded_cmd;
 
     boost::split(exploded_cmd, last_cmd, boost::is_any_of(" "), boost::token_compress_on);

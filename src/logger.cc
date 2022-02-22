@@ -45,33 +45,10 @@ Logger &Logger::set_level(int level) {
 }
 
 void Logger::put(int level, const char *content, size_t length) {
-    const char *level_str;
     int n;
 
     if (level < log_level) {
         return;
-    }
-
-    switch (level) {
-    case DEBUG:
-        level_str = "DEBUG";
-        break;
-    case TRACE:
-        level_str = "TRACE";
-        break;
-    case NOTICE:
-        level_str = "NOTICE";
-        break;
-    case WARNING:
-        level_str = "WARNING";
-        break;
-    case ERROR:
-        level_str = "ERROR";
-        break;
-    case INFO:
-    default:
-        level_str = "INFO";
-        break;
     }
 
     // TODO(codinghuang): seems there are "buffer overflow detected" problem
