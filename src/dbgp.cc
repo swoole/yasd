@@ -229,7 +229,6 @@ void Dbgp::get_zend_object_child_property_doc(tinyxml2::XMLElement *child, const
     zend_string *class_name;
     zend_array *properties;
     class_name = Z_OBJCE_P(property_element.value)->name;
-    zend_ulong num;
     zend_string *key;
     zval *val;
 
