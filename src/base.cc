@@ -45,9 +45,13 @@ void execute_init_file() {
         exit(255);
     }
 
+#if PHP_VERSION_ID < 80100
     memset(&file_handle, 0, sizeof(zend_file_handle));
     file_handle.type = ZEND_HANDLE_FILENAME;
     file_handle.filename = YASD_G(init_file);
+#else
+    zend_stream_init_filename(&file_handle, YASD_G(init_file));
+#endif
 
     CG(compiler_options) &= ~ZEND_COMPILE_EXTENDED_INFO;
     op_array = zend_compile_file(&file_handle, ZEND_EVAL);
