@@ -26,7 +26,7 @@ int DebuggerModeBase::parse_step_over_cmd() {
     yasd::Context *context = global->get_current_context();
     zend_execute_data *frame = EG(current_execute_data);
 
-    uint32_t func_line_end = frame->func->op_array.line_end;
+    unsigned int func_line_end = frame->func->op_array.line_end;
 
     if (frame->opline->lineno == func_line_end && context->level != 1) {
         global->do_step = true;
