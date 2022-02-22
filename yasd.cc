@@ -222,7 +222,7 @@ ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
     // zend_op_array *op_array = &frame->func->op_array;
     const zend_op *online = EG(current_execute_data)->opline;
     const char *filename;
-    unsigned int lineno = online.lineno;
+    unsigned int lineno = online->lineno;
 
     yasd::Context *context = global->get_current_context();
     
