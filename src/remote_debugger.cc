@@ -46,8 +46,13 @@ RemoteDebugger::~RemoteDebugger() {
 void RemoteDebugger::init() {
     register_cmd_handler();
 
-    struct sockaddr_in ide_address;
-    struct hostent *host_entry;
+    struct sockaddr_in ide_address, *sinp;
+    struct addrinfo *host_entry, hint;
+
+    hint.ai_flags = AI_ALL;
+    hint.ai_family = AF_UNSPEC;
+    hint.ai_socktype = SOCK_STREAM;
+    hint.ai_protocol = IPPROTO_TCP;
 
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
         perror("create socket failed");
@@ -58,12 +63,15 @@ void RemoteDebugger::init() {
     ide_address.sin_port = htons(YASD_G(remote_port));
 
     if (!inet_pton(AF_INET, YASD_G(remote_host), &ide_address.sin_addr)) {
-        host_entry = gethostbyname(YASD_G(remote_host));
-        if (host_entry == nullptr) {
-            yasd::util::printfln_info(yasd::Color::YASD_ECHO_YELLOW, "[yasd] DNS resolution failed (%s %s)", YASD_G(remote_host), hstrerror(h_errno));
+        int ret = getaddrinfo(YASD_G(remote_host), NULL, &hint, &host_entry);
+        if(ret != 0) {
+            yasd::util::printfln_info(yasd::Color::YASD_ECHO_YELLOW, "[yasd] DNS resolution failed (%s %s)", YASD_G(remote_host), gai_strerror(ret));
             return;
         }
-        memcpy(&(ide_address.sin_addr.s_addr), host_entry->h_addr_list[0], host_entry->h_length);
+
+        sinp = (struct sockaddr_in *)host_entry->ai_addr;
+        memcpy(&(ide_address.sin_addr.s_addr), &sinp->sin_addr, 4);
+        freeaddrinfo(host_entry);
     }
 
     if (connect(sock, (struct sockaddr *) &ide_address, sizeof(ide_address)) < 0) {
