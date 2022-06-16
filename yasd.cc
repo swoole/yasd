@@ -303,6 +303,10 @@ static PHP_FUNCTION(Yasd_getOpcodeByName) {
 
     for (zend_uchar i = 0; i <= ZEND_VM_LAST_OPCODE; i++) {
         const char *tmp = zend_get_opcode_name(i);
+
+        if (tmp == nullptr) {
+            continue;
+        }
         if (strcasecmp(tmp, ZSTR_VAL(opcode_name)) == 0) {
             RETURN_LONG(i);
         }
