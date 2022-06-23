@@ -222,8 +222,7 @@ ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
     // zend_op_array *op_array = &frame->func->op_array;
     const zend_op *online = EG(current_execute_data)->opline;
     const char *filename;
-    int lineno;
-    int start_lineno;
+    unsigned int lineno = online->lineno;
 
     yasd::Context *context = global->get_current_context();
     
@@ -234,7 +233,6 @@ ZEND_DLEXPORT void yasd_statement_call(zend_execute_data *frame) {
     }
 
     filename = yasd::util::execution::get_filename();
-    start_lineno = lineno = online->lineno;
 
     if (global->debugger->is_hit_watch_point()) {
         return global->debugger->handle_request(filename, lineno);
@@ -341,11 +339,11 @@ zend_extension_version_info extension_version_info = {
 };
 
 zend_extension zend_extension_entry = {
-    "Yasd",
-    PHP_YASD_VERSION,
-    "codinghuang",
-    "https://github.com/huanghantao",
-    "Our Copyright",
+    (char*) "Yasd",
+    (char*) PHP_YASD_VERSION,
+    (char*) "codinghuang",
+    (char*) "https://github.com/huanghantao",
+    (char*) "Our Copyright",
     yasd_zend_startup,
     NULL,
     NULL, /* activate_func_t */
