@@ -2,6 +2,8 @@ English | [中文](./README-CN.md)
 
 # yasd
 
+> Swoole 5.0.1 + PHP 8.1 already support xdebug, so there is no need to use the yasd debugger!
+
 Yet Another Swoole Debugger. [document](https://huanghantao.github.io/yasd-wiki/)
 
 ## How to use it
